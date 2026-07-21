@@ -5,6 +5,7 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 from urllib.parse import unquote, urlparse
+from urllib.request import url2pathname
 
 from astrocitizen.shared.errors import DomainError, NotFoundError
 
@@ -40,7 +41,8 @@ class LocalArtifactStore:
         if parsed.scheme not in ("file", ""):
             raise DomainError(f"URI nao suportada neste adapter: {uri}")
         if parsed.scheme == "file":
-            path = Path(unquote(parsed.path))
+            # url2pathname handles Windows file:///C:/... correctly
+            path = Path(url2pathname(unquote(parsed.path)))
         else:
             path = Path(uri)
         path = path.resolve()
