@@ -1,4 +1,4 @@
-"""SqliteArchive — implementacao SQLite do ArchivePort (S1)."""
+"""SqliteArchive — implementacao SQLite do ArchivePort (S1+S2)."""
 
 from __future__ import annotations
 
@@ -10,6 +10,13 @@ from uuid import UUID
 
 from astrocitizen.adapters.sqlite.schema import SCHEMA_SQL, SCHEMA_VERSION
 from astrocitizen.inventory.models import Equipment, InstrumentConfig, Site
+from astrocitizen.planning.models import (
+    DailyPlan,
+    EphemerisSnapshot,
+    MeteoSnapshot,
+    ObservationBlock,
+    Target,
+)
 from astrocitizen.programs.models import Program, ProgramTemplate
 from astrocitizen.shared.errors import NotFoundError
 from astrocitizen.shared.timeutil import utc_now_iso
@@ -686,3 +693,381 @@ class SqliteArchive:
                 (str(workspace_id), limit),
             ).fetchall()
         return [dict(r) for r in rows]
+
+    # --- targets (S2) ---
+    def upsert_target(self, target: Target) -> Target:
+        now = utc_now_iso()
+        existing = self.get_target(target.id)
+        if existing is None:
+            self._conn.execute(
+                """
+                INSERT INTO targets(
+                    id, workspace_id, designation, ra_deg, dec_deg, target_type,
+                    external_ids, created_at, updated_at, version
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    str(target.id),
+                    str(target.workspace_id),
+                    target.designation,
+                    target.ra_deg,
+                    target.dec_deg,
+                    target.target_type,
+                    _j(target.external_ids),
+                    now,
+                    now,
+                    target.version,
+                ),
+            )
+            self._audit("create", "targets", str(target.id), str(target.workspace_id))
+        else:
+            self._conn.execute(
+                """
+                UPDATE targets SET
+                    designation = ?, ra_deg = ?, dec_deg = ?, target_type = ?,
+                    external_ids = ?, updated_at = ?, version = version + 1
+                WHERE id = ? AND deleted_at IS NULL
+                """,
+                (
+                    target.designation,
+                    target.ra_deg,
+                    target.dec_deg,
+                    target.target_type,
+                    _j(target.external_ids),
+                    now,
+                    str(target.id),
+                ),
+            )
+            target.version = existing.version + 1
+            self._audit("update", "targets", str(target.id), str(target.workspace_id))
+        self._conn.commit()
+        return target
+
+    def _row_to_target(self, row: sqlite3.Row) -> Target:
+        return Target(
+            id=UUID(row["id"]),
+            workspace_id=UUID(row["workspace_id"]),
+            designation=row["designation"],
+            ra_deg=row["ra_deg"],
+            dec_deg=row["dec_deg"],
+            target_type=row["target_type"],
+            external_ids=_loads(row["external_ids"], {}),
+            version=row["version"],
+        )
+
+    def get_target(self, target_id: UUID) -> Target | None:
+        row = self._conn.execute(
+            "SELECT * FROM targets WHERE id = ? AND deleted_at IS NULL",
+            (str(target_id),),
+        ).fetchone()
+        return None if row is None else self._row_to_target(row)
+
+    def list_targets(self, workspace_id: UUID) -> list[Target]:
+        rows = self._conn.execute(
+            """
+            SELECT * FROM targets
+            WHERE workspace_id = ? AND deleted_at IS NULL
+            ORDER BY designation
+            """,
+            (str(workspace_id),),
+        ).fetchall()
+        return [self._row_to_target(r) for r in rows]
+
+    def link_program_target(
+        self,
+        program_id: UUID,
+        target_id: UUID,
+        *,
+        role: str = "primary",
+        sort_order: int = 0,
+    ) -> None:
+        self._conn.execute(
+            """
+            INSERT INTO program_targets(program_id, target_id, role, sort_order)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(program_id, target_id, role) DO UPDATE SET sort_order = excluded.sort_order
+            """,
+            (str(program_id), str(target_id), role, sort_order),
+        )
+        self._conn.commit()
+
+    def list_program_targets(self, program_id: UUID) -> list[tuple[Target, str, int]]:
+        rows = self._conn.execute(
+            """
+            SELECT t.*, pt.role, pt.sort_order
+            FROM program_targets pt
+            JOIN targets t ON t.id = pt.target_id
+            WHERE pt.program_id = ? AND t.deleted_at IS NULL
+            ORDER BY pt.sort_order, t.designation
+            """,
+            (str(program_id),),
+        ).fetchall()
+        return [(self._row_to_target(r), r["role"], int(r["sort_order"])) for r in rows]
+
+    # --- daily plans ---
+    def upsert_daily_plan(self, plan: DailyPlan) -> DailyPlan:
+        now = utc_now_iso()
+        existing = self.get_daily_plan(plan.id)
+        generated = plan.generated_at or now
+        if existing is None:
+            self._conn.execute(
+                """
+                INSERT INTO daily_plans(
+                    id, workspace_id, site_id, night_date, state, generated_at,
+                    published_at, created_at, updated_at, version
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    str(plan.id),
+                    str(plan.workspace_id),
+                    str(plan.site_id),
+                    plan.night_date,
+                    plan.state,
+                    generated,
+                    plan.published_at,
+                    now,
+                    now,
+                    plan.version,
+                ),
+            )
+            plan.generated_at = generated
+            self._audit("create", "daily_plans", str(plan.id), str(plan.workspace_id))
+        else:
+            self._conn.execute(
+                """
+                UPDATE daily_plans SET
+                    state = ?, generated_at = ?, published_at = ?,
+                    updated_at = ?, version = version + 1
+                WHERE id = ? AND deleted_at IS NULL
+                """,
+                (
+                    plan.state,
+                    generated,
+                    plan.published_at,
+                    now,
+                    str(plan.id),
+                ),
+            )
+            plan.generated_at = generated
+            plan.version = existing.version + 1
+            self._audit("update", "daily_plans", str(plan.id), str(plan.workspace_id))
+        self._conn.commit()
+        return plan
+
+    def _row_to_plan(self, row: sqlite3.Row) -> DailyPlan:
+        return DailyPlan(
+            id=UUID(row["id"]),
+            workspace_id=UUID(row["workspace_id"]),
+            site_id=UUID(row["site_id"]),
+            night_date=row["night_date"],
+            state=row["state"],
+            generated_at=row["generated_at"],
+            published_at=row["published_at"],
+            version=row["version"],
+        )
+
+    def get_daily_plan(self, plan_id: UUID) -> DailyPlan | None:
+        row = self._conn.execute(
+            "SELECT * FROM daily_plans WHERE id = ? AND deleted_at IS NULL",
+            (str(plan_id),),
+        ).fetchone()
+        return None if row is None else self._row_to_plan(row)
+
+    def get_daily_plan_for_night(
+        self,
+        workspace_id: UUID,
+        site_id: UUID,
+        night_date: str,
+    ) -> DailyPlan | None:
+        row = self._conn.execute(
+            """
+            SELECT * FROM daily_plans
+            WHERE workspace_id = ? AND site_id = ? AND night_date = ?
+              AND deleted_at IS NULL
+            """,
+            (str(workspace_id), str(site_id), night_date),
+        ).fetchone()
+        return None if row is None else self._row_to_plan(row)
+
+    def list_daily_plans(
+        self, workspace_id: UUID, *, site_id: UUID | None = None
+    ) -> list[DailyPlan]:
+        if site_id is None:
+            rows = self._conn.execute(
+                """
+                SELECT * FROM daily_plans
+                WHERE workspace_id = ? AND deleted_at IS NULL
+                ORDER BY night_date DESC
+                """,
+                (str(workspace_id),),
+            ).fetchall()
+        else:
+            rows = self._conn.execute(
+                """
+                SELECT * FROM daily_plans
+                WHERE workspace_id = ? AND site_id = ? AND deleted_at IS NULL
+                ORDER BY night_date DESC
+                """,
+                (str(workspace_id), str(site_id)),
+            ).fetchall()
+        return [self._row_to_plan(r) for r in rows]
+
+    def _row_to_block(self, row: sqlite3.Row) -> ObservationBlock:
+        def _uuid(val: str | None) -> UUID | None:
+            return UUID(val) if val else None
+
+        return ObservationBlock(
+            id=UUID(row["id"]),
+            daily_plan_id=UUID(row["daily_plan_id"]),
+            program_id=_uuid(row["program_id"]),
+            target_id=_uuid(row["target_id"]),
+            instrument_config_id=_uuid(row["instrument_config_id"]),
+            sort_order=row["sort_order"],
+            window_start_utc=row["window_start_utc"],
+            window_end_utc=row["window_end_utc"],
+            predicted_altitude_deg=row["predicted_altitude_deg"],
+            airmass=row["airmass"],
+            status=row["status"],
+            status_reason=row["status_reason"],
+            priority=row["priority"],
+            notes=row["notes"] or "",
+            ephemeris_snapshot_id=_uuid(row["ephemeris_snapshot_id"]),
+            meteo_snapshot_id=_uuid(row["meteo_snapshot_id"]),
+            technique=row["technique"],
+            version=row["version"],
+        )
+
+    def replace_observation_blocks(
+        self,
+        daily_plan_id: UUID,
+        blocks: list[ObservationBlock],
+    ) -> list[ObservationBlock]:
+        now = utc_now_iso()
+        self._conn.execute(
+            """
+            UPDATE observation_blocks
+            SET deleted_at = ?, updated_at = ?
+            WHERE daily_plan_id = ? AND deleted_at IS NULL
+            """,
+            (now, now, str(daily_plan_id)),
+        )
+        for block in blocks:
+            self._conn.execute(
+                """
+                INSERT INTO observation_blocks(
+                    id, daily_plan_id, program_id, target_id, instrument_config_id,
+                    sort_order, window_start_utc, window_end_utc,
+                    predicted_altitude_deg, airmass, status, status_reason, priority,
+                    notes, ephemeris_snapshot_id, meteo_snapshot_id, technique,
+                    created_at, updated_at, version
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    str(block.id),
+                    str(daily_plan_id),
+                    str(block.program_id) if block.program_id else None,
+                    str(block.target_id) if block.target_id else None,
+                    str(block.instrument_config_id) if block.instrument_config_id else None,
+                    block.sort_order,
+                    block.window_start_utc,
+                    block.window_end_utc,
+                    block.predicted_altitude_deg,
+                    block.airmass,
+                    block.status,
+                    block.status_reason,
+                    block.priority,
+                    block.notes,
+                    str(block.ephemeris_snapshot_id) if block.ephemeris_snapshot_id else None,
+                    str(block.meteo_snapshot_id) if block.meteo_snapshot_id else None,
+                    block.technique,
+                    now,
+                    now,
+                    block.version,
+                ),
+            )
+        self._audit("replace_blocks", "daily_plans", str(daily_plan_id), detail={"n": len(blocks)})
+        self._conn.commit()
+        return blocks
+
+    def list_observation_blocks(self, daily_plan_id: UUID) -> list[ObservationBlock]:
+        rows = self._conn.execute(
+            """
+            SELECT * FROM observation_blocks
+            WHERE daily_plan_id = ? AND deleted_at IS NULL
+            ORDER BY sort_order, priority
+            """,
+            (str(daily_plan_id),),
+        ).fetchall()
+        return [self._row_to_block(r) for r in rows]
+
+    def get_observation_block(self, block_id: UUID) -> ObservationBlock | None:
+        row = self._conn.execute(
+            "SELECT * FROM observation_blocks WHERE id = ? AND deleted_at IS NULL",
+            (str(block_id),),
+        ).fetchone()
+        return None if row is None else self._row_to_block(row)
+
+    def update_observation_block(self, block: ObservationBlock) -> ObservationBlock:
+        now = utc_now_iso()
+        existing = self.get_observation_block(block.id)
+        if existing is None:
+            raise NotFoundError(f"observation_blocks nao encontrado: {block.id}")
+        self._conn.execute(
+            """
+            UPDATE observation_blocks SET
+                sort_order = ?, status = ?, status_reason = ?, notes = ?,
+                priority = ?, updated_at = ?, version = version + 1
+            WHERE id = ? AND deleted_at IS NULL
+            """,
+            (
+                block.sort_order,
+                block.status,
+                block.status_reason,
+                block.notes,
+                block.priority,
+                now,
+                str(block.id),
+            ),
+        )
+        block.version = existing.version + 1
+        self._audit("update", "observation_blocks", str(block.id))
+        self._conn.commit()
+        return block
+
+    def save_meteo_snapshot(self, snap: MeteoSnapshot) -> MeteoSnapshot:
+        self._conn.execute(
+            """
+            INSERT INTO meteo_snapshots(id, workspace_id, site_id, captured_at_utc, source, payload)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                str(snap.id),
+                str(snap.workspace_id),
+                str(snap.site_id),
+                snap.captured_at_utc,
+                snap.source,
+                _j(snap.payload),
+            ),
+        )
+        self._conn.commit()
+        return snap
+
+    def save_ephemeris_snapshot(self, snap: EphemerisSnapshot) -> EphemerisSnapshot:
+        self._conn.execute(
+            """
+            INSERT INTO ephemeris_snapshots(
+                id, workspace_id, site_id, target_id, epoch_utc, source, payload
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                str(snap.id),
+                str(snap.workspace_id),
+                str(snap.site_id),
+                str(snap.target_id) if snap.target_id else None,
+                snap.epoch_utc,
+                snap.source,
+                _j(snap.payload),
+            ),
+        )
+        self._conn.commit()
+        return snap

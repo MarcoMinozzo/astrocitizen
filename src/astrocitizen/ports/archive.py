@@ -6,6 +6,13 @@ from typing import Protocol, runtime_checkable
 from uuid import UUID
 
 from astrocitizen.inventory.models import Equipment, InstrumentConfig, Site
+from astrocitizen.planning.models import (
+    DailyPlan,
+    EphemerisSnapshot,
+    MeteoSnapshot,
+    ObservationBlock,
+    Target,
+)
 from astrocitizen.programs.models import Program, ProgramTemplate
 from astrocitizen.workspace.models import Workspace
 
@@ -22,7 +29,7 @@ class ArchivePort(Protocol):
         ...
 
     def migrate(self) -> int:
-        """Aplica migrações pendentes; devolve versão actual do schema."""
+        """Aplica migracoes pendentes; devolve versao actual do schema."""
         ...
 
     # --- workspace ---
@@ -73,7 +80,56 @@ class ArchivePort(Protocol):
 
     def soft_delete_program(self, program_id: UUID) -> None: ...
 
-    # --- observations (S1: flag simulada + soft-delete) ---
+    # --- targets (S2) ---
+    def upsert_target(self, target: Target) -> Target: ...
+
+    def get_target(self, target_id: UUID) -> Target | None: ...
+
+    def list_targets(self, workspace_id: UUID) -> list[Target]: ...
+
+    def link_program_target(
+        self,
+        program_id: UUID,
+        target_id: UUID,
+        *,
+        role: str = "primary",
+        sort_order: int = 0,
+    ) -> None: ...
+
+    def list_program_targets(self, program_id: UUID) -> list[tuple[Target, str, int]]: ...
+
+    # --- daily plans (S2) ---
+    def upsert_daily_plan(self, plan: DailyPlan) -> DailyPlan: ...
+
+    def get_daily_plan(self, plan_id: UUID) -> DailyPlan | None: ...
+
+    def get_daily_plan_for_night(
+        self,
+        workspace_id: UUID,
+        site_id: UUID,
+        night_date: str,
+    ) -> DailyPlan | None: ...
+
+    def list_daily_plans(self, workspace_id: UUID, *, site_id: UUID | None = None) -> list[DailyPlan]: ...
+
+    def replace_observation_blocks(
+        self,
+        daily_plan_id: UUID,
+        blocks: list[ObservationBlock],
+    ) -> list[ObservationBlock]: ...
+
+    def list_observation_blocks(self, daily_plan_id: UUID) -> list[ObservationBlock]: ...
+
+    def update_observation_block(self, block: ObservationBlock) -> ObservationBlock: ...
+
+    def get_observation_block(self, block_id: UUID) -> ObservationBlock | None: ...
+
+    # --- snapshots (S2) ---
+    def save_meteo_snapshot(self, snap: MeteoSnapshot) -> MeteoSnapshot: ...
+
+    def save_ephemeris_snapshot(self, snap: EphemerisSnapshot) -> EphemerisSnapshot: ...
+
+    # --- observations ---
     def create_observation(
         self,
         *,

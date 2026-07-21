@@ -2,7 +2,7 @@
 
 **Versão:** 1.0  
 **Data:** 2026-07-21  
-**Estado:** Fase 1 — implementação · **S0+S1 concluídos** (AC-001…004, AC-010…024) · seguinte **S2** (AC-030…037)  
+**Estado:** Fase 1 — implementação · **S0–S2 concluídos** (AC-001…004, AC-010…024, AC-030…037) · seguinte **S3** (AC-040…053)  
 **Fontes:** escopo, RN-*, PO-*, arquitetura, persistência, stack  
 
 ---
@@ -91,14 +91,14 @@
 
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
-| AC-030 | `EphemerisPort` + adapter Astropy (AltAz) | P1 | M | AC-020 | |
-| AC-031 | Adapter Astroquery (SIMBAD, Horizons, MPC) | P1 | M | AC-030 | |
-| AC-032 | `MeteoPort` + adapter API + manual (RN-020…024) | P1 | M | AC-020 | |
-| AC-033 | Snapshot meteo/efemérides no BD (RN-113) | P1 | S | AC-011, AC-032 | |
-| AC-034 | Geração ProgramaDiario (RN-050…056) | P1 | L | AC-022, AC-030, AC-032 | |
-| AC-035 | Edição manual do diário + motivos inviável | P1 | M | AC-034 | |
-| AC-036 | Validação de equipamento no plano (RN-030…035) | P1 | M | AC-021, AC-034 | |
-| AC-037 | Resolução de conflitos multi-programa (prioridade) | P1 | M | AC-034 | |
+| AC-030 | `EphemerisPort` + adapter Astropy (AltAz) | P1 | M | AC-020 | ✅ S2 — `AstropyEphemeris` |
+| AC-031 | Adapter Astroquery (SIMBAD, Horizons, MPC) | P1 | M | AC-030 | ✅ S2 — SIMBAD opcional `[sky]`; Horizons/MPC depois |
+| AC-032 | `MeteoPort` + adapter API + manual (RN-020…024) | P1 | M | AC-020 | ✅ S2 — Open-Meteo + ManualMeteo |
+| AC-033 | Snapshot meteo/efemérides no BD (RN-113) | P1 | S | AC-011, AC-032 | ✅ S2 — tabelas + persistência |
+| AC-034 | Geração ProgramaDiario (RN-050…056) | P1 | L | AC-022, AC-030, AC-032 | ✅ S2 — `GenerateDailyPlan` (RN-056 freeze → S3) |
+| AC-035 | Edição manual do diário + motivos inviável | P1 | M | AC-034 | ✅ S2 — `EditDailyPlan` + CLI |
+| AC-036 | Validação de equipamento no plano (RN-030…035) | P1 | M | AC-021, AC-034 | ✅ S2 |
+| AC-037 | Resolução de conflitos multi-programa (prioridade) | P1 | M | AC-034 | ✅ S2 |
 
 ---
 
@@ -289,7 +289,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 |--------|------|-------|
 | S0 | Skeleton + CI | AC-001…004 |
 | S1 | BD + Site + Equipamento + Programas | AC-010…024 ✅ |
-| S2 | Efemérides + Meteo + ProgramaDiario | AC-030…037 |
+| S2 | Efemérides + Meteo + ProgramaDiario | AC-030…037 ✅ |
 | S3 | Camera/Mount/Focuser sim + Sessão + FITS | AC-040…053 |
 | S4 | Calibração + GUI/CLI shell | AC-060…073 |
 | S5 | Templates P1 esqueleto + 1 análise ponta a ponta (ex.: variáveis) | AC-080…081, início E9 |

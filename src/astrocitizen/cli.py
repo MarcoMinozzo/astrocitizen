@@ -1,14 +1,18 @@
-"""CLI do AstroCitizen (S1: init-db, site, equipment, program)."""
+"""CLI do AstroCitizen (S1+S2: init-db, site, equipment, program, target, plan)."""
 
 from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from uuid import UUID
 
 from astrocitizen import __version__
 from astrocitizen.adapters.fs import LocalArtifactStore
+from astrocitizen.adapters.meteo import ManualMeteo, OpenMeteo
+from astrocitizen.adapters.sky import AstropyEphemeris, SimbadResolver
 from astrocitizen.adapters.sqlite import SqliteArchive
 from astrocitizen.inventory.models import Equipment, Site
+from astrocitizen.planning import EditDailyPlan, GenerateDailyPlan, Target
 from astrocitizen.programs.models import Program
 from astrocitizen.programs.seed import seed_program_templates
 from astrocitizen.shared import CONTEXT_MODULES
@@ -33,16 +37,32 @@ def _ensure_default_workspace(archive: SqliteArchive) -> Workspace:
     return archive.upsert_workspace(ws)
 
 
+def _resolve_site(archive: SqliteArchive, ws: Workspace, site_arg: str | None) -> Site:
+    sites = archive.list_sites(ws.id)
+    if not sites:
+        raise SystemExit("nenhum site; use: astrocitizen site add ...")
+    if site_arg:
+        sid = UUID(site_arg)
+        site = archive.get_site(sid)
+        if site is None:
+            raise SystemExit(f"site nao encontrado: {site_arg}")
+        return site
+    for s in sites:
+        if s.is_default:
+            return s
+    return sites[0]
+
+
 def _cmd_init_db(args: argparse.Namespace) -> int:
     db = Path(args.db)
     artifacts = Path(args.artifacts)
     archive = _open_archive(db)
     ws = _ensure_default_workspace(archive)
     n = seed_program_templates(archive)
-    LocalArtifactStore(artifacts)  # cria root
+    LocalArtifactStore(artifacts)
     print(f"db={db}")
     print(f"artifacts={artifacts.resolve()}")
-    print(f"schema=ok workspace={ws.id} name={ws.name}")
+    print(f"schema={archive.migrate()} workspace={ws.id} name={ws.name}")
     print(f"templates_seeded={n}")
     archive.close()
     return 0
@@ -129,7 +149,8 @@ def _cmd_program_create(args: argparse.Namespace) -> int:
         workspace_id=ws.id,
         template_id=tmpl.id,
         name=name,
-        state="draft",
+        state="active" if args.active else "draft",
+        priority=args.priority,
         export_networks=list(tmpl.default_networks),
         minimum_product=tmpl.minimum_product,
     )
@@ -143,7 +164,150 @@ def _cmd_program_list(args: argparse.Namespace) -> int:
     archive = _open_archive(Path(args.db))
     ws = _ensure_default_workspace(archive)
     for p in archive.list_programs(ws.id, state=args.state):
-        print(f"{p.id}\t{p.template_id}\t{p.state}\t{p.name}")
+        print(f"{p.id}\t{p.template_id}\t{p.state}\tp={p.priority}\t{p.name}")
+    archive.close()
+    return 0
+
+
+def _cmd_program_activate(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    program = archive.get_program(UUID(args.id))
+    if program is None:
+        print(f"programa nao encontrado: {args.id}")
+        archive.close()
+        return 1
+    program.state = "active"
+    archive.upsert_program(program)
+    print(f"{program.id}\tactive\t{program.name}")
+    archive.close()
+    return 0
+
+
+def _cmd_program_link_target(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    archive.link_program_target(
+        UUID(args.program),
+        UUID(args.target),
+        role=args.role,
+        sort_order=args.sort,
+    )
+    print(f"linked program={args.program} target={args.target} role={args.role}")
+    archive.close()
+    return 0
+
+
+def _cmd_target_add(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    ra, dec = args.ra, args.dec
+    external_ids: dict = {}
+    if (ra is None or dec is None) and args.resolve:
+        resolved = SimbadResolver().resolve(args.name)
+        ra = resolved["ra_deg"]
+        dec = resolved["dec_deg"]
+        external_ids = dict(resolved.get("external_ids") or {})
+    if ra is None or dec is None:
+        print("indique --ra/--dec ou --resolve (requer astroquery)")
+        archive.close()
+        return 1
+    target = Target(
+        id=new_id(),
+        workspace_id=ws.id,
+        designation=args.name,
+        ra_deg=ra,
+        dec_deg=dec,
+        target_type=args.type,
+        external_ids=external_ids,
+    )
+    archive.upsert_target(target)
+    print(f"{target.id}\t{target.designation}\t{target.ra_deg},{target.dec_deg}")
+    archive.close()
+    return 0
+
+
+def _cmd_target_list(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    for t in archive.list_targets(ws.id):
+        print(f"{t.id}\t{t.designation}\t{t.ra_deg},{t.dec_deg}\t{t.target_type}")
+    archive.close()
+    return 0
+
+
+def _cmd_plan_generate(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    site = _resolve_site(archive, ws, args.site)
+    if args.meteo == "api":
+        meteo = OpenMeteo()
+    else:
+        meteo = ManualMeteo(
+            cloud_cover_pct=args.cloud,
+            wind_ms=args.wind,
+            humidity_pct=args.humidity,
+            precipitation=args.precip,
+        )
+    plan = GenerateDailyPlan(archive, AstropyEphemeris(), meteo).execute(
+        workspace_id=ws.id,
+        site_id=site.id,
+        night_date=args.date,
+    )
+    blocks = archive.list_observation_blocks(plan.id)
+    print(f"plan={plan.id}\tnight={plan.night_date}\tsite={site.name}\tblocks={len(blocks)}")
+    for b in blocks:
+        reason = b.status_reason or "-"
+        print(f"  {b.sort_order}\t{b.status}\tpri={b.priority}\t{b.id}\t{reason}")
+    archive.close()
+    return 0
+
+
+def _cmd_plan_list(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    site_id = UUID(args.site) if args.site else None
+    for p in archive.list_daily_plans(ws.id, site_id=site_id):
+        print(f"{p.id}\t{p.night_date}\t{p.state}\tsite={p.site_id}")
+    archive.close()
+    return 0
+
+
+def _cmd_plan_show(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    plan = archive.get_daily_plan(UUID(args.id))
+    if plan is None:
+        print(f"plano nao encontrado: {args.id}")
+        archive.close()
+        return 1
+    print(f"plan={plan.id}\tnight={plan.night_date}\tstate={plan.state}\tv={plan.version}")
+    for b in archive.list_observation_blocks(plan.id):
+        reason = b.status_reason or "-"
+        print(
+            f"  {b.sort_order}\t{b.status}\tpri={b.priority}\t"
+            f"alt={b.predicted_altitude_deg}\t{b.id}\t{reason}"
+        )
+    archive.close()
+    return 0
+
+
+def _cmd_plan_edit(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    editor = EditDailyPlan(archive)
+    if args.reorder:
+        ids = [UUID(x) for x in args.reorder.split(",")]
+        editor.reorder(UUID(args.plan), ids)
+        print("reordered")
+    elif args.block:
+        editor.set_block_status(
+            UUID(args.block),
+            args.status,
+            reason=args.reason,
+            notes=args.notes,
+        )
+        print(f"updated block={args.block} status={args.status}")
+    else:
+        print("use --block ... --status ... ou --reorder id1,id2,...")
+        archive.close()
+        return 1
     archive.close()
     return 0
 
@@ -217,11 +381,68 @@ def build_parser() -> argparse.ArgumentParser:
     _add_db_arg(p_create)
     p_create.add_argument("--template", required=True, help="ex.: PO-A01")
     p_create.add_argument("--name", default=None)
+    p_create.add_argument("--active", action="store_true")
+    p_create.add_argument("--priority", type=int, default=10)
     p_create.set_defaults(func=_cmd_program_create)
     p_plist = prog_sub.add_parser("list", help="Listar programas")
     _add_db_arg(p_plist)
     p_plist.add_argument("--state", default=None)
     p_plist.set_defaults(func=_cmd_program_list)
+    p_act = prog_sub.add_parser("activate", help="Activar programa")
+    _add_db_arg(p_act)
+    p_act.add_argument("--id", required=True)
+    p_act.set_defaults(func=_cmd_program_activate)
+    p_link = prog_sub.add_parser("link-target", help="Associar alvo a programa")
+    _add_db_arg(p_link)
+    p_link.add_argument("--program", required=True)
+    p_link.add_argument("--target", required=True)
+    p_link.add_argument("--role", default="primary")
+    p_link.add_argument("--sort", type=int, default=0)
+    p_link.set_defaults(func=_cmd_program_link_target)
+
+    p_tgt = sub.add_parser("target", help="Gerir alvos")
+    tgt_sub = p_tgt.add_subparsers(dest="tgt_cmd", required=True)
+    p_tadd = tgt_sub.add_parser("add", help="Adicionar alvo")
+    _add_db_arg(p_tadd)
+    p_tadd.add_argument("--name", required=True)
+    p_tadd.add_argument("--ra", type=float, default=None)
+    p_tadd.add_argument("--dec", type=float, default=None)
+    p_tadd.add_argument("--type", default="star")
+    p_tadd.add_argument("--resolve", action="store_true", help="Resolver via SIMBAD")
+    p_tadd.set_defaults(func=_cmd_target_add)
+    p_tlist = tgt_sub.add_parser("list", help="Listar alvos")
+    _add_db_arg(p_tlist)
+    p_tlist.set_defaults(func=_cmd_target_list)
+
+    p_plan = sub.add_parser("plan", help="Programa diario")
+    plan_sub = p_plan.add_subparsers(dest="plan_cmd", required=True)
+    p_gen = plan_sub.add_parser("generate", help="Gerar/regenerar plano draft")
+    _add_db_arg(p_gen)
+    p_gen.add_argument("--date", required=True, help="YYYY-MM-DD (noite civil)")
+    p_gen.add_argument("--site", default=None, help="UUID do site (default: site *)")
+    p_gen.add_argument("--meteo", choices=("manual", "api"), default="manual")
+    p_gen.add_argument("--cloud", type=float, default=10.0)
+    p_gen.add_argument("--wind", type=float, default=2.0)
+    p_gen.add_argument("--humidity", type=float, default=40.0)
+    p_gen.add_argument("--precip", action="store_true")
+    p_gen.set_defaults(func=_cmd_plan_generate)
+    p_pl = plan_sub.add_parser("list", help="Listar planos")
+    _add_db_arg(p_pl)
+    p_pl.add_argument("--site", default=None)
+    p_pl.set_defaults(func=_cmd_plan_list)
+    p_show = plan_sub.add_parser("show", help="Mostrar plano e blocos")
+    _add_db_arg(p_show)
+    p_show.add_argument("--id", required=True)
+    p_show.set_defaults(func=_cmd_plan_show)
+    p_edit = plan_sub.add_parser("edit", help="Editar blocos (RN-052)")
+    _add_db_arg(p_edit)
+    p_edit.add_argument("--plan", required=True)
+    p_edit.add_argument("--block", default=None)
+    p_edit.add_argument("--status", default="agendado")
+    p_edit.add_argument("--reason", default=None)
+    p_edit.add_argument("--notes", default=None)
+    p_edit.add_argument("--reorder", default=None, help="ids separados por virgula")
+    p_edit.set_defaults(func=_cmd_plan_edit)
 
     return parser
 

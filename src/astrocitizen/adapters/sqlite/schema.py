@@ -1,8 +1,9 @@
-"""Schema SQLite v1 (subset S1) — alinhado a MODELO_DADOS_V1."""
+"""Schema SQLite — alinhado a MODELO_DADOS_V1 (subset S1+S2)."""
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
-SCHEMA_SQL = """
+# Tabelas S1 (v1)
+SCHEMA_V1_SQL = """
 CREATE TABLE IF NOT EXISTS schema_migrations (
     version INTEGER PRIMARY KEY,
     applied_at TEXT NOT NULL
@@ -157,3 +158,99 @@ CREATE TABLE IF NOT EXISTS audit_log (
 CREATE INDEX IF NOT EXISTS idx_audit_workspace_time
     ON audit_log(workspace_id, at_utc);
 """
+
+# Tabelas S2 (v2) — targets, planos diarios, snapshots
+SCHEMA_V2_SQL = """
+CREATE TABLE IF NOT EXISTS targets (
+    id TEXT PRIMARY KEY,
+    workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+    designation TEXT NOT NULL,
+    ra_deg REAL,
+    dec_deg REAL,
+    target_type TEXT NOT NULL DEFAULT 'star',
+    external_ids TEXT NOT NULL DEFAULT '{}',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    version INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE INDEX IF NOT EXISTS idx_targets_workspace_designation
+    ON targets(workspace_id, designation) WHERE deleted_at IS NULL;
+
+CREATE TABLE IF NOT EXISTS program_targets (
+    program_id TEXT NOT NULL REFERENCES programs(id),
+    target_id TEXT NOT NULL REFERENCES targets(id),
+    role TEXT NOT NULL DEFAULT 'primary',
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY (program_id, target_id, role)
+);
+
+CREATE TABLE IF NOT EXISTS daily_plans (
+    id TEXT PRIMARY KEY,
+    workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+    site_id TEXT NOT NULL REFERENCES sites(id),
+    night_date TEXT NOT NULL,
+    state TEXT NOT NULL DEFAULT 'draft',
+    generated_at TEXT NOT NULL,
+    published_at TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    version INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_daily_plans_unique_night
+    ON daily_plans(workspace_id, site_id, night_date) WHERE deleted_at IS NULL;
+
+CREATE TABLE IF NOT EXISTS observation_blocks (
+    id TEXT PRIMARY KEY,
+    daily_plan_id TEXT NOT NULL REFERENCES daily_plans(id),
+    program_id TEXT,
+    target_id TEXT,
+    instrument_config_id TEXT,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    window_start_utc TEXT NOT NULL,
+    window_end_utc TEXT NOT NULL,
+    predicted_altitude_deg REAL,
+    airmass REAL,
+    status TEXT NOT NULL DEFAULT 'candidato',
+    status_reason TEXT,
+    priority INTEGER NOT NULL DEFAULT 10,
+    notes TEXT NOT NULL DEFAULT '',
+    ephemeris_snapshot_id TEXT,
+    meteo_snapshot_id TEXT,
+    technique TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    version INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE INDEX IF NOT EXISTS idx_blocks_plan_order
+    ON observation_blocks(daily_plan_id, sort_order) WHERE deleted_at IS NULL;
+
+CREATE INDEX IF NOT EXISTS idx_blocks_plan_status
+    ON observation_blocks(daily_plan_id, status) WHERE deleted_at IS NULL;
+
+CREATE TABLE IF NOT EXISTS meteo_snapshots (
+    id TEXT PRIMARY KEY,
+    workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+    site_id TEXT NOT NULL REFERENCES sites(id),
+    captured_at_utc TEXT NOT NULL,
+    source TEXT NOT NULL,
+    payload TEXT NOT NULL DEFAULT '{}'
+);
+
+CREATE TABLE IF NOT EXISTS ephemeris_snapshots (
+    id TEXT PRIMARY KEY,
+    workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+    site_id TEXT NOT NULL REFERENCES sites(id),
+    target_id TEXT,
+    epoch_utc TEXT NOT NULL,
+    source TEXT NOT NULL,
+    payload TEXT NOT NULL DEFAULT '{}'
+);
+"""
+
+SCHEMA_SQL = SCHEMA_V1_SQL + SCHEMA_V2_SQL

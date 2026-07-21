@@ -10,12 +10,17 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
 authors = [{ name = "AstroCitizen Contributors" }]
-dependencies = []
+dependencies = [
+  "astropy>=6.0",
+]
 
 [project.optional-dependencies]
 dev = [
   "pytest>=8.0",
   "ruff>=0.6",
+]
+sky = [
+  "astroquery>=0.4",
 ]
 
 [project.scripts]

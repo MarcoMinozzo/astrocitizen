@@ -39,10 +39,13 @@ src/astrocitizen/
   workspace|planning|inventory|programs|observatory|
   reduction|archive|contribution|sync/
   adapters/
-    sqlite/        # SqliteArchive + schema v1
+    sqlite/        # SqliteArchive + schema v2
     fs/            # LocalArtifactStore
+    sky/           # AstropyEphemeris, SimbadResolver
+    meteo/         # OpenMeteo, ManualMeteo
+  planning/        # GenerateDailyPlan, EditDailyPlan
   programs/catalog/   # program_templates.json (PO-*)
-  cli.py           # init-db, site, equipment, program
+  cli.py           # init-db, site, equipment, program, target, plan
 ```
 
 Schema alvo: [docs/MODELO_DADOS_V1.md](docs/MODELO_DADOS_V1.md).
@@ -56,8 +59,8 @@ Schema alvo: [docs/MODELO_DADOS_V1.md](docs/MODELO_DADOS_V1.md).
 
 ## Sprint actual
 
-**S0+S1** concluídos (AC-001…004, AC-010…024).  
-Seguinte: **S2** — efemérides + meteo + programa diário (AC-030…037).
+**S0–S2** concluídos (AC-001…004, AC-010…024, AC-030…037).  
+Seguinte: **S3** — hardware sim + sessão + FITS (AC-040…053).
 
 ## Contacto / produto
 
