@@ -2,7 +2,7 @@
 
 **Versão:** 1.0  
 **Data:** 2026-07-21  
-**Estado:** Fase 1 — implementação · **S0–S2 concluídos** (AC-001…004, AC-010…024, AC-030…037) · seguinte **S3** (AC-040…053)  
+**Estado:** Fase 1 — implementação · **S0–S3 concluídos** (até AC-053) · seguinte **S4** (calibração + GUI/CLI shell)  
 **Fontes:** escopo, RN-*, PO-*, arquitetura, persistência, stack  
 
 ---
@@ -106,14 +106,14 @@
 
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
-| AC-040 | `CameraPort` + SimulatorCamera | P1 | M | AC-002 | |
-| AC-041 | Adapter Alpaca Camera (Alpyca) | P1 | L | AC-040 | |
-| AC-042 | Adapter SBIG udrv (integração sbig-suite) | P1 | L | AC-040 | Repo separado |
-| AC-043 | `MountPort` + Simulator + Alpyca Telescope | P1 | L | AC-002 | |
-| AC-044 | `FocuserPort` + Alpyca Focuser | P1 | M | AC-002 | |
+| AC-040 | `CameraPort` + SimulatorCamera | P1 | M | AC-002 | ✅ S3 — `SimulatorCamera` |
+| AC-041 | Adapter Alpaca Camera (Alpyca) | P1 | L | AC-040 | ✅ S3 — stub + extra `[alpaca]`; Omni depois |
+| AC-042 | Adapter SBIG udrv (integração sbig-suite) | P1 | L | AC-040 | ✅ S3 — stub; repo `sbig-suite` |
+| AC-043 | `MountPort` + Simulator + Alpyca Telescope | P1 | L | AC-002 | ✅ S3 — sim + stub Alpaca |
+| AC-044 | `FocuserPort` + Alpyca Focuser | P1 | M | AC-002 | ✅ S3 — sim + stub Alpaca |
 | AC-045 | FilterWheel / ObservingConditions (Alpaca) | P2 | M | AC-043 | |
-| AC-046 | Factory de backends (udrv \| alpaca \| sim) | P1 | S | AC-040…044 | |
-| AC-047 | Omni Simulator / docs setup Linux+Windows | P1 | M | AC-043 | |
+| AC-046 | Factory de backends (udrv \| alpaca \| sim) | P1 | S | AC-040…044 | ✅ S3 |
+| AC-047 | Omni Simulator / docs setup Linux+Windows | P1 | M | AC-043 | ✅ S3 — [HARDWARE_SIMULATOR.md](HARDWARE_SIMULATOR.md) |
 
 ---
 
@@ -121,10 +121,10 @@
 
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
-| AC-050 | Caso de uso ExecutarSessao (snapshot diário) | P1 | M | AC-034 | |
-| AC-051 | Registrar Observacao → BD + FITS (RN-060…064) | P1 | M | AC-012, AC-050 | |
-| AC-052 | Headers FITS ricos (site, alvo, meteo, PO-*) | P1 | S | AC-051 | |
-| AC-053 | Política de falha de instrumento (RN-092) | P1 | S | AC-050 | |
+| AC-050 | Caso de uso ExecutarSessao (snapshot diário) | P1 | M | AC-034 | ✅ S3 — RN-056 |
+| AC-051 | Registrar Observacao → BD + FITS (RN-060…064) | P1 | M | AC-012, AC-050 | ✅ S3 |
+| AC-052 | Headers FITS ricos (site, alvo, meteo, PO-*) | P1 | S | AC-051 | ✅ S3 |
+| AC-053 | Política de falha de instrumento (RN-092) | P1 | S | AC-050 | ✅ S3 |
 | AC-054 | Aquisição ad hoc + associação posterior a programa | P2 | S | AC-051 | |
 
 ---
@@ -290,7 +290,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | S0 | Skeleton + CI | AC-001…004 |
 | S1 | BD + Site + Equipamento + Programas | AC-010…024 ✅ |
 | S2 | Efemérides + Meteo + ProgramaDiario | AC-030…037 ✅ |
-| S3 | Camera/Mount/Focuser sim + Sessão + FITS | AC-040…053 |
+| S3 | Camera/Mount/Focuser sim + Sessão + FITS | AC-040…053 ✅ |
 | S4 | Calibração + GUI/CLI shell | AC-060…073 |
 | S5 | Templates P1 esqueleto + 1 análise ponta a ponta (ex.: variáveis) | AC-080…081, início E9 |
 

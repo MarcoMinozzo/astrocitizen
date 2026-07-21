@@ -8,10 +8,12 @@ from uuid import UUID
 
 from astrocitizen import __version__
 from astrocitizen.adapters.fs import LocalArtifactStore
+from astrocitizen.adapters.hardware import create_camera
 from astrocitizen.adapters.meteo import ManualMeteo, OpenMeteo
 from astrocitizen.adapters.sky import AstropyEphemeris, SimbadResolver
 from astrocitizen.adapters.sqlite import SqliteArchive
 from astrocitizen.inventory.models import Equipment, Site
+from astrocitizen.observatory import CaptureObservation, ExecuteSession
 from astrocitizen.planning import EditDailyPlan, GenerateDailyPlan, Target
 from astrocitizen.programs.models import Program
 from astrocitizen.programs.seed import seed_program_templates
@@ -312,6 +314,51 @@ def _cmd_plan_edit(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_session_start(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    session = ExecuteSession(archive).start(
+        workspace_id=ws.id,
+        plan_id=UUID(args.plan),
+    )
+    print(f"session={session.id}\tplan={session.daily_plan_id}\tv={session.daily_plan_version}")
+    archive.close()
+    return 0
+
+
+def _cmd_session_capture(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    artifacts = LocalArtifactStore(Path(args.artifacts))
+    camera = create_camera(args.backend)
+    camera.connect()
+    obs = CaptureObservation(archive, camera, artifacts).execute(
+        session_id=UUID(args.session),
+        block_id=UUID(args.block) if args.block else None,
+        exptime_s=args.exptime,
+        frame_type=args.frame,
+    )
+    print(f"observation={obs.id}\tsimulated={obs.simulated}\tbackend={obs.camera_backend}")
+    archive.close()
+    return 0
+
+
+def _cmd_session_end(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    session = ExecuteSession(archive).end(UUID(args.session), abort=args.abort)
+    print(f"session={session.id}\tstate={session.state}")
+    archive.close()
+    return 0
+
+
+def _cmd_session_list(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    for s in archive.list_sessions(ws.id, state=args.state):
+        print(f"{s.id}\t{s.state}\tplan={s.daily_plan_id}\t{s.started_at_utc}")
+    archive.close()
+    return 0
+
+
 def _add_db_arg(p: argparse.ArgumentParser) -> None:
     p.add_argument(
         "--db",
@@ -443,6 +490,31 @@ def build_parser() -> argparse.ArgumentParser:
     p_edit.add_argument("--notes", default=None)
     p_edit.add_argument("--reorder", default=None, help="ids separados por virgula")
     p_edit.set_defaults(func=_cmd_plan_edit)
+
+    p_sess = sub.add_parser("session", help="Sessao observacional (S3)")
+    sess_sub = p_sess.add_subparsers(dest="sess_cmd", required=True)
+    p_ss = sess_sub.add_parser("start", help="Iniciar sessao (congela plano RN-056)")
+    _add_db_arg(p_ss)
+    p_ss.add_argument("--plan", required=True)
+    p_ss.set_defaults(func=_cmd_session_start)
+    p_sc = sess_sub.add_parser("capture", help="Expor e gravar FITS")
+    _add_db_arg(p_sc)
+    p_sc.add_argument("--session", required=True)
+    p_sc.add_argument("--block", default=None)
+    p_sc.add_argument("--exptime", type=float, default=1.0)
+    p_sc.add_argument("--frame", default="light")
+    p_sc.add_argument("--backend", default="sim", choices=("sim", "alpaca", "udrv"))
+    p_sc.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_sc.set_defaults(func=_cmd_session_capture)
+    p_se = sess_sub.add_parser("end", help="Terminar sessao")
+    _add_db_arg(p_se)
+    p_se.add_argument("--session", required=True)
+    p_se.add_argument("--abort", action="store_true")
+    p_se.set_defaults(func=_cmd_session_end)
+    p_sl = sess_sub.add_parser("list", help="Listar sessoes")
+    _add_db_arg(p_sl)
+    p_sl.add_argument("--state", default=None)
+    p_sl.set_defaults(func=_cmd_session_list)
 
     return parser
 

@@ -1,6 +1,6 @@
 """Schema SQLite — alinhado a MODELO_DADOS_V1 (subset S1+S2)."""
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 # Tabelas S1 (v1)
 SCHEMA_V1_SQL = """
@@ -253,4 +253,52 @@ CREATE TABLE IF NOT EXISTS ephemeris_snapshots (
 );
 """
 
-SCHEMA_SQL = SCHEMA_V1_SQL + SCHEMA_V2_SQL
+# S3 — sessoes e eventos
+SCHEMA_V3_SQL = """
+CREATE TABLE IF NOT EXISTS sessions (
+    id TEXT PRIMARY KEY,
+    workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+    site_id TEXT NOT NULL REFERENCES sites(id),
+    daily_plan_id TEXT NOT NULL REFERENCES daily_plans(id),
+    daily_plan_version INTEGER NOT NULL,
+    device_id TEXT,
+    started_at_utc TEXT NOT NULL,
+    ended_at_utc TEXT,
+    state TEXT NOT NULL DEFAULT 'active',
+    plan_snapshot TEXT NOT NULL DEFAULT '{}',
+    meteo_start_id TEXT,
+    meteo_end_id TEXT,
+    client_id TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT,
+    version INTEGER NOT NULL DEFAULT 1
+);
+
+CREATE INDEX IF NOT EXISTS idx_sessions_workspace_state
+    ON sessions(workspace_id, state) WHERE deleted_at IS NULL;
+
+CREATE TABLE IF NOT EXISTS session_events (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL REFERENCES sessions(id),
+    block_id TEXT,
+    event_type TEXT NOT NULL,
+    occurred_at_utc TEXT NOT NULL,
+    payload TEXT NOT NULL DEFAULT '{}',
+    client_op_id TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_session_events_session
+    ON session_events(session_id, occurred_at_utc);
+"""
+
+SCHEMA_SQL = SCHEMA_V1_SQL + SCHEMA_V2_SQL + SCHEMA_V3_SQL
+
+# Colunas extra em observations (ALTER idempotente via migrate helper)
+OBSERVATION_V3_COLUMNS = (
+    ("session_id", "TEXT"),
+    ("block_id", "TEXT"),
+    ("target_id", "TEXT"),
+    ("instrument_config_id", "TEXT"),
+    ("meteo_snapshot_id", "TEXT"),
+)

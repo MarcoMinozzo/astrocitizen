@@ -22,6 +22,9 @@ dev = [
 sky = [
   "astroquery>=0.4",
 ]
+alpaca = [
+  "alpyca>=2.0",
+]
 
 [project.scripts]
 astrocitizen = "astrocitizen.cli:main"

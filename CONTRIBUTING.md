@@ -44,6 +44,8 @@ src/astrocitizen/
     sky/           # AstropyEphemeris, SimbadResolver
     meteo/         # OpenMeteo, ManualMeteo
   planning/        # GenerateDailyPlan, EditDailyPlan
+  observatory/     # ExecuteSession, CaptureObservation
+  adapters/hardware/  # sim + factory + stubs alpaca/udrv
   programs/catalog/   # program_templates.json (PO-*)
   cli.py           # init-db, site, equipment, program, target, plan
 ```
@@ -59,8 +61,8 @@ Schema alvo: [docs/MODELO_DADOS_V1.md](docs/MODELO_DADOS_V1.md).
 
 ## Sprint actual
 
-**S0–S2** concluídos (AC-001…004, AC-010…024, AC-030…037).  
-Seguinte: **S3** — hardware sim + sessão + FITS (AC-040…053).
+**S0–S3** concluídos (até AC-053).  
+Seguinte: **S4** — calibração + GUI/CLI shell (AC-060…073).
 
 ## Contacto / produto
 

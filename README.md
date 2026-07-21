@@ -19,7 +19,8 @@ Fase **1 — implementação** iniciada.
 | **S0** | Skeleton hexagonal, ports, CLI, CI Linux+Windows (AC-001…004) |
 | **S1** | SQLite + Site/Equipamento/Programas PO-* + ArtifactStore (AC-010…024) |
 | **S2** | Efemérides Astropy + meteo + ProgramaDiario (AC-030…037) |
-| S3 | Seguinte — Camera/Mount sim + Sessão + FITS (AC-040…053) |
+| **S3** | Simulators + Sessão + FITS (AC-040…053) |
+| S4 | Seguinte — Calibração + GUI/CLI shell (AC-060…073) |
 
 ```bash
 pip install -e ".[dev]"
@@ -29,6 +30,8 @@ astrocitizen site add --name Casa --lat -29.7 --lon -51.1 --default
 astrocitizen target add --name Vega --ra 279.23 --dec 38.78
 astrocitizen program create --template PO-A01 --name Vars --active
 astrocitizen plan generate --date 2026-07-15 --meteo manual
+astrocitizen session start --plan <uuid>
+astrocitizen session capture --session <uuid> --exptime 1
 ```
 
 Ver [CONTRIBUTING.md](CONTRIBUTING.md).

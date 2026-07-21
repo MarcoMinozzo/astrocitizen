@@ -6,6 +6,7 @@ from typing import Protocol, runtime_checkable
 from uuid import UUID
 
 from astrocitizen.inventory.models import Equipment, InstrumentConfig, Site
+from astrocitizen.observatory.models import ObservationRecord, Session
 from astrocitizen.planning.models import (
     DailyPlan,
     EphemerisSnapshot,
@@ -128,6 +129,38 @@ class ArchivePort(Protocol):
     def save_meteo_snapshot(self, snap: MeteoSnapshot) -> MeteoSnapshot: ...
 
     def save_ephemeris_snapshot(self, snap: EphemerisSnapshot) -> EphemerisSnapshot: ...
+
+    # --- sessions (S3) ---
+    def upsert_session(self, session: Session) -> Session: ...
+
+    def get_session(self, session_id: UUID) -> Session | None: ...
+
+    def list_sessions(self, workspace_id: UUID, *, state: str | None = None) -> list[Session]: ...
+
+    def add_session_event(
+        self,
+        *,
+        event_id: UUID,
+        session_id: UUID,
+        event_type: str,
+        occurred_at_utc: str,
+        block_id: UUID | None = None,
+        payload: dict | None = None,
+    ) -> None: ...
+
+    def save_observation(self, obs: ObservationRecord) -> ObservationRecord: ...
+
+    def save_artifact(
+        self,
+        *,
+        artifact_id: UUID,
+        workspace_id: UUID,
+        kind: str,
+        uri: str,
+        filename: str,
+        observation_id: UUID | None = None,
+        size_bytes: int | None = None,
+    ) -> UUID: ...
 
     # --- observations ---
     def create_observation(

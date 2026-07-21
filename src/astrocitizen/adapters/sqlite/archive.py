@@ -8,7 +8,11 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID
 
-from astrocitizen.adapters.sqlite.schema import SCHEMA_SQL, SCHEMA_VERSION
+from astrocitizen.adapters.sqlite.schema import (
+    OBSERVATION_V3_COLUMNS,
+    SCHEMA_SQL,
+    SCHEMA_VERSION,
+)
 from astrocitizen.inventory.models import Equipment, InstrumentConfig, Site
 from astrocitizen.planning.models import (
     DailyPlan,
@@ -17,6 +21,7 @@ from astrocitizen.planning.models import (
     ObservationBlock,
     Target,
 )
+from astrocitizen.observatory.models import ObservationRecord, Session
 from astrocitizen.programs.models import Program, ProgramTemplate
 from astrocitizen.shared.errors import NotFoundError
 from astrocitizen.shared.timeutil import utc_now_iso
@@ -61,6 +66,7 @@ class SqliteArchive:
 
     def migrate(self) -> int:
         self._conn.executescript(SCHEMA_SQL)
+        self._ensure_observation_v3_columns()
         current = self._conn.execute(
             "SELECT COALESCE(MAX(version), 0) FROM schema_migrations"
         ).fetchone()[0]
@@ -72,6 +78,16 @@ class SqliteArchive:
             self._conn.commit()
             return SCHEMA_VERSION
         return int(current)
+
+    def _ensure_observation_v3_columns(self) -> None:
+        existing = {
+            row[1]
+            for row in self._conn.execute("PRAGMA table_info(observations)").fetchall()
+        }
+        for name, coltype in OBSERVATION_V3_COLUMNS:
+            if name not in existing:
+                self._conn.execute(f"ALTER TABLE observations ADD COLUMN {name} {coltype}")
+        self._conn.commit()
 
     def _audit(
         self,
@@ -1071,3 +1087,213 @@ class SqliteArchive:
         )
         self._conn.commit()
         return snap
+
+    # --- sessions (S3) ---
+    def upsert_session(self, session: Session) -> Session:
+        now = utc_now_iso()
+        existing = self.get_session(session.id)
+        if existing is None:
+            self._conn.execute(
+                """
+                INSERT INTO sessions(
+                    id, workspace_id, site_id, daily_plan_id, daily_plan_version,
+                    device_id, started_at_utc, ended_at_utc, state, plan_snapshot,
+                    meteo_start_id, meteo_end_id, client_id, created_at, updated_at, version
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    str(session.id),
+                    str(session.workspace_id),
+                    str(session.site_id),
+                    str(session.daily_plan_id),
+                    session.daily_plan_version,
+                    str(session.device_id) if session.device_id else None,
+                    session.started_at_utc,
+                    session.ended_at_utc,
+                    session.state,
+                    _j(session.plan_snapshot),
+                    str(session.meteo_start_id) if session.meteo_start_id else None,
+                    str(session.meteo_end_id) if session.meteo_end_id else None,
+                    str(session.client_id) if session.client_id else None,
+                    now,
+                    now,
+                    session.version,
+                ),
+            )
+            self._audit("create", "sessions", str(session.id), str(session.workspace_id))
+        else:
+            self._conn.execute(
+                """
+                UPDATE sessions SET
+                    state = ?, ended_at_utc = ?, plan_snapshot = ?,
+                    meteo_start_id = ?, meteo_end_id = ?,
+                    updated_at = ?, version = version + 1
+                WHERE id = ? AND deleted_at IS NULL
+                """,
+                (
+                    session.state,
+                    session.ended_at_utc,
+                    _j(session.plan_snapshot),
+                    str(session.meteo_start_id) if session.meteo_start_id else None,
+                    str(session.meteo_end_id) if session.meteo_end_id else None,
+                    now,
+                    str(session.id),
+                ),
+            )
+            session.version = existing.version + 1
+            self._audit("update", "sessions", str(session.id), str(session.workspace_id))
+        self._conn.commit()
+        return session
+
+    def _row_to_session(self, row: sqlite3.Row) -> Session:
+        def _u(val: str | None) -> UUID | None:
+            return UUID(val) if val else None
+
+        return Session(
+            id=UUID(row["id"]),
+            workspace_id=UUID(row["workspace_id"]),
+            site_id=UUID(row["site_id"]),
+            daily_plan_id=UUID(row["daily_plan_id"]),
+            daily_plan_version=row["daily_plan_version"],
+            started_at_utc=row["started_at_utc"],
+            ended_at_utc=row["ended_at_utc"],
+            state=row["state"],
+            plan_snapshot=_loads(row["plan_snapshot"], {}),
+            meteo_start_id=_u(row["meteo_start_id"]),
+            meteo_end_id=_u(row["meteo_end_id"]),
+            device_id=_u(row["device_id"]),
+            client_id=_u(row["client_id"]),
+            version=row["version"],
+        )
+
+    def get_session(self, session_id: UUID) -> Session | None:
+        row = self._conn.execute(
+            "SELECT * FROM sessions WHERE id = ? AND deleted_at IS NULL",
+            (str(session_id),),
+        ).fetchone()
+        return None if row is None else self._row_to_session(row)
+
+    def list_sessions(self, workspace_id: UUID, *, state: str | None = None) -> list[Session]:
+        if state:
+            rows = self._conn.execute(
+                """
+                SELECT * FROM sessions
+                WHERE workspace_id = ? AND state = ? AND deleted_at IS NULL
+                ORDER BY started_at_utc DESC
+                """,
+                (str(workspace_id), state),
+            ).fetchall()
+        else:
+            rows = self._conn.execute(
+                """
+                SELECT * FROM sessions
+                WHERE workspace_id = ? AND deleted_at IS NULL
+                ORDER BY started_at_utc DESC
+                """,
+                (str(workspace_id),),
+            ).fetchall()
+        return [self._row_to_session(r) for r in rows]
+
+    def add_session_event(
+        self,
+        *,
+        event_id: UUID,
+        session_id: UUID,
+        event_type: str,
+        occurred_at_utc: str,
+        block_id: UUID | None = None,
+        payload: dict | None = None,
+    ) -> None:
+        self._conn.execute(
+            """
+            INSERT INTO session_events(
+                id, session_id, block_id, event_type, occurred_at_utc, payload
+            ) VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                str(event_id),
+                str(session_id),
+                str(block_id) if block_id else None,
+                event_type,
+                occurred_at_utc,
+                _j(payload or {}),
+            ),
+        )
+        self._conn.commit()
+
+    def save_observation(self, obs: ObservationRecord) -> ObservationRecord:
+        now = utc_now_iso()
+        self._conn.execute(
+            """
+            INSERT INTO observations(
+                id, workspace_id, site_id, program_id, observed_at_utc, state,
+                camera_backend, simulated, meteo_manual, headers_summary, notes,
+                session_id, block_id, target_id, instrument_config_id, meteo_snapshot_id,
+                created_at, updated_at, version
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                str(obs.id),
+                str(obs.workspace_id),
+                str(obs.site_id) if obs.site_id else None,
+                str(obs.program_id) if obs.program_id else None,
+                obs.observed_at_utc,
+                obs.state,
+                obs.camera_backend,
+                1 if obs.simulated else 0,
+                1 if obs.meteo_manual else 0,
+                _j(obs.headers_summary),
+                obs.notes,
+                str(obs.session_id) if obs.session_id else None,
+                str(obs.block_id) if obs.block_id else None,
+                str(obs.target_id) if obs.target_id else None,
+                str(obs.instrument_config_id) if obs.instrument_config_id else None,
+                str(obs.meteo_snapshot_id) if obs.meteo_snapshot_id else None,
+                now,
+                now,
+                obs.version,
+            ),
+        )
+        self._audit(
+            "create",
+            "observations",
+            str(obs.id),
+            str(obs.workspace_id),
+            {"simulated": obs.simulated, "backend": obs.camera_backend},
+        )
+        self._conn.commit()
+        return obs
+
+    def save_artifact(
+        self,
+        *,
+        artifact_id: UUID,
+        workspace_id: UUID,
+        kind: str,
+        uri: str,
+        filename: str,
+        observation_id: UUID | None = None,
+        size_bytes: int | None = None,
+    ) -> UUID:
+        now = utc_now_iso()
+        self._conn.execute(
+            """
+            INSERT INTO artifacts(
+                id, workspace_id, observation_id, kind, uri, filename,
+                size_bytes, immutable, upload_status, created_at, updated_at, version
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, 'local', ?, ?, 1)
+            """,
+            (
+                str(artifact_id),
+                str(workspace_id),
+                str(observation_id) if observation_id else None,
+                kind,
+                uri,
+                filename,
+                size_bytes,
+                now,
+                now,
+            ),
+        )
+        self._conn.commit()
+        return artifact_id
