@@ -165,12 +165,12 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 |----|----------|-----|-----|-----|
 | AC-080 | PO-J01/J03/J05 Calibração + meteo site | P1 | M | E3, E6 | ✅ S5 — workflows P1 |
 | AC-081 | PO-A01 Variáveis (AAVSO) — esqueleto programa | P1 | M | E2, E9 | ✅ S5 — workflow + fotometria + export |
-| AC-082 | PO-A05 Trânsitos — esqueleto | P1 | M | E9 |
-| AC-083 | PO-B01 Espectroscopia slit — esqueleto | P1 | M | E10 |
-| AC-084 | PO-B02/B03 Be/ARAS — esqueleto | P1 | M | E10 |
+| AC-082 | PO-A05 Trânsitos — esqueleto | P1 | M | E9 | ✅ export ExoClock LC |
+| AC-083 | PO-B01 Espectroscopia slit — esqueleto | P1 | M | E10 | |
+| AC-084 | PO-B02/B03 Be/ARAS — esqueleto | P1 | M | E10 | ✅ BeSS FITS 1D export |
 | AC-085 | PO-C01/C02 NEO/MPC — esqueleto | P1 | M | E11 |
 | AC-086 | PO-C03 Supernovas blink — esqueleto | P1 | M | E11 |
-| AC-087 | PO-D01 Ocultações IOTA — esqueleto | P1 | M | E12 |
+| AC-087 | PO-D01 Ocultações IOTA — esqueleto | P1 | M | E12 | ✅ pacote IOTA-ES |
 | AC-088 | PO-E03 Sol manchas — esqueleto | P1 | M | E13 |
 
 ---
@@ -195,7 +195,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | AC-101 | Calibração λ | P2 | L | AC-100 | |
 | AC-102 | Medidas de linha / EW | P2 | M | AC-101 | |
 | AC-103 | Persistência espectro + produto no BD | P2 | M | AC-101 | |
-| AC-104 | Export ARAS/BeSS | P2 | M | E14 | |
+| AC-104 | Export ARAS/BeSS | P2 | M | E14 | ✅ BeSS FITS 1D · `contribute bess` |
 | AC-105 | Templates B04–B06 | P2–P3 | M | AC-102 | |
 
 ---
@@ -217,6 +217,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
 | AC-120 | Import previsão IOTA / arquivo | P2 | M | E3 | |
+| AC-121 | Export pacote IOTA-ES / Hub | P2 | M | E14 | ✅ `contribute iota` |
 | AC-121 | Aquisição timed + timestamps | P2 | L | E5 | |
 | AC-122 | Redução de contato + relatório | P2 | L | AC-121 | |
 | AC-123 | Templates D02–D04 | P3 | M | AC-122 | |
@@ -243,6 +244,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | AC-142 | Segredos locais (credenciais) | P2 | S | AC-140 | ✅ `credentials.json` local |
 | AC-143 | Painel de envios pendentes | P2 | M | E7 | ✅ GUI **Contribute** + CLI list |
 | AC-144 | TNS Bulk API AT-rep | P1 | M | AC-140 | ✅ sandbox + dry-run · `contribute tns` |
+| AC-145 | Export ExoClock LC | P1 | M | AC-140 | ✅ `contribute exoclock` |
 
 ---
 

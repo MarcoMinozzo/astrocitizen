@@ -25,7 +25,7 @@ def submission_table_rows(subs: list[Any]) -> list[list[str]]:
 def credentials_status_lines(store: Any) -> list[str]:
     data = store.load()
     lines = []
-    for net in ("aavso", "mpc", "tns"):
+    for net in ("aavso", "mpc", "tns", "bess", "exoclock", "iota"):
         vals = dict(data.get(net) or {})
         if not vals:
             lines.append(f"{net}: (sem credenciais)")
@@ -45,6 +45,8 @@ def credentials_status_lines(store: Any) -> list[str]:
                 keys.append(f"user_id={vals['user_id']}")
             if vals.get("groupid") is not None:
                 keys.append(f"groupid={vals['groupid']}")
+        if net in ("bess", "exoclock", "iota") and vals.get("observer"):
+            keys.append(f"observer={vals['observer']}")
         lines.append(f"{net}: {', '.join(keys) if keys else '(vazio)'}")
     return lines
 
@@ -70,7 +72,10 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
 
     from astrocitizen.adapters.fs import LocalArtifactStore
     from astrocitizen.contribution.aavso import ExportAavso
+    from astrocitizen.contribution.bess import write_bess_fits
     from astrocitizen.contribution.credentials import LocalCredentialsStore
+    from astrocitizen.contribution.exoclock import ExportExoclock
+    from astrocitizen.contribution.iota import write_iota_pack
     from astrocitizen.contribution.models import NetworkSubmission
     from astrocitizen.contribution.mpc import MpcAdesSubmitter, write_ades_psv
     from astrocitizen.contribution.tns import (
@@ -93,7 +98,7 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             top = QHBoxLayout()
             self.filter_combo = QComboBox()
             self.filter_combo.addItem("Todas", None)
-            for n in ("aavso", "mpc", "tns"):
+            for n in ("aavso", "mpc", "tns", "bess", "exoclock", "iota"):
                 self.filter_combo.addItem(n, n)
             self.refresh_btn = QPushButton("Atualizar lista")
             self.refresh_btn.clicked.connect(self.refresh)
@@ -117,6 +122,9 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             tabs.addTab(self._tab_aavso(), "AAVSO")
             tabs.addTab(self._tab_mpc(), "MPC")
             tabs.addTab(self._tab_tns(), "TNS")
+            tabs.addTab(self._tab_bess(), "BeSS")
+            tabs.addTab(self._tab_exoclock(), "ExoClock")
+            tabs.addTab(self._tab_iota(), "IOTA")
             root.addWidget(tabs)
 
             self.log = QTextEdit()
@@ -196,6 +204,54 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             form.addRow("Mag", self.t_mag)
             form.addRow("Group id", self.t_group)
             form.addRow("Modo", self.t_submit)
+            form.addRow(btn)
+            return w
+
+        def _tab_bess(self) -> QWidget:
+            w = QWidget()
+            form = QFormLayout(w)
+            self.b_obj = QLineEdit()
+            self.b_obj.setText("gam Cas")
+            self.b_obs = QLineEdit()
+            self.b_date = QLineEdit()
+            self.b_date.setText("2026-07-21T01:00:00")
+            btn = QPushButton("Gerar FITS 1D BeSS")
+            btn.clicked.connect(self._run_bess)
+            form.addRow("OBJNAME", self.b_obj)
+            form.addRow("Observer", self.b_obs)
+            form.addRow("DATE-OBS", self.b_date)
+            form.addRow(btn)
+            return w
+
+        def _tab_exoclock(self) -> QWidget:
+            w = QWidget()
+            form = QFormLayout(w)
+            self.e_product = QLineEdit()
+            self.e_target = QLineEdit()
+            self.e_target.setText("WASP-12b")
+            btn = QPushButton("Export LC ExoClock")
+            btn.clicked.connect(self._run_exoclock)
+            form.addRow("Product UUID", self.e_product)
+            form.addRow("Target", self.e_target)
+            form.addRow(btn)
+            return w
+
+        def _tab_iota(self) -> QWidget:
+            w = QWidget()
+            form = QFormLayout(w)
+            self.i_event = QLineEdit()
+            self.i_star = QLineEdit()
+            self.i_ast = QLineEdit()
+            self.i_obs = QLineEdit()
+            self.i_result = QComboBox()
+            self.i_result.addItems(["positive", "negative"])
+            btn = QPushButton("Pacote IOTA-ES")
+            btn.clicked.connect(self._run_iota)
+            form.addRow("Event ID", self.i_event)
+            form.addRow("Star", self.i_star)
+            form.addRow("Asteroid", self.i_ast)
+            form.addRow("Observer", self.i_obs)
+            form.addRow("Result", self.i_result)
             form.addRow(btn)
             return w
 
@@ -377,5 +433,128 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                 self.refresh()
             except Exception as exc:  # noqa: BLE001
                 QMessageBox.critical(self, "TNS", str(exc))
+
+        def _run_bess(self) -> None:
+            if self._workspace_id is None:
+                QMessageBox.warning(self, "Contribute", "Sem workspace.")
+                return
+            import numpy as np
+
+            observer = (
+                self.b_obs.text().strip()
+                or self.creds.get_network("bess").get("observer")
+                or "AstroCitizen"
+            )
+            out = self.artifacts_root / "export" / "bess" / "gui_bess.fits"
+            try:
+                wave = np.linspace(400.0, 700.0, 301)
+                write_bess_fits(
+                    out,
+                    objname=self.b_obj.text().strip() or "BeStar",
+                    observer=str(observer),
+                    date_obs=self.b_date.text().strip() or "2026-07-21T01:00:00",
+                    exptime_s=60.0,
+                    wavelength_nm=wave,
+                    flux=np.ones_like(wave),
+                )
+                store = LocalArtifactStore(self.artifacts_root)
+                uri = store.put(out, key=f"export/bess/{out.name}")
+                sub = NetworkSubmission(
+                    id=new_id(),
+                    workspace_id=self._workspace_id,
+                    network="bess",
+                    status="draft",
+                    artifact_uri=uri,
+                    payload_summary={"note": "upload BeSS portal"},
+                )
+                self.archive.save_network_submission(sub)
+                self._log(f"BeSS wrote {out} - http://basebe.obspm.fr/")
+                self.refresh()
+            except Exception as exc:  # noqa: BLE001
+                QMessageBox.critical(self, "BeSS", str(exc))
+
+        def _run_exoclock(self) -> None:
+            if self._workspace_id is None:
+                QMessageBox.warning(self, "Contribute", "Sem workspace.")
+                return
+            try:
+                pid = UUID(self.e_product.text().strip())
+            except ValueError:
+                QMessageBox.warning(self, "ExoClock", "Product UUID invalido.")
+                return
+            observer = self.creds.get_network("exoclock").get("observer") or "AstroCitizen"
+            out = self.artifacts_root / "export" / "exoclock" / f"{pid}.txt"
+            try:
+                ExportExoclock(self.archive).execute(
+                    product_id=pid,
+                    target=self.e_target.text().strip() or "TARGET",
+                    out_path=out,
+                    observer=str(observer),
+                )
+                store = LocalArtifactStore(self.artifacts_root)
+                uri = store.put(out, key=f"export/exoclock/{out.name}")
+                sub = NetworkSubmission(
+                    id=new_id(),
+                    workspace_id=self._workspace_id,
+                    network="exoclock",
+                    status="draft",
+                    artifact_uri=uri,
+                    product_id=pid,
+                    payload_summary={"target": self.e_target.text()},
+                )
+                self.archive.save_network_submission(sub)
+                self._log(f"ExoClock wrote {out} - https://www.exoclock.space/upload/")
+                self.refresh()
+            except Exception as exc:  # noqa: BLE001
+                QMessageBox.critical(self, "ExoClock", str(exc))
+
+        def _run_iota(self) -> None:
+            import shutil
+
+            if self._workspace_id is None:
+                QMessageBox.warning(self, "Contribute", "Sem workspace.")
+                return
+            if not self.i_event.text().strip():
+                QMessageBox.warning(self, "IOTA", "Event ID obrigatorio.")
+                return
+            sites = self.archive.list_sites(self._workspace_id)
+            if not sites:
+                QMessageBox.warning(self, "IOTA", "Sem sites no workspace.")
+                return
+            site = sites[0]
+            observer = (
+                self.i_obs.text().strip()
+                or self.creds.get_network("iota").get("observer")
+                or "AstroCitizen"
+            )
+            pack = self.artifacts_root / "export" / "iota" / "gui_pack"
+            try:
+                write_iota_pack(
+                    pack,
+                    event_id=self.i_event.text().strip(),
+                    star=self.i_star.text().strip() or "star",
+                    asteroid=self.i_ast.text().strip() or "asteroid",
+                    observer=str(observer),
+                    latitude_deg=site.latitude_deg,
+                    longitude_deg=site.longitude_deg,
+                    elevation_m=site.elevation_m,
+                    result=self.i_result.currentText(),
+                )
+                zip_path = Path(shutil.make_archive(str(pack), "zip", root_dir=pack))
+                store = LocalArtifactStore(self.artifacts_root)
+                uri = store.put(zip_path, key=f"export/iota/{zip_path.name}")
+                sub = NetworkSubmission(
+                    id=new_id(),
+                    workspace_id=self._workspace_id,
+                    network="iota",
+                    status="draft",
+                    artifact_uri=uri,
+                    payload_summary={"event": self.i_event.text()},
+                )
+                self.archive.save_network_submission(sub)
+                self._log(f"IOTA pack {zip_path}")
+                self.refresh()
+            except Exception as exc:  # noqa: BLE001
+                QMessageBox.critical(self, "IOTA", str(exc))
 
     return ContributeDashboard

@@ -14,7 +14,10 @@ from astrocitizen.adapters.sky import AstropyEphemeris, SimbadResolver
 from astrocitizen.adapters.sqlite import SqliteArchive
 from astrocitizen.analysis import AperturePhotometry
 from astrocitizen.contribution.aavso import ExportAavso
+from astrocitizen.contribution.bess import annotate_existing_fits, write_bess_fits
 from astrocitizen.contribution.credentials import LocalCredentialsStore
+from astrocitizen.contribution.exoclock import ExportExoclock
+from astrocitizen.contribution.iota import write_iota_pack
 from astrocitizen.contribution.models import NetworkSubmission
 from astrocitizen.contribution.mpc import MpcAdesSubmitter, write_ades_psv
 from astrocitizen.contribution.tns import TnsClient, format_tns_at_report, write_tns_report
@@ -495,6 +498,8 @@ def _cmd_contribute_cred_set(args: argparse.Namespace) -> int:
         vals["user_id"] = args.user_id
     if args.groupid is not None:
         vals["groupid"] = args.groupid
+    if getattr(args, "observer", None):
+        vals["observer"] = args.observer
     if not vals:
         print("nada a gravar (passe --obscode / --mpc-code / --email / --api-key / ...)")
         return 1
@@ -672,6 +677,128 @@ def _cmd_contribute_list(args: argparse.Namespace) -> int:
             f"{s.created_at}\t{s.network}\t{s.status}\t{s.id}\t"
             f"{(s.artifact_uri or '-')[:60]}"
         )
+    archive.close()
+    return 0
+
+
+def _cmd_contribute_bess(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    cred = LocalCredentialsStore(Path(args.credentials) if args.credentials else None)
+    observer = args.observer or cred.get_network("bess").get("observer") or "AstroCitizen"
+    out = Path(args.out)
+    if args.fits:
+        annotate_existing_fits(
+            Path(args.fits),
+            out,
+            observer=str(observer),
+            site=args.site,
+            instrument=args.instrument,
+        )
+    else:
+        import numpy as np
+
+        n = max(int(args.npix), 2)
+        wave = np.linspace(args.wave0, args.wave1, n)
+        flux = np.ones(n, dtype=float)
+        write_bess_fits(
+            out,
+            objname=args.objname,
+            observer=str(observer),
+            date_obs=args.date_obs,
+            exptime_s=args.exptime,
+            wavelength_nm=wave,
+            flux=flux,
+            site=args.site or "AstroCitizen",
+            instrument=args.instrument or "AstroCitizen-spec",
+            ra_deg=args.ra,
+            dec_deg=args.dec,
+        )
+    store = LocalArtifactStore(Path(args.artifacts))
+    uri = store.put(out, key=f"export/bess/{out.name}")
+    sub = NetworkSubmission(
+        id=new_id(),
+        workspace_id=ws.id,
+        network="bess",
+        status="draft",
+        artifact_uri=uri,
+        payload_summary={"objname": args.objname, "note": "upload BeSS portal"},
+    )
+    archive.save_network_submission(sub)
+    print(f"wrote={out}\turi={uri}\tsubmission={sub.id}\tportal=http://basebe.obspm.fr/")
+    archive.close()
+    return 0
+
+
+def _cmd_contribute_exoclock(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    cred = LocalCredentialsStore(Path(args.credentials) if args.credentials else None)
+    observer = args.observer or cred.get_network("exoclock").get("observer") or "AstroCitizen"
+    out = Path(args.out)
+    ExportExoclock(archive).execute(
+        product_id=UUID(args.product),
+        target=args.target,
+        out_path=out,
+        telescope=args.telescope,
+        observer=str(observer),
+    )
+    store = LocalArtifactStore(Path(args.artifacts))
+    uri = store.put(out, key=f"export/exoclock/{out.name}")
+    sub = NetworkSubmission(
+        id=new_id(),
+        workspace_id=ws.id,
+        network="exoclock",
+        status="draft",
+        artifact_uri=uri,
+        product_id=UUID(args.product),
+        payload_summary={"target": args.target, "note": "upload ExoClock"},
+    )
+    archive.save_network_submission(sub)
+    print(
+        f"wrote={out}\turi={uri}\tsubmission={sub.id}\t"
+        f"upload=https://www.exoclock.space/upload/"
+    )
+    archive.close()
+    return 0
+
+
+def _cmd_contribute_iota(args: argparse.Namespace) -> int:
+    import shutil
+
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    site = _resolve_site(archive, ws, args.site)
+    cred = LocalCredentialsStore(Path(args.credentials) if args.credentials else None)
+    observer = args.observer or cred.get_network("iota").get("observer") or "AstroCitizen"
+    pack_dir = Path(args.out)
+    write_iota_pack(
+        pack_dir,
+        event_id=args.event,
+        star=args.star,
+        asteroid=args.asteroid,
+        observer=str(observer),
+        latitude_deg=site.latitude_deg,
+        longitude_deg=site.longitude_deg,
+        elevation_m=site.elevation_m,
+        result=args.result,
+        d_time_utc=args.d_time,
+        r_time_utc=args.r_time,
+    )
+    zip_base = pack_dir if pack_dir.suffix == "" else pack_dir.with_suffix("")
+    zip_path = Path(shutil.make_archive(str(zip_base), "zip", root_dir=pack_dir))
+    store = LocalArtifactStore(Path(args.artifacts))
+    uri = store.put(zip_path, key=f"export/iota/{zip_path.name}")
+    sub = NetworkSubmission(
+        id=new_id(),
+        workspace_id=ws.id,
+        network="iota",
+        status="draft",
+        artifact_uri=uri,
+        payload_summary={"event": args.event, "result": args.result},
+    )
+    archive.save_network_submission(sub)
+    print(f"pack={pack_dir}\tzip={zip_path}\turi={uri}\tsubmission={sub.id}")
     archive.close()
     return 0
 
@@ -989,20 +1116,27 @@ def build_parser() -> argparse.ArgumentParser:
     p_mr.add_argument("--artifacts", default=str(default_artifacts_root()))
     p_mr.set_defaults(func=_cmd_meteo_radar)
 
-    p_c = sub.add_parser("contribute", help="Export / submit redes (AAVSO, MPC, TNS)")
+    p_c = sub.add_parser(
+        "contribute", help="Export / submit redes (AAVSO, MPC, TNS, BeSS, ExoClock, IOTA)"
+    )
     c_sub = p_c.add_subparsers(dest="contribute_cmd", required=True)
 
     p_cred = c_sub.add_parser("credentials", help="Credenciais locais de redes")
     cred_sub = p_cred.add_subparsers(dest="cred_cmd", required=True)
     p_cs = cred_sub.add_parser("set", help="Gravar credenciais de uma rede")
     p_cs.add_argument("--credentials", default=None)
-    p_cs.add_argument("--network", required=True, choices=("aavso", "mpc", "tns"))
+    p_cs.add_argument(
+        "--network",
+        required=True,
+        choices=("aavso", "mpc", "tns", "bess", "exoclock", "iota"),
+    )
     p_cs.add_argument("--obscode", default=None)
     p_cs.add_argument("--mpc-code", default=None)
     p_cs.add_argument("--email", default=None)
     p_cs.add_argument("--api-key", default=None)
     p_cs.add_argument("--user-id", default=None)
     p_cs.add_argument("--groupid", type=int, default=None)
+    p_cs.add_argument("--observer", default=None, help="Nome observador (BeSS/ExoClock/IOTA)")
     p_cs.set_defaults(func=_cmd_contribute_cred_set)
     p_cg = cred_sub.add_parser("show", help="Mostrar credenciais (api_key mascarada)")
     p_cg.add_argument("--credentials", default=None)
@@ -1057,9 +1191,58 @@ def build_parser() -> argparse.ArgumentParser:
     p_ct.add_argument("--prod", action="store_true", help="Usar TNS producao (nao sandbox)")
     p_ct.set_defaults(func=_cmd_contribute_tns)
 
+    p_cb = c_sub.add_parser("bess", help="FITS 1D BeSS (portal manual)")
+    _add_db_arg(p_cb)
+    p_cb.add_argument("--objname", default="BeStar")
+    p_cb.add_argument("--observer", default=None)
+    p_cb.add_argument("--date-obs", default="2026-07-21T01:00:00")
+    p_cb.add_argument("--exptime", type=float, default=60.0)
+    p_cb.add_argument("--wave0", type=float, default=400.0, help="nm")
+    p_cb.add_argument("--wave1", type=float, default=700.0, help="nm")
+    p_cb.add_argument("--npix", type=int, default=301)
+    p_cb.add_argument("--ra", type=float, default=None)
+    p_cb.add_argument("--dec", type=float, default=None)
+    p_cb.add_argument("--site", default=None)
+    p_cb.add_argument("--instrument", default=None)
+    p_cb.add_argument("--fits", default=None, help="Anotar FITS 1D existente")
+    p_cb.add_argument("--out", required=True)
+    p_cb.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_cb.add_argument("--credentials", default=None)
+    p_cb.set_defaults(func=_cmd_contribute_bess)
+
+    p_ce = c_sub.add_parser("exoclock", help="LC txt ExoClock (upload manual)")
+    _add_db_arg(p_ce)
+    p_ce.add_argument("--product", required=True)
+    p_ce.add_argument("--target", required=True)
+    p_ce.add_argument("--telescope", default="AstroCitizen")
+    p_ce.add_argument("--observer", default=None)
+    p_ce.add_argument("--out", required=True)
+    p_ce.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_ce.add_argument("--credentials", default=None)
+    p_ce.set_defaults(func=_cmd_contribute_exoclock)
+
+    p_ci = c_sub.add_parser("iota", help="Pacote IOTA-ES (hub regional manual)")
+    _add_db_arg(p_ci)
+    p_ci.add_argument("--event", required=True)
+    p_ci.add_argument("--star", required=True)
+    p_ci.add_argument("--asteroid", required=True)
+    p_ci.add_argument("--observer", default=None)
+    p_ci.add_argument("--site", default=None)
+    p_ci.add_argument("--result", default="positive", choices=("positive", "negative"))
+    p_ci.add_argument("--d-time", default=None)
+    p_ci.add_argument("--r-time", default=None)
+    p_ci.add_argument("--out", required=True, help="Directorio do pacote")
+    p_ci.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_ci.add_argument("--credentials", default=None)
+    p_ci.set_defaults(func=_cmd_contribute_iota)
+
     p_cl = c_sub.add_parser("list", help="Listar network_submissions")
     _add_db_arg(p_cl)
-    p_cl.add_argument("--network", default=None, choices=("aavso", "mpc", "tns"))
+    p_cl.add_argument(
+        "--network",
+        default=None,
+        choices=("aavso", "mpc", "tns", "bess", "exoclock", "iota"),
+    )
     p_cl.set_defaults(func=_cmd_contribute_list)
 
     return parser
