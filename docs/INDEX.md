@@ -30,6 +30,7 @@
 | Doc | Descrição |
 |-----|-----------|
 | [WORKFLOWS.md](WORKFLOWS.md) | Jornada do usuário, modos, fluxos passo a passo, PO-A01 referência |
+| [AAVSO_WEBOBS_CHECKLIST.md](AAVSO_WEBOBS_CHECKLIST.md) | Validar export Extended no WebObs |
 
 ## Arquitetura SaaS + Desktop
 

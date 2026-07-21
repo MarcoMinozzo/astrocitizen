@@ -1,4 +1,4 @@
-"""Painel Noite: forecast Open-Meteo + radar RainViewer + estado do plano."""
+"""Painel Noite: forecast Open-Meteo + radar RainViewer + plano diario."""
 
 from __future__ import annotations
 
@@ -74,6 +74,14 @@ def plan_status_text(plan: Any | None, blocks: list[Any]) -> str:
     )
 
 
+def fetch_plan_status(
+    archive: Any, workspace_id: UUID, site_id: UUID, night_date: str
+) -> str:
+    plan = archive.get_daily_plan_for_night(workspace_id, site_id, night_date)
+    blocks = archive.list_observation_blocks(plan.id) if plan is not None else []
+    return plan_status_text(plan, blocks)
+
+
 def build_night_dashboard(parent: Any | None = None) -> Any:
     """Devolve a classe NightDashboard (requer PySide6)."""
     from PySide6.QtCore import QDate, Qt
@@ -93,8 +101,9 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
         QWidget,
     )
 
-    from astrocitizen.adapters.meteo import OpenMeteo, RainViewerRadar
+    from astrocitizen.adapters.meteo import ManualMeteo, OpenMeteo, RainViewerRadar
     from astrocitizen.adapters.sky import AstropyEphemeris
+    from astrocitizen.planning import GenerateDailyPlan
     from astrocitizen.planning.meteo_rules import evaluate_meteo_window
     from astrocitizen.shared.paths import default_artifacts_root
 
@@ -112,13 +121,21 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             self.date_edit.setCalendarPopup(True)
             self.date_edit.setDisplayFormat("yyyy-MM-dd")
             self.date_edit.setDate(QDate.fromString(tonight_utc_date(), "yyyy-MM-dd"))
+            self.meteo_combo = QComboBox()
+            self.meteo_combo.addItem("Open-Meteo", "api")
+            self.meteo_combo.addItem("Manual (limpo)", "manual")
             self.refresh_btn = QPushButton("Atualizar noite")
             self.refresh_btn.clicked.connect(self.refresh_night)
+            self.plan_btn = QPushButton("Gerar plano")
+            self.plan_btn.clicked.connect(self.generate_plan)
             top.addWidget(QLabel("Site"))
             top.addWidget(self.site_combo, 1)
             top.addWidget(QLabel("Noite"))
             top.addWidget(self.date_edit)
+            top.addWidget(QLabel("Meteo"))
+            top.addWidget(self.meteo_combo)
             top.addWidget(self.refresh_btn)
+            top.addWidget(self.plan_btn)
 
             self.summary = QTextEdit()
             self.summary.setReadOnly(True)
@@ -185,6 +202,22 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                 return None
             return self._sites[idx]
 
+        def _meteo(self) -> Any:
+            if self.meteo_combo.currentData() == "manual":
+                return ManualMeteo(
+                    cloud_cover_pct=10.0,
+                    wind_ms=2.0,
+                    humidity_pct=40.0,
+                    precipitation=False,
+                )
+            return OpenMeteo()
+
+        def _update_plan_label(self, site: Any, night_date: str) -> None:
+            assert self._workspace_id is not None
+            self.plan_label.setText(
+                fetch_plan_status(self.archive, self._workspace_id, site.id, night_date)
+            )
+
         def refresh_night(self) -> None:
             site = self._current_site()
             if site is None or self._workspace_id is None:
@@ -192,6 +225,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                 return
             night_date = self.date_edit.date().toString("yyyy-MM-dd")
             self.refresh_btn.setEnabled(False)
+            self.plan_btn.setEnabled(False)
             self.summary.setPlainText("A carregar Open-Meteo + radar...")
             try:
                 eph = AstropyEphemeris()
@@ -202,7 +236,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                     night_date=night_date,
                     night_start_rule=site.night_start_rule,
                 )
-                fc = OpenMeteo().forecast(
+                fc = self._meteo().forecast(
                     latitude_deg=site.latitude_deg,
                     longitude_deg=site.longitude_deg,
                     start_utc=night["start_utc"],
@@ -226,14 +260,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                     for c, val in enumerate(row):
                         self.hours.setItem(r, c, QTableWidgetItem(val))
                 self.hours.resizeColumnsToContents()
-
-                plan = self.archive.get_daily_plan_for_night(
-                    self._workspace_id, site.id, night_date
-                )
-                blocks = (
-                    self.archive.list_observation_blocks(plan.id) if plan is not None else []
-                )
-                self.plan_label.setText(plan_status_text(plan, blocks))
+                self._update_plan_label(site, night_date)
 
                 out = self.artifacts_root / "radar" / f"{site.id}_gui.png"
                 meta = RainViewerRadar().region_image(
@@ -262,6 +289,35 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                 self.summary.setPlainText(f"erro: {exc}")
                 QMessageBox.critical(self, "Noite", str(exc))
             finally:
+                self.refresh_btn.setEnabled(True)
+                self.plan_btn.setEnabled(True)
+
+        def generate_plan(self) -> None:
+            site = self._current_site()
+            if site is None or self._workspace_id is None:
+                QMessageBox.warning(self, "Noite", "Nenhum site seleccionado.")
+                return
+            night_date = self.date_edit.date().toString("yyyy-MM-dd")
+            self.plan_btn.setEnabled(False)
+            self.refresh_btn.setEnabled(False)
+            try:
+                plan = GenerateDailyPlan(
+                    self.archive, AstropyEphemeris(), self._meteo()
+                ).execute(
+                    workspace_id=self._workspace_id,
+                    site_id=site.id,
+                    night_date=night_date,
+                )
+                self._update_plan_label(site, night_date)
+                QMessageBox.information(
+                    self,
+                    "Plano",
+                    f"Plano gerado: {plan.id}\nestado={plan.state}",
+                )
+            except Exception as exc:  # noqa: BLE001 - UI boundary
+                QMessageBox.critical(self, "Gerar plano", str(exc))
+            finally:
+                self.plan_btn.setEnabled(True)
                 self.refresh_btn.setEnabled(True)
 
     return NightDashboard

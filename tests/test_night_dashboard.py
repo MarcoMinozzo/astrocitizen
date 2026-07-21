@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from types import SimpleNamespace
+from uuid import uuid4
 
 from astrocitizen.desktop.night import (
+    fetch_plan_status,
     forecast_summary_lines,
     hourly_table_rows,
     plan_status_text,
@@ -63,3 +65,15 @@ def test_plan_status_text() -> None:
     assert "plano=draft" in text
     assert "ok=2" in text
     assert "inviavel_meteo=1" in text
+
+
+def test_fetch_plan_status_empty() -> None:
+    class Arch:
+        def get_daily_plan_for_night(self, *a, **k):
+            return None
+
+        def list_observation_blocks(self, *a, **k):
+            return []
+
+    msg = fetch_plan_status(Arch(), uuid4(), uuid4(), "2026-07-21")
+    assert "nenhum gerado" in msg
