@@ -2,7 +2,7 @@
 
 **Versão:** 1.0  
 **Data:** 2026-07-21  
-**Estado:** Fase 1 — implementação · **S0–S3 concluídos** (até AC-053) · seguinte **S4** (calibração + GUI/CLI shell)  
+**Estado:** Fase 1 — implementação · **S0–S5 concluídos** · pausa para revisão · seguinte pós-revisão: AC-075 `.exe` / E9+  
 **Fontes:** escopo, RN-*, PO-*, arquitetura, persistência, stack  
 
 ---
@@ -133,9 +133,9 @@
 
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
-| AC-060 | Masters bias/dark/flat versionados no BD | P1 | M | AC-012 | PO-J01/J03 |
-| AC-061 | Aplicar calibração → ProdutoAnalise | P1 | M | AC-060 | |
-| AC-062 | Viewer FITS básico (stretch, ROI, hist) | P1 | M | AC-007 | |
+| AC-060 | Masters bias/dark/flat versionados no BD | P1 | M | AC-012 | ✅ S4 — `BuildMaster` |
+| AC-061 | Aplicar calibração → ProdutoAnalise | P1 | M | AC-060 | ✅ S4 — `ApplyCalibration` |
+| AC-062 | Viewer FITS básico (stretch, ROI, hist) | P1 | M | AC-007 | ✅ S4 — `fits_stats` + stretch; GUI imagem depois |
 | AC-063 | Stack / align básico | P2 | M | AC-061 | |
 
 ---
@@ -144,10 +144,10 @@
 
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
-| AC-070 | CLI: site, programas, plan, session (esqueleto) | P1 | M | AC-001 | |
-| AC-071 | GUI shell PySide6 (navegação por módulos) | P1 | L | AC-001 | |
-| AC-072 | Telas: Sites, Equipamento, Programas | P1 | M | AC-071, E2 | |
-| AC-073 | Telas: Programa diário, Sessão, Arquivo | P1 | L | AC-071, E3, E5 | |
+| AC-070 | CLI: site, programas, plan, session (esqueleto) | P1 | M | AC-001 | ✅ S4 — + reduce/analyze/gui |
+| AC-071 | GUI shell PySide6 (navegação por módulos) | P1 | L | AC-001 | ✅ S4 — `astrocitizen gui` |
+| AC-072 | Telas: Sites, Equipamento, Programas | P1 | M | AC-071, E2 | ✅ S4 |
+| AC-073 | Telas: Programa diário, Sessão, Arquivo | P1 | L | AC-071, E3, E5 | ✅ S4 |
 | AC-074 | Painel gestão multi-programa | P2 | M | AC-071, AC-022 | |
 | AC-075 | Empacote **Windows `.exe`** (PyInstaller onedir/onefile) | P1 | M | AC-071 | DoD Desktop — espelhar sbig-suite CI |
 | AC-076 | CI: build + smoke test do `.exe` (simulator) em `windows-latest` | P1 | S | AC-075, AC-003 | Artefacto descarregável |
@@ -162,8 +162,8 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 
 | ID | Template | Pri | Est | Dep |
 |----|----------|-----|-----|-----|
-| AC-080 | PO-J01/J03/J05 Calibração + meteo site | P1 | M | E3, E6 |
-| AC-081 | PO-A01 Variáveis (AAVSO) — esqueleto programa | P1 | M | E2, E9 |
+| AC-080 | PO-J01/J03/J05 Calibração + meteo site | P1 | M | E3, E6 | ✅ S5 — workflows P1 |
+| AC-081 | PO-A01 Variáveis (AAVSO) — esqueleto programa | P1 | M | E2, E9 | ✅ S5 — workflow + fotometria + export |
 | AC-082 | PO-A05 Trânsitos — esqueleto | P1 | M | E9 |
 | AC-083 | PO-B01 Espectroscopia slit — esqueleto | P1 | M | E10 |
 | AC-084 | PO-B02/B03 Be/ARAS — esqueleto | P1 | M | E10 |
@@ -178,10 +178,10 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
-| AC-090 | Detecção / centroide | P2 | M | E6 | |
-| AC-091 | Fotometria de abertura + diferencial | P2 | L | AC-090 | |
-| AC-092 | Curva de luz → BD (pontos) | P2 | M | AC-091, E1 | |
-| AC-093 | Export AAVSO | P2 | M | AC-092, E14 | |
+| AC-090 | Detecção / centroide | P2 | M | E6 | ✅ S5 — inicio (centroid) |
+| AC-091 | Fotometria de abertura + diferencial | P2 | L | AC-090 | ✅ S5 — inicio |
+| AC-092 | Curva de luz → BD (pontos) | P2 | M | AC-091, E1 | ✅ S5 — measurement_points |
+| AC-093 | Export AAVSO | P2 | M | AC-092, E14 | ✅ S5 — Extended simplificado |
 | AC-094 | Templates A02–A04, A09 | P2 | M | AC-091 | |
 
 ---
@@ -291,8 +291,8 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | S1 | BD + Site + Equipamento + Programas | AC-010…024 ✅ |
 | S2 | Efemérides + Meteo + ProgramaDiario | AC-030…037 ✅ |
 | S3 | Camera/Mount/Focuser sim + Sessão + FITS | AC-040…053 ✅ |
-| S4 | Calibração + GUI/CLI shell | AC-060…073 |
-| S5 | Templates P1 esqueleto + 1 análise ponta a ponta (ex.: variáveis) | AC-080…081, início E9 |
+| S4 | Calibração + GUI/CLI shell | AC-060…073 ✅ |
+| S5 | Templates P1 esqueleto + 1 análise ponta a ponta (ex.: variáveis) | AC-080…081, início E9 ✅ |
 
 ---
 

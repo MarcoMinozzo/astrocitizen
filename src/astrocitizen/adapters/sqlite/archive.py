@@ -22,9 +22,14 @@ from astrocitizen.planning.models import (
     Target,
 )
 from astrocitizen.observatory.models import ObservationRecord, Session
+from astrocitizen.reduction.models import AnalysisProduct, CalibrationMaster
 from astrocitizen.programs.models import Program, ProgramTemplate
 from astrocitizen.shared.errors import NotFoundError
+from astrocitizen.shared.ids import new_id
 from astrocitizen.shared.timeutil import utc_now_iso
+
+def new_id_local():
+    return new_id()
 from astrocitizen.workspace.models import Workspace
 
 
@@ -1297,3 +1302,181 @@ class SqliteArchive:
         )
         self._conn.commit()
         return artifact_id
+
+    # --- reduction / analysis (S4/S5) ---
+    def save_calibration_master(self, master: CalibrationMaster) -> CalibrationMaster:
+        self._conn.execute(
+            """
+            INSERT INTO calibration_masters(
+                id, workspace_id, kind, version_num, artifact_id, parameters, notes, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                str(master.id),
+                str(master.workspace_id),
+                master.kind,
+                master.version_num,
+                str(master.artifact_id) if master.artifact_id else None,
+                _j(master.parameters),
+                master.notes,
+                master.created_at or utc_now_iso(),
+            ),
+        )
+        self._conn.commit()
+        return master
+
+    def get_calibration_master(self, master_id: UUID) -> CalibrationMaster | None:
+        row = self._conn.execute(
+            "SELECT * FROM calibration_masters WHERE id = ? AND deleted_at IS NULL",
+            (str(master_id),),
+        ).fetchone()
+        if row is None:
+            return None
+        return CalibrationMaster(
+            id=UUID(row["id"]),
+            workspace_id=UUID(row["workspace_id"]),
+            kind=row["kind"],
+            version_num=row["version_num"],
+            artifact_id=UUID(row["artifact_id"]) if row["artifact_id"] else None,
+            parameters=_loads(row["parameters"], {}),
+            notes=row["notes"] or "",
+            created_at=row["created_at"],
+        )
+
+    def list_calibration_masters(
+        self, workspace_id: UUID, *, kind: str | None = None
+    ) -> list[CalibrationMaster]:
+        if kind:
+            rows = self._conn.execute(
+                """
+                SELECT * FROM calibration_masters
+                WHERE workspace_id = ? AND kind = ? AND deleted_at IS NULL
+                ORDER BY version_num DESC
+                """,
+                (str(workspace_id), kind),
+            ).fetchall()
+        else:
+            rows = self._conn.execute(
+                """
+                SELECT * FROM calibration_masters
+                WHERE workspace_id = ? AND deleted_at IS NULL
+                ORDER BY kind, version_num DESC
+                """,
+                (str(workspace_id),),
+            ).fetchall()
+        out: list[CalibrationMaster] = []
+        for row in rows:
+            out.append(
+                CalibrationMaster(
+                    id=UUID(row["id"]),
+                    workspace_id=UUID(row["workspace_id"]),
+                    kind=row["kind"],
+                    version_num=row["version_num"],
+                    artifact_id=UUID(row["artifact_id"]) if row["artifact_id"] else None,
+                    parameters=_loads(row["parameters"], {}),
+                    notes=row["notes"] or "",
+                    created_at=row["created_at"],
+                )
+            )
+        return out
+
+    def save_analysis_product(self, product: AnalysisProduct) -> AnalysisProduct:
+        now = utc_now_iso()
+        self._conn.execute(
+            """
+            INSERT INTO analysis_products(
+                id, workspace_id, program_id, product_type, version_num, parent_product_id,
+                is_publishable, parameters, summary, state, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                str(product.id),
+                str(product.workspace_id),
+                str(product.program_id) if product.program_id else None,
+                product.product_type,
+                product.version_num,
+                str(product.parent_product_id) if product.parent_product_id else None,
+                1 if product.is_publishable else 0,
+                _j(product.parameters),
+                _j(product.summary),
+                product.state,
+                now,
+                now,
+            ),
+        )
+        self._conn.commit()
+        return product
+
+    def get_analysis_product(self, product_id: UUID) -> AnalysisProduct | None:
+        row = self._conn.execute(
+            "SELECT * FROM analysis_products WHERE id = ? AND deleted_at IS NULL",
+            (str(product_id),),
+        ).fetchone()
+        if row is None:
+            return None
+        return AnalysisProduct(
+            id=UUID(row["id"]),
+            workspace_id=UUID(row["workspace_id"]),
+            program_id=UUID(row["program_id"]) if row["program_id"] else None,
+            product_type=row["product_type"],
+            version_num=row["version_num"],
+            parent_product_id=UUID(row["parent_product_id"]) if row["parent_product_id"] else None,
+            is_publishable=bool(row["is_publishable"]),
+            parameters=_loads(row["parameters"], {}),
+            summary=_loads(row["summary"], {}),
+            state=row["state"],
+        )
+
+    def link_product_observation(self, product_id: UUID, observation_id: UUID) -> None:
+        self._conn.execute(
+            """
+            INSERT OR IGNORE INTO analysis_product_observations(product_id, observation_id)
+            VALUES (?, ?)
+            """,
+            (str(product_id), str(observation_id)),
+        )
+        self._conn.commit()
+
+    def save_measurement_points(
+        self,
+        product_id: UUID,
+        points: list[dict],
+    ) -> int:
+        for i, pt in enumerate(points):
+            self._conn.execute(
+                """
+                INSERT INTO measurement_points(
+                    id, product_id, t_utc, sequence_index, x, y, y_err, band, meta
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    str(pt.get("id") or new_id_local()),
+                    str(product_id),
+                    pt.get("t_utc"),
+                    pt.get("sequence_index", i),
+                    float(pt["x"]),
+                    float(pt["y"]),
+                    pt.get("y_err"),
+                    pt.get("band"),
+                    _j(pt.get("meta") or {}),
+                ),
+            )
+        self._conn.commit()
+        return len(points)
+
+    def list_measurement_points(self, product_id: UUID) -> list[dict]:
+        rows = self._conn.execute(
+            """
+            SELECT * FROM measurement_points
+            WHERE product_id = ?
+            ORDER BY sequence_index, t_utc
+            """,
+            (str(product_id),),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def get_artifact_uri(self, artifact_id: UUID) -> str | None:
+        row = self._conn.execute(
+            "SELECT uri FROM artifacts WHERE id = ?", (str(artifact_id),)
+        ).fetchone()
+        return None if row is None else row["uri"]

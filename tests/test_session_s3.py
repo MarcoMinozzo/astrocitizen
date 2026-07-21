@@ -24,7 +24,8 @@ from astrocitizen.workspace.models import Workspace
 
 def _world(tmp_path: Path):
     archive = SqliteArchive(tmp_path / "s3.sqlite3")
-    assert archive.migrate() == SCHEMA_VERSION == 3
+    assert archive.migrate() == SCHEMA_VERSION
+    assert SCHEMA_VERSION >= 3
     ws = archive.upsert_workspace(Workspace(id=new_id(), name="ws"))
     seed_program_templates(archive)
     site = archive.upsert_site(

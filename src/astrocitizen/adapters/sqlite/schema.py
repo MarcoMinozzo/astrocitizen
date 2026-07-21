@@ -1,6 +1,6 @@
 """Schema SQLite — alinhado a MODELO_DADOS_V1 (subset S1+S2)."""
 
-SCHEMA_VERSION = 3
+SCHEMA_VERSION = 4
 
 # Tabelas S1 (v1)
 SCHEMA_V1_SQL = """
@@ -292,7 +292,62 @@ CREATE INDEX IF NOT EXISTS idx_session_events_session
     ON session_events(session_id, occurred_at_utc);
 """
 
-SCHEMA_SQL = SCHEMA_V1_SQL + SCHEMA_V2_SQL + SCHEMA_V3_SQL
+# S4/S5 — masters, produtos de analise, pontos
+SCHEMA_V4_SQL = """
+CREATE TABLE IF NOT EXISTS calibration_masters (
+    id TEXT PRIMARY KEY,
+    workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+    kind TEXT NOT NULL,
+    version_num INTEGER NOT NULL,
+    artifact_id TEXT,
+    parameters TEXT NOT NULL DEFAULT '{}',
+    notes TEXT NOT NULL DEFAULT '',
+    created_at TEXT NOT NULL,
+    deleted_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_masters_workspace_kind
+    ON calibration_masters(workspace_id, kind, version_num) WHERE deleted_at IS NULL;
+
+CREATE TABLE IF NOT EXISTS analysis_products (
+    id TEXT PRIMARY KEY,
+    workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+    program_id TEXT,
+    product_type TEXT NOT NULL,
+    version_num INTEGER NOT NULL DEFAULT 1,
+    parent_product_id TEXT,
+    is_publishable INTEGER NOT NULL DEFAULT 0,
+    parameters TEXT NOT NULL DEFAULT '{}',
+    summary TEXT NOT NULL DEFAULT '{}',
+    state TEXT NOT NULL DEFAULT 'draft',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    deleted_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS analysis_product_observations (
+    product_id TEXT NOT NULL REFERENCES analysis_products(id),
+    observation_id TEXT NOT NULL REFERENCES observations(id),
+    PRIMARY KEY (product_id, observation_id)
+);
+
+CREATE TABLE IF NOT EXISTS measurement_points (
+    id TEXT PRIMARY KEY,
+    product_id TEXT NOT NULL REFERENCES analysis_products(id),
+    t_utc TEXT,
+    sequence_index INTEGER,
+    x REAL NOT NULL,
+    y REAL NOT NULL,
+    y_err REAL,
+    band TEXT,
+    meta TEXT NOT NULL DEFAULT '{}'
+);
+
+CREATE INDEX IF NOT EXISTS idx_points_product
+    ON measurement_points(product_id, sequence_index);
+"""
+
+SCHEMA_SQL = SCHEMA_V1_SQL + SCHEMA_V2_SQL + SCHEMA_V3_SQL + SCHEMA_V4_SQL
 
 # Colunas extra em observations (ALTER idempotente via migrate helper)
 OBSERVATION_V3_COLUMNS = (

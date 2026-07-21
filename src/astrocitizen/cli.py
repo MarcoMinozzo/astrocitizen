@@ -14,6 +14,11 @@ from astrocitizen.adapters.sky import AstropyEphemeris, SimbadResolver
 from astrocitizen.adapters.sqlite import SqliteArchive
 from astrocitizen.inventory.models import Equipment, Site
 from astrocitizen.observatory import CaptureObservation, ExecuteSession
+from astrocitizen.reduction import ApplyCalibration, BuildMaster, fits_stats
+from astrocitizen.analysis import AperturePhotometry
+from astrocitizen.contribution.aavso import ExportAavso
+from astrocitizen.programs.workflows import workflow_for, P1_WORKFLOWS
+from astrocitizen.desktop import run_gui
 from astrocitizen.planning import EditDailyPlan, GenerateDailyPlan, Target
 from astrocitizen.programs.models import Program
 from astrocitizen.programs.seed import seed_program_templates
@@ -359,6 +364,118 @@ def _cmd_session_list(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_gui(args: argparse.Namespace) -> int:
+    return run_gui(args.db)
+
+
+def _cmd_reduce_master(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    store = LocalArtifactStore(Path(args.artifacts))
+    paths = [Path(x) for x in args.fits]
+    master = BuildMaster(archive, store).execute(
+        workspace_id=ws.id, kind=args.kind, fits_paths=paths, notes=args.notes or ""
+    )
+    print(f"master={master.id}\tkind={master.kind}\tv={master.version_num}")
+    archive.close()
+    return 0
+
+
+def _cmd_reduce_apply(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    store = LocalArtifactStore(Path(args.artifacts))
+    product = ApplyCalibration(archive, store).execute(
+        workspace_id=ws.id,
+        light_uri=args.light,
+        dark_master_id=UUID(args.dark) if args.dark else None,
+        flat_master_id=UUID(args.flat) if args.flat else None,
+        bias_master_id=UUID(args.bias) if args.bias else None,
+        observation_id=UUID(args.observation) if args.observation else None,
+    )
+    print(f"product={product.id}\ttype={product.product_type}\tmean={product.summary.get('mean')}")
+    archive.close()
+    return 0
+
+
+def _cmd_reduce_stats(args: argparse.Namespace) -> int:
+    st = fits_stats(Path(args.fits))
+    for k, v in st.items():
+        if k == "header_keys":
+            continue
+        print(f"{k}={v}")
+    return 0
+
+
+def _cmd_reduce_masters_list(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    for m in archive.list_calibration_masters(ws.id, kind=args.kind):
+        print(f"{m.id}\t{m.kind}\tv{m.version_num}\tart={m.artifact_id}")
+    archive.close()
+    return 0
+
+
+def _cmd_analyze_photometry(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    store = LocalArtifactStore(Path(args.artifacts))
+    comp = None
+    if args.comp is not None:
+        cx, cy = args.comp.split(",")
+        comp = (float(cx), float(cy))
+    product = AperturePhotometry(archive, store).execute(
+        workspace_id=ws.id,
+        fits_uri=args.fits_uri,
+        x=args.x,
+        y=args.y,
+        band=args.band,
+        comp_xy=comp,
+        program_id=UUID(args.program) if args.program else None,
+    )
+    print(
+        f"product={product.id}\tmag={product.summary.get('mag')}\t"
+        f"dmag={product.summary.get('dmag')}\tflux={product.summary.get('flux')}"
+    )
+    archive.close()
+    return 0
+
+
+def _cmd_analyze_export_aavso(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    out = ExportAavso(archive).execute(
+        product_id=UUID(args.product),
+        star_name=args.star,
+        observer_code=args.obscode,
+        out_path=Path(args.out),
+        band=args.band,
+    )
+    print(f"wrote={out}")
+    archive.close()
+    return 0
+
+
+def _cmd_workflow_list(args: argparse.Namespace) -> int:
+    for tid, wf in P1_WORKFLOWS.items():
+        print(f"{tid}\t{wf['analysis']}\t{wf['name']}")
+        if args.verbose:
+            print(f"  steps={','.join(wf['steps'])}")
+    return 0
+
+
+def _cmd_workflow_show(args: argparse.Namespace) -> int:
+    wf = workflow_for(args.template)
+    if wf is None:
+        print(f"sem workflow P1 para {args.template}")
+        return 1
+    print(f"{args.template}\t{wf['name']}")
+    for s in wf["steps"]:
+        print(f"  - {s}")
+    print(f"networks={','.join(wf.get('networks') or []) or '-'}")
+    return 0
+
+
+
 def _add_db_arg(p: argparse.ArgumentParser) -> None:
     p.add_argument(
         "--db",
@@ -515,6 +632,67 @@ def build_parser() -> argparse.ArgumentParser:
     _add_db_arg(p_sl)
     p_sl.add_argument("--state", default=None)
     p_sl.set_defaults(func=_cmd_session_list)
+
+    p_gui = sub.add_parser("gui", help="Abrir shell PySide6 (requer [gui])")
+    _add_db_arg(p_gui)
+    p_gui.set_defaults(func=_cmd_gui)
+
+    p_red = sub.add_parser("reduce", help="Calibracao / masters / stats FITS")
+    red_sub = p_red.add_subparsers(dest="red_cmd", required=True)
+    p_rm = red_sub.add_parser("master", help="Construir master bias/dark/flat")
+    _add_db_arg(p_rm)
+    p_rm.add_argument("--kind", required=True, choices=("bias", "dark", "flat"))
+    p_rm.add_argument("--fits", nargs="+", required=True)
+    p_rm.add_argument("--notes", default="")
+    p_rm.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_rm.set_defaults(func=_cmd_reduce_master)
+    p_ra = red_sub.add_parser("apply", help="Aplicar calibracao a light")
+    _add_db_arg(p_ra)
+    p_ra.add_argument("--light", required=True, help="URI file:// do light")
+    p_ra.add_argument("--bias", default=None)
+    p_ra.add_argument("--dark", default=None)
+    p_ra.add_argument("--flat", default=None)
+    p_ra.add_argument("--observation", default=None)
+    p_ra.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_ra.set_defaults(func=_cmd_reduce_apply)
+    p_rs = red_sub.add_parser("stats", help="Estatisticas FITS (viewer CLI)")
+    p_rs.add_argument("--fits", required=True)
+    p_rs.set_defaults(func=_cmd_reduce_stats)
+    p_rl = red_sub.add_parser("masters", help="Listar masters")
+    _add_db_arg(p_rl)
+    p_rl.add_argument("--kind", default=None)
+    p_rl.set_defaults(func=_cmd_reduce_masters_list)
+
+    p_an = sub.add_parser("analyze", help="Analise (fotometria / export)")
+    an_sub = p_an.add_subparsers(dest="an_cmd", required=True)
+    p_ph = an_sub.add_parser("photometry", help="Fotometria de abertura")
+    _add_db_arg(p_ph)
+    p_ph.add_argument("--fits-uri", required=True)
+    p_ph.add_argument("--x", type=float, required=True)
+    p_ph.add_argument("--y", type=float, required=True)
+    p_ph.add_argument("--band", default="V")
+    p_ph.add_argument("--comp", default=None, help="x,y estrela comparacao")
+    p_ph.add_argument("--program", default=None)
+    p_ph.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_ph.set_defaults(func=_cmd_analyze_photometry)
+    p_ex = an_sub.add_parser("export-aavso", help="Export AAVSO Extended")
+    _add_db_arg(p_ex)
+    p_ex.add_argument("--product", required=True)
+    p_ex.add_argument("--star", required=True)
+    p_ex.add_argument("--obscode", required=True)
+    p_ex.add_argument("--out", required=True)
+    p_ex.add_argument("--band", default="V")
+    p_ex.set_defaults(func=_cmd_analyze_export_aavso)
+
+    p_wf = sub.add_parser("workflow", help="Workflows P1 (PO-J*, PO-A01)")
+    wf_sub = p_wf.add_subparsers(dest="wf_cmd", required=True)
+    p_wfl = wf_sub.add_parser("list", help="Listar workflows P1")
+    p_wfl.add_argument("-v", "--verbose", action="store_true")
+    p_wfl.set_defaults(func=_cmd_workflow_list)
+    p_wfs = wf_sub.add_parser("show", help="Mostrar workflow de template")
+    p_wfs.add_argument("--template", required=True)
+    p_wfs.set_defaults(func=_cmd_workflow_show)
+
 
     return parser
 

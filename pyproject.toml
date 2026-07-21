@@ -25,6 +25,9 @@ sky = [
 alpaca = [
   "alpyca>=2.0",
 ]
+gui = [
+  "PySide6>=6.6",
+]
 
 [project.scripts]
 astrocitizen = "astrocitizen.cli:main"

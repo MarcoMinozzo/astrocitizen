@@ -61,8 +61,8 @@ Schema alvo: [docs/MODELO_DADOS_V1.md](docs/MODELO_DADOS_V1.md).
 
 ## Sprint actual
 
-**S0–S3** concluídos (até AC-053).  
-Seguinte: **S4** — calibração + GUI/CLI shell (AC-060…073).
+**S0–S5** concluídos.  
+**Pausa para revisão.** Depois: empacote `.exe` (AC-075), Omni Alpaca, E9+.
 
 ## Contacto / produto
 

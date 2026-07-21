@@ -20,7 +20,9 @@ Fase **1 — implementação** iniciada.
 | **S1** | SQLite + Site/Equipamento/Programas PO-* + ArtifactStore (AC-010…024) |
 | **S2** | Efemérides Astropy + meteo + ProgramaDiario (AC-030…037) |
 | **S3** | Simulators + Sessão + FITS (AC-040…053) |
-| S4 | Seguinte — Calibração + GUI/CLI shell (AC-060…073) |
+| **S4** | Calibração + shell PySide6/CLI (AC-060…073) |
+| **S5** | Workflows P1 + fotometria/AAVSO (AC-080…081, E9 início) |
+| — | **Pausa para revisão** |
 
 ```bash
 pip install -e ".[dev]"
