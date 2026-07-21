@@ -2,7 +2,7 @@
 
 **Versão:** 1.0  
 **Data:** 2026-07-21  
-**Estado:** Fase 1 — implementação · **S0–S5 concluídos** · pausa para revisão · seguinte pós-revisão: AC-075 `.exe` / E9+  
+**Estado:** Fase 1 — implementação · **S0–S5 concluídos** · meteo hourly/radar + painel Noite · **AC-075/076** empacote `.exe`  
 **Fontes:** escopo, RN-*, PO-*, arquitetura, persistência, stack  
 
 ---
@@ -150,8 +150,8 @@
 | AC-073 | Telas: Programa diário, Sessão, Arquivo | P1 | L | AC-071, E3, E5 | ✅ S4 |
 | AC-073a | Painel **Noite**: forecast hourly + radar + estado do plano | P1 | M | AC-071, AC-032 | ✅ — `desktop/night.py` · `astrocitizen gui` |
 | AC-074 | Painel gestão multi-programa | P2 | M | AC-071, AC-022 | |
-| AC-075 | Empacote **Windows `.exe`** (PyInstaller onedir/onefile) | P1 | M | AC-071 | DoD Desktop — espelhar sbig-suite CI |
-| AC-076 | CI: build + smoke test do `.exe` (simulator) em `windows-latest` | P1 | S | AC-075, AC-003 | Artefacto descarregável |
+| AC-075 | Empacote **Windows `.exe`** (PyInstaller onedir/onefile) | P1 | M | AC-071 | ✅ — `scripts/build_pyinstaller.sh` · [packaging/README.md](packaging/README.md) |
+| AC-076 | CI: build + smoke test do `.exe` (simulator) em `windows-latest` | P1 | S | AC-075, AC-003 | ✅ — job `windows-exe` + artefact `astrocitizen-windows` |
 | AC-077 | Instalador Windows opcional (NSIS/MSI) + nota drivers (udrv/Alpaca) | P2 | M | AC-075 | Assinatura código depois |
 | AC-078 | Empacote Linux (AppImage ou PyInstaller) paridade | P2 | M | AC-071 | |
 

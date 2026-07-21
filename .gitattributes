@@ -1,0 +1,2 @@
+# Keep shell scripts LF for Linux/CI (AC-075)
+*.sh text eol=lf

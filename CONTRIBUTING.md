@@ -61,8 +61,17 @@ Schema alvo: [docs/MODELO_DADOS_V1.md](docs/MODELO_DADOS_V1.md).
 
 ## Sprint actual
 
-**S0–S5** concluídos.  
-**Pausa para revisão.** Depois: empacote `.exe` (AC-075), Omni Alpaca, E9+.
+**S0–S5** concluídos · painel Noite · **AC-075/076** (`.exe` + CI).  
+Seguinte: Omni Alpaca, E9+, opcional GUI no bundle PySide6.
+
+## Empacote `.exe`
+
+Ver [packaging/README.md](packaging/README.md). Resumo:
+
+```bash
+./scripts/build_pyinstaller.sh
+./scripts/smoke_exe.sh
+```
 
 ## Contacto / produto
 

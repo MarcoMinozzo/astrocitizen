@@ -31,3 +31,39 @@ jobs:
         run: |
           astrocitizen version
           astrocitizen modules
+
+  windows-exe:
+    name: Windows exe (AC-075/076)
+    runs-on: windows-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install deps
+        run: |
+          python -m pip install -U pip
+          pip install -e ".[dev,packaging]"
+      - name: Build exe
+        run: |
+          pyinstaller --name astrocitizen --onefile --noconfirm --console --paths src `
+            --collect-data astrocitizen `
+            --hidden-import astrocitizen.cli `
+            --hidden-import astrocitizen.adapters.sky.astropy_ephemeris `
+            --hidden-import astrocitizen.adapters.meteo.open_meteo `
+            --hidden-import astrocitizen.adapters.meteo.manual `
+            --hidden-import astrocitizen.adapters.hardware `
+            --exclude-module PyQt5 --exclude-module PyQt6 `
+            --exclude-module PySide6 --exclude-module PySide2 `
+            --distpath dist --workpath build --specpath packaging `
+            src/astrocitizen/__main__.py
+      - name: Smoke exe
+        shell: pwsh
+        run: .\scripts\smoke_exe.ps1
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: astrocitizen-windows
+          path: dist/astrocitizen.exe
+          if-no-files-found: error

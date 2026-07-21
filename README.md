@@ -22,7 +22,8 @@ Fase **1 — implementação** iniciada.
 | **S3** | Simulators + Sessão + FITS (AC-040…053) |
 | **S4** | Calibração + shell PySide6/CLI (AC-060…073) |
 | **S5** | Workflows P1 + fotometria/AAVSO (AC-080…081, E9 início) |
-| — | **Pausa para revisão** |
+| — | **Pausa para revisão** (meteo+radar+Noite feitos) |
+| **AC-075/076** | PyInstaller `.exe` Windows + CI smoke |
 
 ```bash
 pip install -e ".[dev]"
@@ -34,6 +35,13 @@ astrocitizen program create --template PO-A01 --name Vars --active
 astrocitizen plan generate --date 2026-07-15 --meteo manual
 astrocitizen session start --plan <uuid>
 astrocitizen session capture --session <uuid> --exptime 1
+```
+
+Empacote Windows (ver [packaging/README.md](packaging/README.md)):
+
+```bash
+./scripts/build_pyinstaller.sh
+./scripts/smoke_exe.sh
 ```
 
 Ver [CONTRIBUTING.md](CONTRIBUTING.md).
