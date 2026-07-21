@@ -171,7 +171,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | AC-085 | PO-C01/C02 NEO/MPC — esqueleto | P1 | M | E11 | ✅ workflow + `analyze astrometry` + MPC `--product` |
 | AC-086 | PO-C03 Supernovas blink — esqueleto | P1 | M | E11 | ✅ workflow + `analyze blink` + TNS `--product` |
 | AC-087 | PO-D01 Ocultações IOTA — esqueleto | P1 | M | E12 | ✅ pacote IOTA-ES |
-| AC-088 | PO-E03 Sol manchas — esqueleto | P1 | M | E13 |
+| AC-088 | PO-E03 Sol manchas — esqueleto | P1 | M | E13 | ✅ workflow + `analyze sunspots` + `contribute solar` + safety |
 
 ---
 
@@ -230,7 +230,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 |----|------|-----|-----|-----|-------|
 | AC-130 | Pipeline lunar/planetário (lucky/stack) | P2 | L | E6 | |
 | AC-131 | Deep-sky sequence LRGB básica | P2 | L | E6 | |
-| AC-132 | Modo solar + avisos de segurança | P2 | M | E5 | |
+| AC-132 | Modo solar + avisos de segurança | P2 | M | E5 | ✅ inicio — checklist obrigatorio em `analyze sunspots` |
 | AC-133 | Templates E/F restantes | P3 | M | AC-130 | |
 
 ---

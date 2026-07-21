@@ -128,6 +128,23 @@ P1_WORKFLOWS: dict[str, dict] = {
         "analysis": "timing",
         "export": "iota_es_pack",
     },
+    "PO-E03": {
+        "name": "Sol luz branca / manchas",
+        "steps": [
+            "safety_checklist",
+            "acquire_white_light",
+            "count_sunspots",
+            "export_solar_report",
+        ],
+        "networks": ["Redes solares amadoras"],
+        "analysis": "solar",
+        "export": "solar_sunspot_report",
+        "safety": [
+            "filter_confirmed",
+            "no_unfiltered_eyepiece",
+            "daytime_acknowledged",
+        ],
+    },
 }
 
 

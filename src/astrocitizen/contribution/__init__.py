@@ -7,11 +7,13 @@ from astrocitizen.contribution.exoclock import ExportExoclock, format_exoclock_l
 from astrocitizen.contribution.iota import format_iota_es_txt, write_iota_pack
 from astrocitizen.contribution.models import NetworkSubmission
 from astrocitizen.contribution.mpc import MpcAdesSubmitter, format_ades_psv, write_ades_psv
+from astrocitizen.contribution.solar import ExportSolarReport, format_solar_report
 from astrocitizen.contribution.tns import TnsClient, format_tns_at_report, write_tns_report
 
 __all__ = [
     "ExportAavso",
     "ExportExoclock",
+    "ExportSolarReport",
     "LocalCredentialsStore",
     "MpcAdesSubmitter",
     "NetworkSubmission",
@@ -21,6 +23,7 @@ __all__ = [
     "format_ades_psv",
     "format_exoclock_lc",
     "format_iota_es_txt",
+    "format_solar_report",
     "format_tns_at_report",
     "write_ades_psv",
     "write_bess_fits",

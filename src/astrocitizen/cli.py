@@ -16,6 +16,7 @@ from astrocitizen.adapters.sqlite import SqliteArchive
 from astrocitizen.analysis import (
     AperturePhotometry,
     BlinkDiff,
+    CountSunspots,
     ExtractSpectrum1D,
     MeasureAstrometry,
     PlateSolve,
@@ -27,6 +28,7 @@ from astrocitizen.contribution.exoclock import ExportExoclock
 from astrocitizen.contribution.iota import write_iota_pack
 from astrocitizen.contribution.models import NetworkSubmission
 from astrocitizen.contribution.mpc import MpcAdesSubmitter, write_ades_psv
+from astrocitizen.contribution.solar import ExportSolarReport
 from astrocitizen.contribution.tns import TnsClient, format_tns_at_report, write_tns_report
 from astrocitizen.desktop import run_gui
 from astrocitizen.inventory.models import Equipment, Site
@@ -568,6 +570,32 @@ def _cmd_analyze_blink(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_analyze_sunspots(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    store = LocalArtifactStore(Path(args.artifacts))
+    product = CountSunspots(archive, store).execute(
+        workspace_id=ws.id,
+        fits_uri=args.fits_uri,
+        filter_confirmed=bool(args.filter_confirmed),
+        no_unfiltered_eyepiece=bool(args.no_unfiltered_eyepiece),
+        daytime_acknowledged=bool(args.daytime_ack),
+        filter_name=args.filter_name,
+        observer=args.observer,
+        k=args.k,
+        spots=args.spots,
+        groups=args.groups,
+        program_id=UUID(args.program) if args.program else None,
+    )
+    print(
+        f"product={product.id}\tgroups={product.summary.get('groups')}\t"
+        f"spots={product.summary.get('spots')}\twolf_r={product.summary.get('wolf_r')}\t"
+        f"filter={product.summary.get('filter_name')}"
+    )
+    archive.close()
+    return 0
+
+
 def _cmd_analyze_export_aavso(args: argparse.Namespace) -> int:
     archive = _open_archive(Path(args.db))
     out = ExportAavso(archive).execute(
@@ -1003,6 +1031,35 @@ def _cmd_contribute_iota(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_contribute_solar(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    cred = LocalCredentialsStore(Path(args.credentials) if args.credentials else None)
+    observer = args.observer or cred.get_network("solar").get("observer")
+    out = Path(args.out)
+    ExportSolarReport(archive).execute(
+        product_id=UUID(args.product),
+        out_path=out,
+        observer=str(observer) if observer else None,
+        site=args.site,
+        notes=args.notes,
+    )
+    store = LocalArtifactStore(Path(args.artifacts))
+    uri = store.put(out, key=f"export/solar/{out.name}")
+    sub = NetworkSubmission(
+        id=new_id(),
+        workspace_id=ws.id,
+        network="solar",
+        status="draft",
+        artifact_uri=uri,
+        product_id=UUID(args.product),
+        payload_summary={"note": "upload rede solar amadora / arquivo local"},
+    )
+    archive.save_network_submission(sub)
+    print(f"wrote={out}\turi={uri}\tsubmission={sub.id}")
+    archive.close()
+    return 0
+
 
 def _cmd_meteo_forecast(args: argparse.Namespace) -> int:
     archive = _open_archive(Path(args.db))
@@ -1343,6 +1400,35 @@ def build_parser() -> argparse.ArgumentParser:
     p_bl.add_argument("--program", default=None)
     p_bl.add_argument("--artifacts", default=str(default_artifacts_root()))
     p_bl.set_defaults(func=_cmd_analyze_blink)
+    p_su = an_sub.add_parser("sunspots", help="Contagem manchas solares (PO-E03)")
+    _add_db_arg(p_su)
+    p_su.add_argument("--fits-uri", required=True)
+    p_su.add_argument(
+        "--filter-confirmed",
+        action="store_true",
+        required=True,
+        help="Confirma filtro solar certificado",
+    )
+    p_su.add_argument(
+        "--no-unfiltered-eyepiece",
+        action="store_true",
+        required=True,
+        help="Confirma que NAO ha ocular sem filtro",
+    )
+    p_su.add_argument(
+        "--daytime-ack",
+        action="store_true",
+        required=True,
+        help="Confirma observacao diurna consciente",
+    )
+    p_su.add_argument("--filter-name", default="white-light")
+    p_su.add_argument("--observer", default="AstroCitizen")
+    p_su.add_argument("--k", type=float, default=1.0, help="fator pessoal Wolf")
+    p_su.add_argument("--spots", type=int, default=None, help="override manual")
+    p_su.add_argument("--groups", type=int, default=None, help="override manual")
+    p_su.add_argument("--program", default=None)
+    p_su.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_su.set_defaults(func=_cmd_analyze_sunspots)
     p_ex = an_sub.add_parser("export-aavso", help="Export AAVSO Extended")
     _add_db_arg(p_ex)
     p_ex.add_argument("--product", required=True)
@@ -1352,7 +1438,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_ex.add_argument("--band", default="V")
     p_ex.set_defaults(func=_cmd_analyze_export_aavso)
 
-    p_wf = sub.add_parser("workflow", help="Workflows P1 (PO-J*/A*/B*/C*/D*)")
+    p_wf = sub.add_parser("workflow", help="Workflows P1 (PO-J*/A*/B*/C*/D*/E*)")
     wf_sub = p_wf.add_subparsers(dest="wf_cmd", required=True)
     p_wfl = wf_sub.add_parser("list", help="Listar workflows P1")
     p_wfl.add_argument("-v", "--verbose", action="store_true")
@@ -1506,12 +1592,23 @@ def build_parser() -> argparse.ArgumentParser:
     p_ci.add_argument("--credentials", default=None)
     p_ci.set_defaults(func=_cmd_contribute_iota)
 
+    p_csol = c_sub.add_parser("solar", help="Relatorio manchas solares (PO-E03)")
+    _add_db_arg(p_csol)
+    p_csol.add_argument("--product", required=True)
+    p_csol.add_argument("--observer", default=None)
+    p_csol.add_argument("--site", default=None)
+    p_csol.add_argument("--notes", default=None)
+    p_csol.add_argument("--out", required=True)
+    p_csol.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_csol.add_argument("--credentials", default=None)
+    p_csol.set_defaults(func=_cmd_contribute_solar)
+
     p_cl = c_sub.add_parser("list", help="Listar network_submissions")
     _add_db_arg(p_cl)
     p_cl.add_argument(
         "--network",
         default=None,
-        choices=("aavso", "mpc", "tns", "bess", "exoclock", "iota"),
+        choices=("aavso", "mpc", "tns", "bess", "exoclock", "iota", "solar"),
     )
     p_cl.set_defaults(func=_cmd_contribute_list)
 
