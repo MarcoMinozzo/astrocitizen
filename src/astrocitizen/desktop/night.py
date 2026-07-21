@@ -210,7 +210,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             self.meteo_combo = QComboBox()
             self.meteo_combo.addItem("Open-Meteo", "api")
             self.meteo_combo.addItem("Manual (limpo)", "manual")
-            self.badge = QLabel("—")
+            self.badge = QLabel("-")
             self.badge.setObjectName("badgeIdle")
             self.refresh_btn = QPushButton("Atualizar noite")
             self.refresh_btn.clicked.connect(self.refresh_night)
