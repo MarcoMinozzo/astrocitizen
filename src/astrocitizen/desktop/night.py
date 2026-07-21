@@ -82,9 +82,63 @@ def fetch_plan_status(
     return plan_status_text(plan, blocks)
 
 
+def build_night_payload(
+    *,
+    site: Any,
+    night_date: str,
+    meteo: Any,
+    artifacts_root: Path,
+) -> dict[str, Any]:
+    """Fetch forecast + radar (safe to run off UI thread; no SQLite)."""
+    from astrocitizen.adapters.meteo import RainViewerRadar
+    from astrocitizen.adapters.sky import AstropyEphemeris
+    from astrocitizen.planning.meteo_rules import evaluate_meteo_window
+
+    eph = AstropyEphemeris()
+    night = eph.night_window(
+        latitude_deg=site.latitude_deg,
+        longitude_deg=site.longitude_deg,
+        elevation_m=site.elevation_m,
+        night_date=night_date,
+        night_start_rule=site.night_start_rule,
+    )
+    fc = meteo.forecast(
+        latitude_deg=site.latitude_deg,
+        longitude_deg=site.longitude_deg,
+        start_utc=night["start_utc"],
+        end_utc=night["end_utc"],
+    )
+    ok, reason = evaluate_meteo_window(fc, site.meteo_thresholds)
+    out = Path(artifacts_root) / "radar" / f"{site.id}_gui.png"
+    meta = RainViewerRadar().region_image(
+        latitude_deg=site.latitude_deg,
+        longitude_deg=site.longitude_deg,
+        zoom=6,
+        size=512,
+        out_path=out,
+    )
+    return {
+        "ok": ok,
+        "reason": reason,
+        "fc": fc,
+        "night": night,
+        "radar_meta": meta,
+        "night_date": night_date,
+        "site_id": site.id,
+        "summary_lines": forecast_summary_lines(
+            fc,
+            ok=ok,
+            reason=reason,
+            night_start=night["start_utc"],
+            night_end=night["end_utc"],
+        ),
+        "hourly_rows": hourly_table_rows(fc),
+    }
+
+
 def build_night_dashboard(parent: Any | None = None) -> Any:
     """Devolve a classe NightDashboard (requer PySide6)."""
-    from PySide6.QtCore import QDate, Qt
+    from PySide6.QtCore import QDate, QObject, Qt, QThread, Signal
     from PySide6.QtGui import QPixmap
     from PySide6.QtWidgets import (
         QComboBox,
@@ -101,11 +155,41 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
         QWidget,
     )
 
-    from astrocitizen.adapters.meteo import ManualMeteo, OpenMeteo, RainViewerRadar
+    from astrocitizen.adapters.meteo import ManualMeteo, OpenMeteo
     from astrocitizen.adapters.sky import AstropyEphemeris
+    from astrocitizen.desktop.theme import viability_badge
     from astrocitizen.planning import GenerateDailyPlan
-    from astrocitizen.planning.meteo_rules import evaluate_meteo_window
     from astrocitizen.shared.paths import default_artifacts_root
+
+    class _NightWorker(QObject):
+        finished = Signal(dict)
+        failed = Signal(str)
+
+        def __init__(
+            self,
+            *,
+            site: Any,
+            night_date: str,
+            meteo: Any,
+            artifacts_root: Path,
+        ) -> None:
+            super().__init__()
+            self._site = site
+            self._night_date = night_date
+            self._meteo = meteo
+            self._artifacts_root = artifacts_root
+
+        def run(self) -> None:
+            try:
+                payload = build_night_payload(
+                    site=self._site,
+                    night_date=self._night_date,
+                    meteo=self._meteo,
+                    artifacts_root=self._artifacts_root,
+                )
+                self.finished.emit(payload)
+            except Exception as exc:  # noqa: BLE001 - worker boundary
+                self.failed.emit(str(exc))
 
     class NightDashboard(QWidget):
         def __init__(self, archive: Any, *, artifacts_root: Path | None = None) -> None:
@@ -114,6 +198,8 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             self.artifacts_root = Path(artifacts_root or default_artifacts_root())
             self._sites: list[Any] = []
             self._workspace_id: UUID | None = None
+            self._thread: QThread | None = None
+            self._worker: _NightWorker | None = None
 
             top = QHBoxLayout()
             self.site_combo = QComboBox()
@@ -124,9 +210,12 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             self.meteo_combo = QComboBox()
             self.meteo_combo.addItem("Open-Meteo", "api")
             self.meteo_combo.addItem("Manual (limpo)", "manual")
+            self.badge = QLabel("—")
+            self.badge.setObjectName("badgeIdle")
             self.refresh_btn = QPushButton("Atualizar noite")
             self.refresh_btn.clicked.connect(self.refresh_night)
             self.plan_btn = QPushButton("Gerar plano")
+            self.plan_btn.setObjectName("secondaryBtn")
             self.plan_btn.clicked.connect(self.generate_plan)
             top.addWidget(QLabel("Site"))
             top.addWidget(self.site_combo, 1)
@@ -134,6 +223,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             top.addWidget(self.date_edit)
             top.addWidget(QLabel("Meteo"))
             top.addWidget(self.meteo_combo)
+            top.addWidget(self.badge)
             top.addWidget(self.refresh_btn)
             top.addWidget(self.plan_btn)
 
@@ -142,6 +232,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             self.summary.setMaximumHeight(120)
 
             self.hours = QTableWidget(0, 7)
+            self.hours.setAlternatingRowColors(True)
             self.hours.setHorizontalHeaderLabels(
                 ["UTC", "Cloud%", "Wind", "RH%", "DewC", "Precipmm", "Prob%"]
             )
@@ -150,9 +241,9 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             self.plan_label.setWordWrap(True)
 
             self.radar_label = QLabel("Radar: clique Atualizar")
+            self.radar_label.setObjectName("radarPane")
             self.radar_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.radar_label.setMinimumSize(320, 320)
-            self.radar_label.setStyleSheet("background:#111; color:#aaa;")
             self.radar_attr = QLabel("")
             self.radar_attr.setWordWrap(True)
             self.radar_attr.setTextFormat(Qt.TextFormat.RichText)
@@ -178,8 +269,17 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             split.setStretchFactor(1, 2)
 
             root = QVBoxLayout(self)
+            root.setContentsMargins(16, 12, 16, 12)
             root.addLayout(top)
             root.addWidget(split, 1)
+
+        def _set_badge(self, ok: bool | None) -> None:
+            label, name = viability_badge(ok)
+            self.badge.setText(label)
+            self.badge.setObjectName(name)
+            # force stylesheet re-apply for objectName change
+            self.badge.style().unpolish(self.badge)
+            self.badge.style().polish(self.badge)
 
         def load_sites(self) -> None:
             self.site_combo.clear()
@@ -187,6 +287,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             workspaces = self.archive.list_workspaces()
             if not workspaces:
                 self.summary.setPlainText("Sem workspace. Rode: astrocitizen init-db")
+                self._set_badge(None)
                 return
             self._workspace_id = workspaces[0].id
             self._sites = self.archive.list_sites(self._workspace_id)
@@ -195,6 +296,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                 self.site_combo.addItem(f"{mark} {s.name}", s.id)
             if not self._sites:
                 self.summary.setPlainText("Sem sites. Rode: astrocitizen site add ...")
+                self._set_badge(None)
 
         def _current_site(self) -> Any | None:
             idx = self.site_combo.currentIndex()
@@ -218,79 +320,86 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                 fetch_plan_status(self.archive, self._workspace_id, site.id, night_date)
             )
 
+        def _set_busy(self, busy: bool) -> None:
+            self.refresh_btn.setEnabled(not busy)
+            self.plan_btn.setEnabled(not busy)
+            self.site_combo.setEnabled(not busy)
+            self.date_edit.setEnabled(not busy)
+            self.meteo_combo.setEnabled(not busy)
+
         def refresh_night(self) -> None:
             site = self._current_site()
             if site is None or self._workspace_id is None:
                 QMessageBox.warning(self, "Noite", "Nenhum site seleccionado.")
                 return
+            if self._thread is not None and self._thread.isRunning():
+                return
             night_date = self.date_edit.date().toString("yyyy-MM-dd")
-            self.refresh_btn.setEnabled(False)
-            self.plan_btn.setEnabled(False)
+            self._set_busy(True)
             self.summary.setPlainText("A carregar Open-Meteo + radar...")
-            try:
-                eph = AstropyEphemeris()
-                night = eph.night_window(
-                    latitude_deg=site.latitude_deg,
-                    longitude_deg=site.longitude_deg,
-                    elevation_m=site.elevation_m,
-                    night_date=night_date,
-                    night_start_rule=site.night_start_rule,
-                )
-                fc = self._meteo().forecast(
-                    latitude_deg=site.latitude_deg,
-                    longitude_deg=site.longitude_deg,
-                    start_utc=night["start_utc"],
-                    end_utc=night["end_utc"],
-                )
-                ok, reason = evaluate_meteo_window(fc, site.meteo_thresholds)
-                self.summary.setPlainText(
-                    "\n".join(
-                        forecast_summary_lines(
-                            fc,
-                            ok=ok,
-                            reason=reason,
-                            night_start=night["start_utc"],
-                            night_end=night["end_utc"],
-                        )
-                    )
-                )
-                rows = hourly_table_rows(fc)
-                self.hours.setRowCount(len(rows))
-                for r, row in enumerate(rows):
-                    for c, val in enumerate(row):
-                        self.hours.setItem(r, c, QTableWidgetItem(val))
-                self.hours.resizeColumnsToContents()
-                self._update_plan_label(site, night_date)
+            self._set_badge(None)
 
-                out = self.artifacts_root / "radar" / f"{site.id}_gui.png"
-                meta = RainViewerRadar().region_image(
-                    latitude_deg=site.latitude_deg,
-                    longitude_deg=site.longitude_deg,
-                    zoom=6,
-                    size=512,
-                    out_path=out,
+            thread = QThread(self)
+            worker = _NightWorker(
+                site=site,
+                night_date=night_date,
+                meteo=self._meteo(),
+                artifacts_root=self.artifacts_root,
+            )
+            worker.moveToThread(thread)
+            thread.started.connect(worker.run)
+            worker.finished.connect(self._on_night_ok)
+            worker.failed.connect(self._on_night_fail)
+            worker.finished.connect(thread.quit)
+            worker.failed.connect(thread.quit)
+            thread.finished.connect(worker.deleteLater)
+            thread.finished.connect(thread.deleteLater)
+            thread.finished.connect(self._on_thread_done)
+            self._thread = thread
+            self._worker = worker
+            thread.start()
+
+        def _on_thread_done(self) -> None:
+            self._thread = None
+            self._worker = None
+            self._set_busy(False)
+
+        def _on_night_ok(self, payload: dict) -> None:
+            self._set_badge(bool(payload.get("ok")))
+            self.summary.setPlainText("\n".join(payload.get("summary_lines") or []))
+            rows = payload.get("hourly_rows") or []
+            self.hours.setRowCount(len(rows))
+            for r, row in enumerate(rows):
+                for c, val in enumerate(row):
+                    self.hours.setItem(r, c, QTableWidgetItem(str(val)))
+            self.hours.resizeColumnsToContents()
+            site = self._current_site()
+            night_date = str(payload.get("night_date") or "")
+            if site is not None and night_date and self._workspace_id is not None:
+                self._update_plan_label(site, night_date)
+            else:
+                self.plan_label.setText("plano: -")
+            meta = payload.get("radar_meta") or {}
+            pix = QPixmap(str(meta.get("image_path") or ""))
+            if pix.isNull():
+                self.radar_label.setText("Falha ao carregar PNG do radar")
+            else:
+                scaled = pix.scaled(
+                    max(self.radar_label.width(), 320),
+                    max(self.radar_label.height(), 320),
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
                 )
-                pix = QPixmap(str(meta["image_path"]))
-                if pix.isNull():
-                    self.radar_label.setText("Falha ao carregar PNG do radar")
-                else:
-                    scaled = pix.scaled(
-                        max(self.radar_label.width(), 320),
-                        max(self.radar_label.height(), 320),
-                        Qt.AspectRatioMode.KeepAspectRatio,
-                        Qt.TransformationMode.SmoothTransformation,
-                    )
-                    self.radar_label.setPixmap(scaled)
-                self.radar_attr.setText(
-                    f"{meta.get('attribution', '')}<br>"
-                    f"<small>{meta.get('image_path')}</small>"
-                )
-            except Exception as exc:  # noqa: BLE001 - UI boundary
-                self.summary.setPlainText(f"erro: {exc}")
-                QMessageBox.critical(self, "Noite", str(exc))
-            finally:
-                self.refresh_btn.setEnabled(True)
-                self.plan_btn.setEnabled(True)
+                self.radar_label.setPixmap(scaled)
+            self.radar_attr.setText(
+                f"{meta.get('attribution', '')}<br>"
+                f"<small>{meta.get('image_path')}</small>"
+            )
+
+        def _on_night_fail(self, message: str) -> None:
+            self._set_badge(None)
+            self.summary.setPlainText(f"erro: {message}")
+            QMessageBox.critical(self, "Noite", message)
 
         def generate_plan(self) -> None:
             site = self._current_site()
@@ -298,8 +407,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                 QMessageBox.warning(self, "Noite", "Nenhum site seleccionado.")
                 return
             night_date = self.date_edit.date().toString("yyyy-MM-dd")
-            self.plan_btn.setEnabled(False)
-            self.refresh_btn.setEnabled(False)
+            self._set_busy(True)
             try:
                 plan = GenerateDailyPlan(
                     self.archive, AstropyEphemeris(), self._meteo()
@@ -317,7 +425,6 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             except Exception as exc:  # noqa: BLE001 - UI boundary
                 QMessageBox.critical(self, "Gerar plano", str(exc))
             finally:
-                self.plan_btn.setEnabled(True)
-                self.refresh_btn.setEnabled(True)
+                self._set_busy(False)
 
     return NightDashboard
