@@ -199,7 +199,7 @@ def viability_badge(ok: bool | None) -> tuple[str, str]:
         return "VIABLE", "badgeOk"
     if ok is False:
         return "INVIABLE", "badgeBad"
-    return "—", "badgeIdle"
+    return "-", "badgeIdle"
 
 
 def empty_state_text(module: str) -> str:
@@ -207,7 +207,7 @@ def empty_state_text(module: str) -> str:
         "Sites": "Nenhum site. CLI: astrocitizen site add --name ...",
         "Equipamento": "Nenhum equipamento. CLI: astrocitizen equipment add ...",
         "Programas": "Nenhum programa. CLI: astrocitizen program create --template PO-A01",
-        "Plano diario": "Nenhum plano. Use Noite ? Gerar plano.",
+        "Plano diario": "Nenhum plano. Use Noite -> Gerar plano.",
         "Sessao": "Nenhuma sessao registada.",
         "Arquivo": "Nenhuma observacao no arquivo.",
     }
