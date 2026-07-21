@@ -10,6 +10,7 @@ from astrocitizen import __version__
 from astrocitizen.adapters.fs import LocalArtifactStore
 from astrocitizen.adapters.hardware import create_camera
 from astrocitizen.adapters.meteo import ManualMeteo, OpenMeteo, RainViewerRadar
+from astrocitizen.adapters.platesolve import create_plate_solver
 from astrocitizen.adapters.sky import AstropyEphemeris, SimbadResolver
 from astrocitizen.adapters.sqlite import SqliteArchive
 from astrocitizen.analysis import (
@@ -17,6 +18,7 @@ from astrocitizen.analysis import (
     BlinkDiff,
     ExtractSpectrum1D,
     MeasureAstrometry,
+    PlateSolve,
 )
 from astrocitizen.contribution.aavso import ExportAavso
 from astrocitizen.contribution.bess import annotate_existing_fits, write_bess_fits
@@ -504,6 +506,39 @@ def _cmd_analyze_astrometry(args: argparse.Namespace) -> int:
         f"product={product.id}\tra={product.summary.get('ra_deg')}\t"
         f"dec={product.summary.get('dec_deg')}\tmag={product.summary.get('mag')}\t"
         f"epoch={product.summary.get('epoch_utc')}"
+    )
+    archive.close()
+    return 0
+
+
+def _cmd_analyze_plate_solve(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    store = LocalArtifactStore(Path(args.artifacts))
+    cred = LocalCredentialsStore(Path(args.credentials) if args.credentials else None)
+    nova_cred = cred.get_network("astrometrynet")
+    api_key = args.api_key or nova_cred.get("api_key")
+    nova_dry = not args.submit
+    solver = create_plate_solver(
+        args.backend,
+        api_key=str(api_key) if api_key else None,
+        nova_dry_run=nova_dry if args.backend == "nova" else True,
+    )
+    product, result = PlateSolve(archive, store, solver).execute(
+        workspace_id=ws.id,
+        fits_uri=args.fits_uri,
+        ra_hint_deg=args.ra_hint,
+        dec_hint_deg=args.dec_hint,
+        radius_deg=args.radius,
+        scale_low_arcsec=args.scale_low,
+        scale_high_arcsec=args.scale_high,
+        timeout_s=args.timeout,
+        program_id=UUID(args.program) if args.program else None,
+    )
+    print(
+        f"product={product.id}\tbackend={result.backend}\t"
+        f"ra={result.ra_center_deg}\tdec={result.dec_center_deg}\t"
+        f"scale={result.scale_arcsec}\twcs_uri={product.parameters.get('wcs_uri')}"
     )
     archive.close()
     return 0
@@ -1272,6 +1307,30 @@ def build_parser() -> argparse.ArgumentParser:
     p_as.add_argument("--program", default=None)
     p_as.add_argument("--artifacts", default=str(default_artifacts_root()))
     p_as.set_defaults(func=_cmd_analyze_astrometry)
+    p_ps = an_sub.add_parser("plate-solve", help="Plate-solve / WCS (AC-110)")
+    _add_db_arg(p_ps)
+    p_ps.add_argument("--fits-uri", required=True)
+    p_ps.add_argument(
+        "--backend",
+        choices=("auto", "solve-field", "nova", "synthetic"),
+        default="auto",
+    )
+    p_ps.add_argument("--ra-hint", type=float, default=None, help="RA deg (hint)")
+    p_ps.add_argument("--dec-hint", type=float, default=None, help="Dec deg (hint)")
+    p_ps.add_argument("--radius", type=float, default=None, help="search radius deg")
+    p_ps.add_argument("--scale-low", type=float, default=None, help="arcsec/pix")
+    p_ps.add_argument("--scale-high", type=float, default=None, help="arcsec/pix")
+    p_ps.add_argument("--timeout", type=float, default=120.0)
+    p_ps.add_argument("--api-key", default=None, help="nova.astrometry.net")
+    p_ps.add_argument("--credentials", default=None)
+    p_ps.add_argument(
+        "--submit",
+        action="store_true",
+        help="Nova: envio real (sem dry-run/synthetic)",
+    )
+    p_ps.add_argument("--program", default=None)
+    p_ps.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_ps.set_defaults(func=_cmd_analyze_plate_solve)
     p_bl = an_sub.add_parser("blink", help="Blink / diff (PO-C03)")
     _add_db_arg(p_bl)
     p_bl.add_argument("--new-uri", required=True)

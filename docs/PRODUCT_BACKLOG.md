@@ -204,8 +204,8 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
-| AC-110 | Plate-solve / WCS (integração externa) | P2 | L | E6 | |
-| AC-111 | Medidas astrométricas → BD | P2 | M | AC-110 | |
+| AC-110 | Plate-solve / WCS (integração externa) | P2 | L | E6 | ✅ `analyze plate-solve` · solve-field / nova / synthetic |
+| AC-111 | Medidas astrométricas → BD | P2 | M | AC-110 | ✅ inicio via `astrometry` product + WCS |
 | AC-112 | Export MPC | P2 | M | E14 | ✅ ADES PSV + `contribute mpc` (dry-run default) |
 | AC-113 | Blink / diff imaging | P2 | M | E6 | |
 | AC-114 | Tracking não-sideral (apoio NEO/cometa) | P2 | L | E4 | |
