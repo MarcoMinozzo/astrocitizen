@@ -1,0 +1,116 @@
+<!-- #BeginTemplate "/Templates/Fixed_Fluid.dwt" --><!-- DW6 -->
+<!DOCTYPE html>
+ 
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="expires" content="Fri, 1 Jan 1990 00:00:00 GMT">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+
+<!-- #BeginEditable "Title" -->
+<title>Applications - Getting Started</title><!-- #EndEditable -->
+
+<link rel="stylesheet" type="text/css" href="../Styles/Fixed_Fluid.css" />
+
+<script type="text/javascript" language="javascript" src="../jscripts/Navigation.js"></script>
+
+</head>
+ 
+<body>
+
+<div id="banner">
+	<img style="position: absolute; top: 20px; left: 20px;" alt="ASCOM Standards for Astronomy" src="../Images/ASCOM-Logo.jpg" />
+	
+	<div id="breadcrumbs">
+	<script type="text/javascript" language="javascript">
+	<!-- 
+	breadcrumbs(); 
+	-->
+	</script>
+</div>
+
+	<div class="topmenucontainer">
+    <script type="text/javascript" language="javascript">
+      <!-- 
+	        writemainmenu();
+	        -->
+    </script>
+  </div>
+</div>
+
+
+
+<div id="leftcontent">
+
+
+	<div class="LeftNav">
+	<div class="center"><div class="north"><div class="south">
+	<script type="text/javascript" language="javascript">
+	<!-- 
+	writesubmenu(); 
+	-->
+	</script>
+	
+	</div></div></div></div>
+
+	<!-- #BeginEditable "LeftNav" -->	<!-- #EndEditable --></div>
+<div id="centercontent">
+	<!-- #BeginEditable "MainContent" -->
+	<div class="article">
+	<h3>ASCOM/COM Applications (Windows only)</h3>
+	<p class="note">If you haven't yet read the section <a href="../About/Index.htm">About ASCOM</a>, you should really go there and read it now. Knowing the basics and design philosophy can save you time and frustration compared to starting with pre-conceived ideas and ending up frustrated. <span class="alert">Consider starting out with Alpaca, which is cross-platform, instead of classic ASCOM/COM</span>. </p>
+	<p>Using ASCOM drivers differs in detail depending on the language you are using for your application. <a href="../About/CompatLang.htm">Over 20 languages on Windows</a> can use drivers, so it's beyond the scope of this document to describe the details for each. The place to start is the documentation for your language that covers &quot;COM Automation&quot; or &quot;ActiveX&quot;.	</p>
+	<h4>Recommended for Windows/COM ASCOM: C#.NET</h4>
+	<p>The <a href="ClientToolkit.htm">ASCOM Client Toolkit</a> is an assembly that greatly simplifies using drivers from .NET applications. Astronomy app developers wishing to use ASCOM drivers from .NET applications on Windows are encouraged to use this library, as it provides not only simplified access to drivers, but also automatic switching between the preferred early-binding interfaces and, for older drivers that don't support it, late-binding. If late binding is needed, the Client Toolkit hides all of the ugly details of calling a driver via its late-bound interface. Your code will always use native .NET class/object syntax.	</p>
+	<h4>Can I use C++?</h4>
+	<p>C++ is by far the most difficult language from which to use ASCOM drivers (or for that matter, any Windows COM Object). Since drivers in general only support &quot;late binding&quot;, it's necessary to implement complex IDispatch-based code to call them. The ActiveX Template Library can be a  help, but it's still really difficult. You'll have to write wrapper code and be very careful calling the interface members. The learning curve is steep. Consider how married you are to C++ before starting your new astronomy application development.</p>
+	<h4>What about Python?</h4>
+	<p>Yes. The <a href="https://pypi.org/project/pywin32/" target="_blank">pywin32 package</a> provides access to the ActiveX/COM features in Windows that ASCOM/COM uses. However we recommend that any new Python applications use <a href="file:///D:/dev/astro/ascom-standards.org/ascom-standards.org/AlpacaDeveloper/Index.htm">ASCOM Alpaca</a> to talk to astronomical devices. Your app will be cross-platform and independent of the large and complex Win32 APIs in pywin32. </p>
+	<h4>Other languages</h4>
+	<p>It's very easy to use an ASCOM driver in most Windows languages. The basic steps are:</p>
+	<ol>
+		<li>Create an instance of the driver</li>
+		<li>Optionally, open the driver's setup window, allowing the user to set things like the COM port. The driver will remember these settings.</li>
+		<li>Connect to the hardware</li>
+		<li>Determine the optional capabilities of the device</li>
+		<li>Prepare the device for your use</li>
+	</ol>
+	<p>At this point you can control the device via the standard interface members (properties and methods). See the interface standard documents installed with the ASCOM Platform.	</p>
+	<h4>Hello World in JScript</h4>
+	<p>The following script, written in the JScript language, shows how simple it is to control a telescope using ASCOM/COM on Windows. We use the Telescope Simulator, part of the ASCOM Platform. The simulator is a Telescope driver; it's a great tool for testing your code. To switch over to talking to some other (real) telescope, all you need to do is change the driver ID from<span style="color: #CF6;"> ASCOM.OmniSim.Telescope</span><tt><span style="color: #CF6"> </span></tt>to <tt><span style="color: #CF6">SomethingElse.Telescope</span></tt>. That's it!</p>
+	<pre>
+var T = new ActiveXObject(&quot;<span style="color: #CF6;">ASCOM.OmniSim.Telescope</span>&quot;);    <span style="color: #999999;">// Change for your driver's ID</span>
+T.SetupDialog();                                    <span style="color: #999999;">// Comment this out once you set COM port, etc.</span>
+T.Connected = true;
+WScript.StdOut.WriteLine(&quot;RA = &quot; + T.RightAscension);
+WScript.StdOut.WriteLine(&quot;DE = &quot; + T.Declination);
+if (T.CanSetTracking &amp;&amp; !T.Tracking)
+    T.Tracking = true;
+WScript.StdOut.WriteLine(&quot;Slewing to 1 hour east of meridian...&quot;);
+T.SlewToCoordinates(T.SiderealTime + 1.0, 0);
+WScript.StdOut.WriteLine(&quot;... slew complete&quot;);
+WScript.StdOut.Write(&quot;Press Enter to quit and release the driver &quot;);
+WScript.StdIn.ReadLine();</pre>
+	<p>Create a file <span style="color: #CF6">ASCOMHello.js</span> with this script in it. Open a CMD shell and change to the directory containing the new script file. Run the script with the Windows Script Host <span style="color: #CF6">cscript</span>. This program plays the same role as (e.g.) the Perl or Python interpreters for those languages.</p>
+	<pre>C:\Foo\Bar\&gt; <span style="color: #CF6">cscript ASCOMHello.js
+RA = 9.660283023289306
+DE = -1.286254097879772e-7
+Slewing to 1 hour east of meridian...
+... slew complete
+Press Enter to quit and release the driver</span>
+
+C:\Foo\Bar\&gt;</pre>
+	<p>After typing the command, you'll see the Omni Simulator's server console window appear, along with a popup advising that you need the web browser to change its settings. Just click OK on that. Now the script should produce the above result.  Note that the simulator server's condole window is still minimized. The next time you want to use the simulator it will run much faster (no startup). Feel free to close this window to shut down the simulator server. </p>
+	<p class="note">NOTE: If you are on a 64-bit system, you may need to be running this in a 32-bit CMD shell if your device's driver is a 32-bit DLL type. To open a 32-bit CMD shell, run <span style="color: #CF6">C:\Windows\SysWOW64\cmd.exe</span></p>
+	<div>
+	
+	<!-- #EndEditable --></div>
+<div id="footer">
+	Copyright &copy; 1998-2026, The ASCOM Initiative. 
+	All rights reserved. </div>
+
+</body>
+
+<!-- #EndTemplate --></html>

@@ -1,0 +1,117 @@
+﻿<!DOCTYPE html ><html lang="en-US"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><link rel="shortcut icon" href="../icons/favicon.ico" /><link rel="stylesheet" href="../css/bulma.css" /><link rel="stylesheet" href="../css/font-awesome.min.css" /><link rel="stylesheet" href="../css/presentationStyle.css" /><link rel="stylesheet" href="../css/vs.min.css" /><script src="../scripts/jquery-3.5.1.min.js"></script><script src="../scripts/clipboard.min.js"></script><script src="../scripts/highlight.min.js"></script><script src="../scripts/presentationStyle.js"></script><title>IDomeV2 Interface</title><meta name="Title" content="IDomeV2" /><meta name="Help.Id" content="T:ASCOM.Common.DeviceInterfaces.IDomeV2" /><meta name="Help.ContentType" content="Reference" /><meta name="container" content="ASCOM.Common.DeviceInterfaces" /><meta name="guid" content="T_ASCOM_Common_DeviceInterfaces_IDomeV2" /><meta name="Description" content="Defines the IDome Interface" /><meta name="tocFile" content="../toc/IDDDN.xml" /></head><body><div class="fixedLayout"><div id="Header" class="fixedHeader"><div class="pageHeader level mb-0 py-2 px-4"><div id="TitleContainer" class="level-left"><div class="level-item"><img src="../icons/Bug72.jpg" /></div><div id="DocumentationTitle" class="level-item">ASCOM Library</div></div><div id="LangFilterSearchContainer" class="level-right"><div class="level-item"><div class="dropdown is-hoverable"><div class="dropdown-trigger"><button class="button" aria-haspopup="true" aria-controls="dropdown-menu"><span id="CurrentLanguage"></span><span class="icon is-small"><i class="fa fa-angle-down" aria-hidden="true"></i></span></button></div><div class="dropdown-menu" role="menu"><div id="LanguageSelections" class="dropdown-content"><a class="dropdown-item languageFilterItem" data-languageId="cs">C#</a><a class="dropdown-item languageFilterItem" data-languageId="vb">VB</a></div></div></div></div><div class="level-item"><form id="SearchForm" action="#" onsubmit="TransferToSearchPage(); return false;"><div class="field"><div class="control has-icons-left"><input id="SearchTerms" class="input" type="text" maxlength="200" placeholder="Search" /><span class="icon is-small is-left"><i class="fa fa-search"></i></span><button id="SearchButton" type="submit" class="is-hidden"></button></div></div></form></div></div></div></div><div class="fixedContent"><nav class="breadcrumb my-1 px-2 border-bottom" role="navigation"><ul id="TopicBreadcrumbs" /></nav><div id="ContentContainer" class="columns pl-5 pr-5 fixedContent"><div id="ShowHideTOCColumn" class="column is-hidden-tablet"><a id="ShowHideTOC">Show/Hide TOC</a></div><div id="TOCColumn" class="column is-hidden-mobile"><nav class="toc"><ul id="TableOfContents" class="toc-menu" /></nav></div><div id="Resizer" class="is-hidden"></div><div id="TopicContent" class="column content is-7"><h1>IDome<wbr />V<wbr />2 Interface</h1><div class="summary">
+            Defines the IDome Interface
+            </div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Definition</h2><div id="IDBSection"><strong>Namespace:</strong> <a href="N_ASCOM_Common_DeviceInterfaces.htm">ASCOM.Common.DeviceInterfaces</a><br /><strong>Assembly:</strong> ASCOM.Common (in ASCOM.Common.dll) Version: 3.0.0-rc.1+86c25ce733aebb4d8b1b8a62e84770ea5e972bea<div class="codeSnippet" data-codeSnippetLanguage="cs"><div class="codeHeader"><span class="codeHeaderTitle">C#</span><span class="buttons"><button class="button is-small is-light copyCode" title="Copy"><span class="icon is-small"><i class="fa fa-copy"></i></span><span>Copy</span></button></span></div><div class="codePanel hljs"><pre xml:space="preserve"><code class="language-cs"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="identifier">IDomeV2</span> : <span class="identifier">IAscomDevice</span></code></pre></div></div><div class="codeSnippet is-hidden" data-codeSnippetLanguage="vb"><div class="codeHeader"><span class="codeHeaderTitle">VB</span><span class="buttons"><button class="button is-small is-light copyCode" title="Copy"><span class="icon is-small"><i class="fa fa-copy"></i></span><span>Copy</span></button></span></div><div class="codePanel hljs"><pre xml:space="preserve"><code class="language-vb"><span class="keyword">Public</span> <span class="keyword">Interface</span> <span class="identifier">IDomeV2</span>
+	<span class="keyword">Inherits</span> <span class="identifier">IAscomDevice</span></code></pre></div></div><dl class="implementsList"><dt>Implements</dt><dd><a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a></dd></dl></div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Remarks</h2><div id="IDBCSection">
+            This interface is used to handle a dome, with or without a controllable shutter, and also a roll off roof.
+            <p>The dome implantation should be self explanatory.</p><p>A roll off roof is implemented using the shutter control as the roof.  The properties and methods should be implemented as follows:
+            <ul><li>OpenShutter and CloseShutter open and close the roof.</li><li>CanFindHome, CanPark,CanSetAltitude, CanSetAzimuth, CanSetPark, CanSlave and CanSyncAzimuth all return false.</li><li>CanSetShutter returns true.</li><li>ShutterStatus is implemented.</li><li>Slewing always returns false.</li><li>AbortSlew should stop the shutter moving.</li><li>FindHome, Park, SetPark, SlewToAltitude, SlewToAzimuth and SyncToAzimuth all throw the <a href="T_ASCOM_NotImplementedException.htm">NotImplementedException</a></li><li>Altitude and Azimuth throw the <a href="T_ASCOM_NotImplementedException.htm">NotImplementedException</a>.</li></ul></p></div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Properties</h2><div id="IDVFASection"><table id="PropertyList" class="table is-hoverable"><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IDomeV2_Altitude.htm">Altitude</a></td><td>
+            The dome altitude (degrees, horizon zero and increasing positive to 90 zenith).
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IDomeV2_AtHome.htm">AtHome</a></td><td>
+            Indicates whether the dome is in the home position. Raises an error if not supported. 
+            <p>
+            This is normally used following a <a href="M_ASCOM_Common_DeviceInterfaces_IDomeV2_FindHome.htm">FindHome<span id="LST1DCDB088_0" data-languageSpecificText="cs=()|vb=|cpp=()|nu=()|fs=()"></span></a> operation. The value is reset with any azimuth slew operation that moves the dome away from the home position.
+            </p><p><a href="P_ASCOM_Common_DeviceInterfaces_IDomeV2_AtHome.htm">AtHome</a> may also become true during normal slew operations, if the dome passes through the home position and the dome controller hardware is capable of detecting that; 
+            or at the end of a slew operation if the dome comes to rest at the home position.
+            </p></td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IDomeV2_AtPark.htm">AtPark</a></td><td>
+            True if the dome is in the programmed park position.
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IDomeV2_Azimuth.htm">Azimuth</a></td><td>
+            The dome azimuth (degrees, North zero and increasing clockwise, i.e., 90 East, 180 South, 270 West)
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IDomeV2_CanFindHome.htm">CanFindHome</a></td><td>
+            True if driver can do a search for home position.
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IDomeV2_CanPark.htm">CanPark</a></td><td>
+            True if driver is capable of setting dome altitude.
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IDomeV2_CanSetAltitude.htm">CanSetAltitude</a></td><td>
+            True if driver is capable of setting dome altitude.
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IDomeV2_CanSetAzimuth.htm">CanSetAzimuth</a></td><td>
+            True if driver is capable of setting dome azimuth.
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IDomeV2_CanSetPark.htm">CanSetPark</a></td><td>
+            True if driver can set the dome park position.
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IDomeV2_CanSetShutter.htm">CanSetShutter</a></td><td>
+            True if driver is capable of automatically operating shutter.
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IDomeV2_CanSlave.htm">CanSlave</a></td><td>
+            True if the dome hardware supports slaving to a telescope.
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IDomeV2_CanSyncAzimuth.htm">CanSyncAzimuth</a></td><td>
+            True if driver is capable of synchronizing the dome azimuth position using the <a href="M_ASCOM_Common_DeviceInterfaces_IDomeV2_SyncToAzimuth.htm">SyncToAzimuth(Double)</a> method.
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_Connected.htm">Connected</a></td><td>
+            Set True to enable the link. Set False to disable the link.
+            You can also read the property to check whether it is connected.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_Description.htm">Description</a></td><td>
+            Returns a description of the driver, such as manufacturer and model number.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_DriverInfo.htm">DriverInfo</a></td><td>
+            Descriptive and version information about this ASCOM driver.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_DriverVersion.htm">DriverVersion</a></td><td>
+            A string in the form "n.n" containing only the major and minor version of the driver.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_InterfaceVersion.htm">InterfaceVersion</a></td><td>
+            The interface version number that this device implements.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_Name.htm">Name</a></td><td>
+            The short name of the driver, for display purposes
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IDomeV2_ShutterStatus.htm">ShutterStatus</a></td><td>
+            Status of the dome shutter or roll-off roof.
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IDomeV2_Slaved.htm">Slaved</a></td><td>
+            True if the dome is slaved to the telescope in its hardware, else False.
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IDomeV2_Slewing.htm">Slewing</a></td><td>
+            True if any part of the dome is currently moving, False if all dome components are steady.
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_SupportedActions.htm">SupportedActions</a></td><td>
+            Returns the list of action names supported by this driver.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr></table></div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Methods</h2><div id="IDHFASection"><table id="MethodList" class="table is-hoverable"><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IDomeV2_AbortSlew.htm">AbortSlew</a></td><td>
+            Immediately cancel current dome operation.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IAscomDevice_Action.htm">Action</a></td><td>
+            Invokes the specified device-specific action.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IDomeV2_CloseShutter.htm">CloseShutter</a></td><td>
+            Close shutter or otherwise shield telescope from the sky.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IAscomDevice_CommandBlind.htm">CommandBlind</a></td><td>
+            Transmits an arbitrary string to the device and does not wait for a response.
+            Optionally, protocol framing characters may be added to the string before transmission.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IAscomDevice_CommandBool.htm">CommandBool</a></td><td>
+            Transmits an arbitrary string to the device and waits for a boolean response.
+            Optionally, protocol framing characters may be added to the string before transmission.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IAscomDevice_CommandString.htm">CommandString</a></td><td>
+            Transmits an arbitrary string to the device and waits for a string response.
+            Optionally, protocol framing characters may be added to the string before transmission.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IAscomDevice_Dispose.htm">Dispose</a></td><td>
+            This method is a "clean-up" method that is primarily of use to drivers that are written in languages such as C# and VB.NET where resource clean-up is initially managed by the language's 
+            runtime garbage collection mechanic. Driver authors should take care to ensure that a client or runtime calling Dispose() does not adversely affect other connected clients.
+            Applications should not call this method.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IDomeV2_FindHome.htm">FindHome</a></td><td>
+            Start operation to search for the dome home position.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IDomeV2_OpenShutter.htm">OpenShutter</a></td><td>
+            Open shutter or otherwise expose telescope to the sky.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IDomeV2_Park.htm">Park</a></td><td>
+            Rotate dome in azimuth to park position.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IDomeV2_SetPark.htm">SetPark</a></td><td>
+            Set the current azimuth, altitude position of dome to be the park position.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IDomeV2_SlewToAltitude.htm">SlewToAltitude</a></td><td>
+            Slew the dome to the given altitude position.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IDomeV2_SlewToAzimuth.htm">SlewToAzimuth</a></td><td>
+            Slew the dome to the given azimuth position.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IDomeV2_SyncToAzimuth.htm">SyncToAzimuth</a></td><td>
+            Synchronize the current position of the dome to the given azimuth.
+            </td></tr></table></div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Extension Methods</h2><div id="IDAFASection"><table id="ExtensionList" class="table is-hoverable"><tr><td><a href="M_ASCOM_Common_ClientExtensions_AbortSlewAsync.htm">AbortSlewAsync</a></td><td>
+            Returns an awaitable, running, <a href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task" target="_blank" rel="noopener noreferrer">Task</a> that halts all dome movement
+            <br />(Defined by <a href="T_ASCOM_Common_ClientExtensions.htm">ClientExtensions</a>)</td></tr><tr><td><a href="M_ASCOM_Common_ClientExtensions_CloseShutterAsync.htm">CloseShutterAsync</a></td><td>
+            Returns an awaitable, running, <a href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task" target="_blank" rel="noopener noreferrer">Task</a> that closes the dome shutter
+            <br />(Defined by <a href="T_ASCOM_Common_ClientExtensions.htm">ClientExtensions</a>)</td></tr><tr><td><a href="M_ASCOM_Common_ClientExtensions_FindHomeAsync.htm">FindHomeAsync</a></td><td>
+            Returns an awaitable, running, <a href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task" target="_blank" rel="noopener noreferrer">Task</a> that moves the dome to the home position
+            <br />(Defined by <a href="T_ASCOM_Common_ClientExtensions.htm">ClientExtensions</a>)</td></tr><tr><td><a href="M_ASCOM_Common_ClientExtensions_OpenShutterAsync.htm">OpenShutterAsync</a></td><td>
+            Returns an awaitable, running, <a href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task" target="_blank" rel="noopener noreferrer">Task</a> that opens the dome shutter
+            <br />(Defined by <a href="T_ASCOM_Common_ClientExtensions.htm">ClientExtensions</a>)</td></tr><tr><td><a href="M_ASCOM_Common_ClientExtensions_ParkAsync.htm">ParkAsync</a></td><td>
+            Returns an awaitable, running, <a href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task" target="_blank" rel="noopener noreferrer">Task</a> that parks the dome
+            <br />(Defined by <a href="T_ASCOM_Common_ClientExtensions.htm">ClientExtensions</a>)</td></tr><tr><td><a href="M_ASCOM_Common_ClientExtensions_SlewToAltitudeAsync.htm">SlewToAltitudeAsync</a></td><td>
+            Returns an awaitable, running, <a href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task" target="_blank" rel="noopener noreferrer">Task</a> that slews the dome to the specified altitude
+            <br />(Defined by <a href="T_ASCOM_Common_ClientExtensions.htm">ClientExtensions</a>)</td></tr><tr><td><a href="M_ASCOM_Common_ClientExtensions_SlewToAzimuthAsync.htm">SlewToAzimuthAsync</a></td><td>
+            Returns an awaitable, running, <a href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task" target="_blank" rel="noopener noreferrer">Task</a> that slews the dome to the specified azimuth
+            <br />(Defined by <a href="T_ASCOM_Common_ClientExtensions.htm">ClientExtensions</a>)</td></tr></table></div><h4 class="quickLinkHeader">Version Information</h4><h4 class="quickLinkHeader">.NET Standard</h4>Supported in: 2.0<br /><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>See Also</h2><div id="seeAlsoSection"><h4>Reference</h4><div><a href="N_ASCOM_Common_DeviceInterfaces.htm">ASCOM.Common.DeviceInterfaces Namespace</a></div></div></div><div id="InThisArticleColumn" class="column is-hidden-mobile"><nav class="menu sticky is-hidden"><p class="menu-label"><strong>In This Article</strong></p><ul id="InThisArticleMenu" class="menu-list"><li><a class="quickLink">Definition</a></li><li><a class="quickLink">Remarks</a></li><li><a class="quickLink">Properties</a></li><li><a class="quickLink">Methods</a></li><li><a class="quickLink">Extension Methods</a><ul class="menu"><li><a class="quickLink">Version Information</a></li><li><a class="quickLink">.NET Standard</a></li></ul></li><li><a class="quickLink">See Also</a></li></ul></nav></div></div></div><footer id="PageFooter" class="footer border-top py-3 fixedFooter"><div class="columns"><div id="FooterContent" class="column"><p><a href="https://www.ascom-standards.org" target="_blank" rel="noopener noreferrer">Copyright © 2021 - 2025 ASCOM Initiative</a></p> 
+				</div></div></footer></div><script>$(function(){
+SetDefaultLanguage("cs");
+LoadTocFile(null, null);
+InitializeQuickLinks();
+
+$(".toggleSection" ).click(function () {
+    SectionExpandCollapse(this);
+});
+
+$(".toggleSection").keypress(function () {
+    SectionExpandCollapseCheckKey(this, event)
+});
+hljs.highlightAll();
+});</script></body></html>

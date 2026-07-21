@@ -1,0 +1,174 @@
+<!-- #BeginTemplate "/Templates/Fixed_Fluid.dwt" --><!-- DW6 -->
+<!DOCTYPE html>
+ 
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="expires" content="Fri, 1 Jan 1990 00:00:00 GMT">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+
+<!-- #BeginEditable "Title" -->
+<title>Conformance Checking</title><!-- #EndEditable -->
+
+<link rel="stylesheet" type="text/css" href="../Styles/Fixed_Fluid.css" />
+
+<script type="text/javascript" language="javascript" src="../jscripts/Navigation.js"></script>
+
+</head>
+ 
+<body>
+
+<div id="banner">
+	<img style="position: absolute; top: 20px; left: 20px;" alt="ASCOM Standards for Astronomy" src="../Images/ASCOM-Logo.jpg" />
+	
+	<div id="breadcrumbs">
+	<script type="text/javascript" language="javascript">
+	<!-- 
+	breadcrumbs(); 
+	-->
+	</script>
+</div>
+
+	<div class="topmenucontainer">
+    <script type="text/javascript" language="javascript">
+      <!-- 
+	        writemainmenu();
+	        -->
+    </script>
+  </div>
+</div>
+
+
+
+<div id="leftcontent">
+
+
+	<div class="LeftNav">
+	<div class="center"><div class="north"><div class="south">
+	<script type="text/javascript" language="javascript">
+	<!-- 
+	writesubmenu(); 
+	-->
+	</script>
+	
+	</div></div></div></div>
+
+	<!-- #BeginEditable "LeftNav" -->	<!-- #EndEditable --></div>
+<div id="centercontent">
+	<!-- #BeginEditable "MainContent" -->
+	<div class="article">
+	<h3>Conformance Checking Drivers</h3>
+	<p><span class="underline">During development</span> of your driver, and certainly <span class="underline">before releasing</span> it, you should use the <a href="https://github.com/ASCOMInitiative/ConformU#readme" target="_blank">Conform Universal tool (ConformU)</a> to test your driver. Since it is frequently updated to check for newly discovered botches, you must download this separetrly from the Platform. </p>
+	<p>This tool performs a comprehensive set of tests on a driver to determine its conformance with the relevant ASCOM interface standard and works with both Alpaca drivers as well as ASCOM/COM drivers. It also tests some aspects of driver behavior against the reference implementation. ConformU is a really useful tool to use during development as it exercises all driver functionality. This means you don't have to develop your own set of basic test harnesses to test your driver.</p>
+	<p>Here are the results from Conform-checking the Omni Simulator's ASCOM/COM Focuser Simulator. </p>
+	<pre style="font-size: 90%; color: ffffcc;">15:40:08.652 ASCOM Universal Device Conformance Checker Version 4.0.0.32688, Build time: Tue 15 October 2024 17:13:10
+15:40:08.656 
+15:40:08.657 Operating system is Windows 10 (22H2), Processor is Intel/AMD 64bit, Application is 64bit.
+15:40:08.657 
+15:40:08.657 COM Driver ProgID: ASCOM.OmniSim.Focuser
+15:40:08.657 
+15:40:08.659 CreateDevice                        INFO     Creating NATIVE COM device: ASCOM.OmniSim.Focuser
+15:40:08.965 CreateDevice                        INFO     Successfully created driver
+15:40:09.976 CreateDevice                        OK       Driver instance created successfully
+15:40:09.977 
+15:40:09.979 Connect to device
+15:40:10.307 Connected                           OK       Connected to device successfully using Connected = True
+15:40:10.822 Connected                           OK       Disconnected from device successfully using Connected = False
+15:40:10.864 Connect                             OK       Connected to device successfully using Connect()
+15:40:10.865 
+15:40:10.877 Common Driver Methods
+15:40:10.878 InterfaceVersion                    OK       4
+15:40:10.880 Connected                           OK       True
+15:40:10.897 Description                         OK       ASCOM Focuser Simulator Driver
+15:40:10.904 DriverInfo                          OK       Focuser Simulator Driver
+15:40:10.913 DriverVersion                       OK       0.4
+15:40:10.920 Name                                OK       Alpaca Focuser Simulator
+15:40:10.920 
+15:40:10.920 Action                              INFO     Conform cannot test the Action method
+15:40:10.958 SupportedActions                    OK       Driver returned an empty action list
+15:40:10.959 
+15:40:11.079 DeviceState                         OK       Received 4 operational state properties.
+15:40:11.080 DeviceState                         OK         IsMoving = False
+15:40:11.080 DeviceState                         OK         Position = 0
+15:40:11.081 DeviceState                         OK         Temperature = 7.31
+15:40:11.091 DeviceState                         OK         TimeStamp = 10/16/2024 3:40:10 PM
+15:40:11.094 DeviceState                         OK       Found all expected operational properties
+15:40:11.095 
+15:40:11.095 Properties
+15:40:11.102 Absolute                            OK       True
+15:40:11.108 IsMoving                            OK       False
+15:40:11.117 MaxStep                             OK       50000
+15:40:11.122 MaxIncrement                        OK       50000
+15:40:11.128 Position                            OK       0
+15:40:11.137 StepSize                            OK       20
+15:40:11.142 TempCompAvailable                   OK       True
+15:40:11.149 TempComp Read                       OK       False
+15:40:11.154 TempComp Write                      OK       Successfully turned temperature compensation on
+15:40:11.155 TempComp Write                      OK       Successfully turned temperature compensation off
+15:40:11.160 Temperature                         OK       7.31
+15:40:11.161 
+15:40:11.161 Methods
+15:40:11.168 Halt                                OK       Focuser halted OK
+15:40:18.207 Move - TempComp False               OK       Absolute move OK
+15:40:32.244 Move - TempComp True V3             OK       Absolute move OK
+15:40:40.289 Move - To 0                         OK       Reported position: 0.
+15:40:41.312 Move - Below 0                      OK       Movement below 0 was not permitted. (Actually moved to 0)
+15:41:13.336 Move - To MidPoint                  OK       Reported position: 25000.
+15:41:45.359 Move - To MaxStep                   OK       Reported position: 50000.
+15:41:46.372 Move - Above MaxStep                OK       Movement above MaxStep was not permitted. (Actually moved to 50000)
+15:41:46.374 
+15:41:46.374 Disconnect from device
+15:41:46.387 Disconnect                          OK       Disconnected from device successfully using Disconnect()
+15:41:46.388 
+15:41:46.388 Conformance test has finished
+15:41:46.389 
+15:41:46.389 Congratulations, no errors, warnings or issues found: your driver passes ASCOM validation!!
+15:41:46.390 
+15:41:46.390 Timing Summary                               See Help for further information.
+15:41:46.391 Timing Summary                               FAST target response time: 0.1 seconds, (configuration and state reporting members).
+15:41:46.391 Timing Summary                               STANDARD target response time: 1.0 second, (property write and asynchronous initiators).
+15:41:46.392 Timing Summary                               EXTENDED target response time: 600.0 seconds, (synchronous methods, ImageArray and ImageArrayVariant).
+15:41:46.392 Timing Summary                               The log shows good and bad timings.
+15:41:46.393                                              
+15:41:46.393 Connect                                      At 15:40:10.857 Connect                  0.032 seconds. (STANDARD)
+15:41:46.394 InterfaceVersion                             At 15:40:10.877 InterfaceVersion         0.000 seconds. (FAST)
+15:41:46.394 Connected                                    At 15:40:10.880 Connected                0.001 seconds. (FAST)
+15:41:46.395 Description                                  At 15:40:10.896 Description              0.015 seconds. (FAST)
+15:41:46.395 DriverInfo                                   At 15:40:10.904 DriverInfo               0.007 seconds. (FAST)
+15:41:46.396 DriverVersion                                At 15:40:10.912 DriverVersion            0.007 seconds. (FAST)
+15:41:46.396 Name                                         At 15:40:10.920 Name                     0.006 seconds. (FAST)
+15:41:46.396 SupportedActions                             At 15:40:10.958 SupportedActions         0.038 seconds. (FAST)
+15:41:46.397 DeviceState                                  At 15:40:11.079 DeviceState              0.120 seconds. OUTSIDE FAST RESPONSE TIME TARGET: 0.1 seconds.
+15:41:46.397 Absolute                                     At 15:40:11.102 Absolute                 0.005 seconds. (FAST)
+15:41:46.398 IsMoving                                     At 15:40:11.108 IsMoving                 0.005 seconds. (FAST)
+15:41:46.399 MaxStep                                      At 15:40:11.117 MaxStep                  0.008 seconds. (FAST)
+15:41:46.400 MaxIncrement                                 At 15:40:11.122 MaxIncrement             0.004 seconds. (FAST)
+15:41:46.401 Position                                     At 15:40:11.127 Position                 0.005 seconds. (FAST)
+15:41:46.401 TempCompAvailable                            At 15:40:11.142 TempCompAvailable        0.004 seconds. (FAST)
+15:41:46.402 TempComp Read                                At 15:40:11.148 TempComp Read            0.006 seconds. (FAST)
+15:41:46.402 TempComp Write                               At 15:40:11.153 TempComp Write           0.005 seconds. (STANDARD)
+15:41:46.403 Temperature                                  At 15:40:11.160 Temperature              0.004 seconds. (FAST)
+15:41:46.404 Halt                                         At 15:40:11.168 Halt                     0.005 seconds. (STANDARD)
+15:41:46.404 Move to 5000                                 At 15:40:11.182 Move to 5000             0.010 seconds. (STANDARD)
+15:41:46.405 Move to 5000                                 At 15:40:25.231 Move to 5000             0.000 seconds. (STANDARD)
+15:41:46.405 Move to 0                                    At 15:40:39.267 Move to 0                0.002 seconds. (STANDARD)
+15:41:46.405 Move to -10                                  At 15:40:40.291 Move to -10              0.001 seconds. (STANDARD)
+15:41:46.406 Move to 25000                                At 15:40:41.313 Move to 25000            0.001 seconds. (STANDARD)
+15:41:46.406 Move to 50000                                At 15:41:13.340 Move to 50000            0.001 seconds. (STANDARD)
+15:41:46.407 Move to 50010                                At 15:41:45.361 Move to 50010            0.001 seconds. (STANDARD)
+15:41:46.407 Disconnect                                   At 15:41:46.384 Disconnect               0.007 seconds. (STANDARD)
+15:41:46.409 
+15:41:46.411 1 member took longer than its target response time.
+
+	</pre>
+	</div>
+	<!-- #EndEditable --></div>
+<div id="footer">
+	Copyright &copy; 1998-2026, The ASCOM Initiative. 
+	All rights reserved. </div>
+
+</body>
+
+<!-- #EndTemplate --></html>

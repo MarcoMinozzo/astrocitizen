@@ -17,8 +17,8 @@ A plataforma separa claramente:
 | **Hardware do observatório** | Montagem, câmera (via ASCOM), focuser, roda, cúpula… | **ASCOM Alpaca** via **Alpyca** |
 | **Hardware SBIG legado** | Câmeras ST USB já suportadas | **Universal Driver** (ctypes) — mantido |
 | **Meteorologia do site** | Condições/previsão no local de observação | API meteo + **ObservingConditions** (Alpaca) + entrada manual |
-| **UI / app** | Interface e orquestração | **PySide6** + Python ≥ 3.10 |
-| **Persistência** | Todo resultado observacional | **BD** (SQLite→PostgreSQL) + storage de FITS |
+| **UI / app** | Interface e orquestração | **SaaS:** Next.js · **Desktop:** PySide6 + PyInstaller (`.exe` Windows) · Python ≥ 3.10 |
+| **Persistência** | Todo resultado observacional | **BDaaS:** PostgreSQL + object storage · Desktop: SQLite local |
 
 Fluxo típico:
 
@@ -88,6 +88,8 @@ Não há `Astropy.occultations` no core. Estratégia:
 |------|---------|
 | Protocolo | **ASCOM Alpaca** |
 | Cliente Python | **Alpyca** (`pip install alpyca`) — docs: https://ascom-standards.org/alpyca/ |
+| Documentação local | Espelho completo em [ascom/README.md](ascom/README.md) (interfaces, API Alpaca, newdocs) |
+| Mapeamento hardware | [ascom/MAPEAMENTO_EQUIPAMENTO_ASCOM.md](ascom/MAPEAMENTO_EQUIPAMENTO_ASCOM.md) |
 | Alternativa Windows-only | COM + `pywin32` — **não preferida** |
 | Servidor Windows | ASCOM Platform + ASCOM Remote |
 | Dev sem hardware | Alpaca Omni Simulators |
@@ -163,7 +165,28 @@ altaz = target.transform_to(AltAz(obstime=now, location=loc))
 5. **Montagens diversas** via Alpaca Telescope (agnóstico de marca).  
 6. **Focuser** no escopo do produto.  
 7. **Site por local de observação** (perfis configuráveis), não coordenada fixa.  
-8. Não depender de `pywin32`/COM no código da plataforma (por enquanto).
+8. Não depender de `pywin32`/COM no código da plataforma (por enquanto).  
+9. **Stack de plataforma** alinhada ao motorsport-agent (**D-009**): FastAPI + Next.js + PostgreSQL BDaaS.  
+10. **Desktop:** **PySide6 + Python** (D-009.4-rev); Tauri opcional futuro — ver [COMPARACAO_DESKTOP_TAURI_VS_PYSIDE.md](COMPARACAO_DESKTOP_TAURI_VS_PYSIDE.md).  
+11. Produção SaaS: **BDaaS** (Postgres + object storage); semi-estruturado via **JSONB**; séries via **Parquet** (faseado).  
+12. **Executável Windows:** entrega Desktop exige `.exe` empacotado (PyInstaller) + smoke CI — utilizador final sem Python instalado (AC-075, AC-076).
+
+---
+
+## 7.1 Stack de plataforma (SaaS + Desktop) — D-009
+
+| Camada | Tecnologia | Origem |
+|--------|------------|--------|
+| API SaaS | FastAPI, Pydantic v2, SQLAlchemy 2, Alembic | motorsport-api |
+| Web SaaS | Next.js, React, TypeScript, Tailwind | motorsport-dashboard |
+| Desktop | **PySide6** + sync HTTP/SQLite + PyInstaller → `.exe` | sbig-suite + D-009.4-rev |
+| Observatory runtime | Mesmo processo Python (Alpyca, udrv, Astropy) | in-process |
+| BD mestre | PostgreSQL **BDaaS** | motorsport DBaaS |
+| Artefatos | Object storage **BDaaS** (S3-compatível) | evolução motorsport storage |
+| Semi-estruturado | JSONB no Postgres | — |
+| Séries | Parquet no object store (faseado) | proposta motorsport Parquet |
+
+Detalhe: [AVALIACAO_STACK_MOTORSPORT.md](AVALIACAO_STACK_MOTORSPORT.md) · [COMPARACAO_DESKTOP_TAURI_VS_PYSIDE.md](COMPARACAO_DESKTOP_TAURI_VS_PYSIDE.md) · ADR: [decisoes/D-009-stack-motorsport-bdaas.md](decisoes/D-009-stack-motorsport-bdaas.md) · [decisoes/D-009.4-rev-desktop-pyside.md](decisoes/D-009.4-rev-desktop-pyside.md).
 
 ---
 

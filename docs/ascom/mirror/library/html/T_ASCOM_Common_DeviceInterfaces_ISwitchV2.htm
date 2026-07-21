@@ -1,0 +1,82 @@
+﻿<!DOCTYPE html ><html lang="en-US"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><link rel="shortcut icon" href="../icons/favicon.ico" /><link rel="stylesheet" href="../css/bulma.css" /><link rel="stylesheet" href="../css/font-awesome.min.css" /><link rel="stylesheet" href="../css/presentationStyle.css" /><link rel="stylesheet" href="../css/vs.min.css" /><script src="../scripts/jquery-3.5.1.min.js"></script><script src="../scripts/clipboard.min.js"></script><script src="../scripts/highlight.min.js"></script><script src="../scripts/presentationStyle.js"></script><title>ISwitchV2 Interface</title><meta name="Title" content="ISwitchV2" /><meta name="Help.Id" content="T:ASCOM.Common.DeviceInterfaces.ISwitchV2" /><meta name="Help.ContentType" content="Reference" /><meta name="container" content="ASCOM.Common.DeviceInterfaces" /><meta name="guid" content="T_ASCOM_Common_DeviceInterfaces_ISwitchV2" /><meta name="Description" content="Defines the ISwitchV2 Interface" /><meta name="tocFile" content="../toc/IDDDN.xml" /></head><body><div class="fixedLayout"><div id="Header" class="fixedHeader"><div class="pageHeader level mb-0 py-2 px-4"><div id="TitleContainer" class="level-left"><div class="level-item"><img src="../icons/Bug72.jpg" /></div><div id="DocumentationTitle" class="level-item">ASCOM Library</div></div><div id="LangFilterSearchContainer" class="level-right"><div class="level-item"><div class="dropdown is-hoverable"><div class="dropdown-trigger"><button class="button" aria-haspopup="true" aria-controls="dropdown-menu"><span id="CurrentLanguage"></span><span class="icon is-small"><i class="fa fa-angle-down" aria-hidden="true"></i></span></button></div><div class="dropdown-menu" role="menu"><div id="LanguageSelections" class="dropdown-content"><a class="dropdown-item languageFilterItem" data-languageId="cs">C#</a><a class="dropdown-item languageFilterItem" data-languageId="vb">VB</a></div></div></div></div><div class="level-item"><form id="SearchForm" action="#" onsubmit="TransferToSearchPage(); return false;"><div class="field"><div class="control has-icons-left"><input id="SearchTerms" class="input" type="text" maxlength="200" placeholder="Search" /><span class="icon is-small is-left"><i class="fa fa-search"></i></span><button id="SearchButton" type="submit" class="is-hidden"></button></div></div></form></div></div></div></div><div class="fixedContent"><nav class="breadcrumb my-1 px-2 border-bottom" role="navigation"><ul id="TopicBreadcrumbs" /></nav><div id="ContentContainer" class="columns pl-5 pr-5 fixedContent"><div id="ShowHideTOCColumn" class="column is-hidden-tablet"><a id="ShowHideTOC">Show/Hide TOC</a></div><div id="TOCColumn" class="column is-hidden-mobile"><nav class="toc"><ul id="TableOfContents" class="toc-menu" /></nav></div><div id="Resizer" class="is-hidden"></div><div id="TopicContent" class="column content is-7"><h1>ISwitch<wbr />V<wbr />2 Interface</h1><div class="summary">
+            Defines the ISwitchV2 Interface
+            </div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Definition</h2><div id="IDBSection"><strong>Namespace:</strong> <a href="N_ASCOM_Common_DeviceInterfaces.htm">ASCOM.Common.DeviceInterfaces</a><br /><strong>Assembly:</strong> ASCOM.Common (in ASCOM.Common.dll) Version: 3.0.0-rc.1+86c25ce733aebb4d8b1b8a62e84770ea5e972bea<div class="codeSnippet" data-codeSnippetLanguage="cs"><div class="codeHeader"><span class="codeHeaderTitle">C#</span><span class="buttons"><button class="button is-small is-light copyCode" title="Copy"><span class="icon is-small"><i class="fa fa-copy"></i></span><span>Copy</span></button></span></div><div class="codePanel hljs"><pre xml:space="preserve"><code class="language-cs"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="identifier">ISwitchV2</span> : <span class="identifier">IAscomDevice</span></code></pre></div></div><div class="codeSnippet is-hidden" data-codeSnippetLanguage="vb"><div class="codeHeader"><span class="codeHeaderTitle">VB</span><span class="buttons"><button class="button is-small is-light copyCode" title="Copy"><span class="icon is-small"><i class="fa fa-copy"></i></span><span>Copy</span></button></span></div><div class="codePanel hljs"><pre xml:space="preserve"><code class="language-vb"><span class="keyword">Public</span> <span class="keyword">Interface</span> <span class="identifier">ISwitchV2</span>
+	<span class="keyword">Inherits</span> <span class="identifier">IAscomDevice</span></code></pre></div></div><dl class="implementsList"><dt>Implements</dt><dd><a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a></dd></dl></div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Remarks</h2><div id="IDBCSection"><p>The Switch interface is used to define a number of 'switch devices'. A switch device can be used to control something, such as a power switch
+            or may be used to sense the state of something, such as a limit switch.</p><p>This SwitchV2 interface is an extension of the original Switch interface.  The changes allow devices to have more than two states and
+            to distinguish between devices that are writeable and those that are read only.</p><p><b>Compatibility between Switch and SwitchV2 interfaces:</b></p><ul><li>Switch devices that implemented the original Switch interface and
+            client applications that use the original interface will still work together.</li><li>Client applications that implement the original
+            Switch interface should still work with drivers that implement the new interface.</li><li>Client applications that use the new features in this interface
+            will not work with drivers that do not implement the new interface.</li></ul><p>Each device has a CanWrite method, this is true if it can be written to or false if the device can only be read.</p><p>The new MinSwitchValue, MaxSwitchValue and SwitchStep methods are used to define the range and values that a device can handle.
+            This also defines the number of different values - states - that a device can have, from two for a traditional on-off switch, through
+            those with a small number of states to those which have many states.</p><p>The SetSwitchValue and GetSwitchValue methods are used to set and get the value of a device as a double.</p><p>There is no fundamental difference between devices with different numbers of states.</p><p><b>Naming Conventions</b></p><p>Each device handled by a Switch is known as a device or switch device for general cases,
+            a controller device if it can alter the state of the device and a sensor device if it can only be read.</p><p>For convenience devices are referred to as boolean if the device can only have two states, and multi-state if it can have more than two values.
+            <b>These are treated the same in the interface definition</b>.</p></div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Properties</h2><div id="IDQFASection"><table id="PropertyList" class="table is-hoverable"><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_Connected.htm">Connected</a></td><td>
+            Set True to enable the link. Set False to disable the link.
+            You can also read the property to check whether it is connected.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_Description.htm">Description</a></td><td>
+            Returns a description of the driver, such as manufacturer and model number.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_DriverInfo.htm">DriverInfo</a></td><td>
+            Descriptive and version information about this ASCOM driver.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_DriverVersion.htm">DriverVersion</a></td><td>
+            A string in the form "n.n" containing only the major and minor version of the driver.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_InterfaceVersion.htm">InterfaceVersion</a></td><td>
+            The interface version number that this device implements.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ISwitchV2_MaxSwitch.htm">MaxSwitch</a></td><td>
+            The number of switch devices managed by this driver
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_Name.htm">Name</a></td><td>
+            The short name of the driver, for display purposes
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_SupportedActions.htm">SupportedActions</a></td><td>
+            Returns the list of action names supported by this driver.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr></table></div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Methods</h2><div id="IDAFASection"><table id="MethodList" class="table is-hoverable"><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IAscomDevice_Action.htm">Action</a></td><td>
+            Invokes the specified device-specific action.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ISwitchV2_CanWrite.htm">CanWrite</a></td><td>
+            Reports if the specified switch device can be written to, default true.
+            This is false if the device cannot be written to, for example a limit switch or a sensor.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IAscomDevice_CommandBlind.htm">CommandBlind</a></td><td>
+            Transmits an arbitrary string to the device and does not wait for a response.
+            Optionally, protocol framing characters may be added to the string before transmission.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IAscomDevice_CommandBool.htm">CommandBool</a></td><td>
+            Transmits an arbitrary string to the device and waits for a boolean response.
+            Optionally, protocol framing characters may be added to the string before transmission.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IAscomDevice_CommandString.htm">CommandString</a></td><td>
+            Transmits an arbitrary string to the device and waits for a string response.
+            Optionally, protocol framing characters may be added to the string before transmission.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IAscomDevice_Dispose.htm">Dispose</a></td><td>
+            This method is a "clean-up" method that is primarily of use to drivers that are written in languages such as C# and VB.NET where resource clean-up is initially managed by the language's 
+            runtime garbage collection mechanic. Driver authors should take care to ensure that a client or runtime calling Dispose() does not adversely affect other connected clients.
+            Applications should not call this method.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ISwitchV2_GetSwitch.htm">GetSwitch</a></td><td>
+            Return the state of switch device id as a boolean
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ISwitchV2_GetSwitchDescription.htm">GetSwitchDescription</a></td><td>
+            Gets the description of the specified switch device. This is to allow a fuller description of
+            the device to be returned, for example for a tool tip.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ISwitchV2_GetSwitchName.htm">GetSwitchName</a></td><td>
+            Return the name of switch device n.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ISwitchV2_GetSwitchValue.htm">GetSwitchValue</a></td><td>
+            Returns the value for switch device id as a double
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ISwitchV2_MaxSwitchValue.htm">MaxSwitchValue</a></td><td>
+            Returns the maximum value for this switch device, this must be greater than <a href="M_ASCOM_Common_DeviceInterfaces_ISwitchV2_MinSwitchValue.htm">MinSwitchValue(Int16)</a>.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ISwitchV2_MinSwitchValue.htm">MinSwitchValue</a></td><td>
+            Returns the minimum value for this switch device, this must be less than <a href="M_ASCOM_Common_DeviceInterfaces_ISwitchV2_MaxSwitchValue.htm">MaxSwitchValue(Int16)</a></td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ISwitchV2_SetSwitch.htm">SetSwitch</a></td><td>
+            Sets a switch controller device to the specified state, true or false.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ISwitchV2_SetSwitchName.htm">SetSwitchName</a></td><td>
+            Set a switch device name to a specified value.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ISwitchV2_SetSwitchValue.htm">SetSwitchValue</a></td><td>
+            Set the value for this device as a double.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ISwitchV2_SwitchStep.htm">SwitchStep</a></td><td>
+            Returns the step size that this device supports (the difference between successive values of the device).
+            </td></tr></table></div><h4 class="quickLinkHeader">Version Information</h4><h4 class="quickLinkHeader">.NET Standard</h4>Supported in: 2.0<br /><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>See Also</h2><div id="seeAlsoSection"><h4>Reference</h4><div><a href="N_ASCOM_Common_DeviceInterfaces.htm">ASCOM.Common.DeviceInterfaces Namespace</a></div></div></div><div id="InThisArticleColumn" class="column is-hidden-mobile"><nav class="menu sticky is-hidden"><p class="menu-label"><strong>In This Article</strong></p><ul id="InThisArticleMenu" class="menu-list"><li><a class="quickLink">Definition</a></li><li><a class="quickLink">Remarks</a></li><li><a class="quickLink">Properties</a></li><li><a class="quickLink">Methods</a><ul class="menu"><li><a class="quickLink">Version Information</a></li><li><a class="quickLink">.NET Standard</a></li></ul></li><li><a class="quickLink">See Also</a></li></ul></nav></div></div></div><footer id="PageFooter" class="footer border-top py-3 fixedFooter"><div class="columns"><div id="FooterContent" class="column"><p><a href="https://www.ascom-standards.org" target="_blank" rel="noopener noreferrer">Copyright © 2021 - 2025 ASCOM Initiative</a></p> 
+				</div></div></footer></div><script>$(function(){
+SetDefaultLanguage("cs");
+LoadTocFile(null, null);
+InitializeQuickLinks();
+
+$(".toggleSection" ).click(function () {
+    SectionExpandCollapse(this);
+});
+
+$(".toggleSection").keypress(function () {
+    SectionExpandCollapseCheckKey(this, event)
+});
+hljs.highlightAll();
+});</script></body></html>

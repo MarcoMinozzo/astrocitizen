@@ -17,7 +17,11 @@
 | **Estimativa** | S ≤3d · M 1–2 sem · L 3–6 sem · XL >6 sem |
 | **Dependências** | Itens que bloqueiam |
 
-**Definição de pronto (DoD) geral:** testes · persistência no BD quando houver resultado · docs mínimas · Linux e Windows quando aplicável a UI/adapters.
+**Definição de pronto (DoD) geral:** testes · persistência no BD quando houver resultado · docs mínimas · Linux e Windows quando aplicável a UI/adapters · **escolhas técnicas alinhadas a D-010** (otimização / recursos).
+
+**DoD Desktop (obrigatório):** no final do dia o utilizador Windows deve ter um **executável `.exe` que funciona bem** (arrancar, modo simulador, fluxos críticos sem depender de `python` instalado). Empacote via PyInstaller (padrão sbig-suite) ou equivalente; CI Windows gera e smoke-testa o artefacto. Ver AC-075…077.
+
+**Princípio transversal (D-010):** toda solução proposta deve maximizar **otimização técnica** e **uso eficiente de recursos computacionais** (CPU, RAM, I/O, processos, latência crítica), sem comprometer corretude nem o DoD Desktop/Windows.
 
 ---
 
@@ -62,7 +66,7 @@
 
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
-| AC-010 | `ArchivePort` + modelo relacional v1 | P0 | M | AC-002 | Site, Programa, Observacao… |
+| AC-010 | `ArchivePort` + modelo relacional v1 | P0 | M | AC-002 | Ver [MODELO_DADOS_V1.md](MODELO_DADOS_V1.md) |
 | AC-011 | Adapter SQLite + migrações | P0 | M | AC-010 | |
 | AC-012 | `ArtifactStorePort` (FITS em disco + URI no BD) | P0 | S | AC-010 | |
 | AC-013 | Soft-delete + auditoria básica | P0 | S | AC-011 | |
@@ -145,6 +149,10 @@
 | AC-072 | Telas: Sites, Equipamento, Programas | P1 | M | AC-071, E2 | |
 | AC-073 | Telas: Programa diário, Sessão, Arquivo | P1 | L | AC-071, E3, E5 | |
 | AC-074 | Painel gestão multi-programa | P2 | M | AC-071, AC-022 | |
+| AC-075 | Empacote **Windows `.exe`** (PyInstaller onedir/onefile) | P1 | M | AC-071 | DoD Desktop — espelhar sbig-suite CI |
+| AC-076 | CI: build + smoke test do `.exe` (simulator) em `windows-latest` | P1 | S | AC-075, AC-003 | Artefacto descarregável |
+| AC-077 | Instalador Windows opcional (NSIS/MSI) + nota drivers (udrv/Alpaca) | P2 | M | AC-075 | Assinatura código depois |
+| AC-078 | Empacote Linux (AppImage ou PyInstaller) paridade | P2 | M | AC-071 | |
 
 ---
 
@@ -307,3 +315,4 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | BD | PERSISTENCIA_E_BANCOS.md |
 | Stack | STACK_TECNOLOGICA.md |
 | Atlas de reporte | atlas/ATLAS_REPORTE_OBSERVACOES.md |
+| Testes hardware / campo | TEST_BACKLOG.md |

@@ -1,0 +1,89 @@
+<!-- #BeginTemplate "/Templates/Fixed_Fluid.dwt" --><!-- DW6 -->
+<!DOCTYPE html>
+ 
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="expires" content="Fri, 1 Jan 1990 00:00:00 GMT">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+
+<!-- #BeginEditable "Title" -->
+<title>The General Principles</title><!-- #EndEditable -->
+
+<link rel="stylesheet" type="text/css" href="../Styles/Fixed_Fluid.css" />
+
+<script type="text/javascript" language="javascript" src="../jscripts/Navigation.js"></script>
+
+</head>
+ 
+<body>
+
+<div id="banner">
+	<img style="position: absolute; top: 20px; left: 20px;" alt="ASCOM Standards for Astronomy" src="../Images/ASCOM-Logo.jpg" />
+	
+	<div id="breadcrumbs">
+	<script type="text/javascript" language="javascript">
+	<!-- 
+	breadcrumbs(); 
+	-->
+	</script>
+</div>
+
+	<div class="topmenucontainer">
+    <script type="text/javascript" language="javascript">
+      <!-- 
+	        writemainmenu();
+	        -->
+    </script>
+  </div>
+</div>
+
+
+
+<div id="leftcontent">
+
+
+	<div class="LeftNav">
+	<div class="center"><div class="north"><div class="south">
+	<script type="text/javascript" language="javascript">
+	<!-- 
+	writesubmenu(); 
+	-->
+	</script>
+	
+	</div></div></div></div>
+
+	<!-- #BeginEditable "LeftNav" -->	<!-- #EndEditable --></div>
+<div id="centercontent">
+	<!-- #BeginEditable "MainContent" -->
+	<div class="article">
+	<h3>The General Principles</h3>
+	
+	<div class="note">Drivers are system components that are responsible for <span class="underline">hiding all device dependencies</span> from applications via a standard interface.</div> 
+
+	<p>On the surface, you may say &quot;Of course!&quot;, but things can become subtle. Let's say your dome control system derives its ShutterStatus from some sensors and the motor state. Now an application calls Dome.OpenShutter() and then starts checking Dome.ShutterStatus to monitor the operation. But in your system, the dome takes a half second to start moving, so your driver reports ShutterClosed for a half second. This is a lie to the application, in fact the shutter is in ShutterOpening state. The application will be faced with a result it doesn't expect: &quot;I asked it to open the shutter, it didn't raise an exception, so I should be seeing ShutterOpening or, if it's super fast, ShutterOpen. What happened?&quot; It is 100% reasonable for an application to flag a problem when faced with such conflicting info. The real problem is that your driver did not hide the specifics of the shutter control system from the application. Immediately after the call to OpenShutter() returns, the only correct states are ShutterOpening with Slewing true, or ShutterOpen with Slewing false. There must not be any &quot;little bit of time&quot; during which the device will lie to the application through its interface.</p>
+<p>It's important to consider what aspects of your target device are exposed to clients. With this in mind, you should review the relevant specification to make sure you aren't exposing low-level limitations or unique requirements to clients. Some of the other sections listed on the left address a few specific instances of this that seem to come up commonly.</p>
+	<div class="note"><a name="doitright" id="doitright"></a>Do it correctly or raise an exception.</div>
+	
+	<h4>For Applications</h4>
+	<p>For app developers the consequences of this principle relate to expectations. If you make a call to a method and it returns normally, you can be 100% certain that the device accepted responsibility for doing what you requested, it started the process, and it expects to be able to complete the request. ASCOM operations are asynchronous(*) so calling a method starts the process. Each method is associated with a <em>completion property</em> which indicates when the process completes later. </p>
+	<p>For example, Dome.SlewToAzimuth() starts the dome moving, and Dome.Slewing starts out True, then later changes to False when the dome rotation to the new azimuth completes <em>successfully</em>. If the process fails for any reason, you will get a run-time error, an exception. This includes both the initial method call as well as reading the completion property. Using the Dome.SlewToAzimuth() method example, if it successfully starts, then later fails, reading Dome.Slewing will not return a value, but instead result in a raised exception. The intepretation is &quot;I cannot tell you the answer because something went wrong.&quot; </p>
+	<p>It is the application's responsibility to avoid asking a device to do impossible tasks, within its abaility. One application developer's approach, for example, is to provide the application with its own horizon curve and altitude limit that must be set to prevent asking the mount to do impossible things and to prevent observing through trees, buildings, etc. However, as <a href="@selfp">described below</a>, it is the driver's responsibility to protect itself against requests that would cause damage or degrade performance.</p>
+	<p class="note">As an application developer, then, you must be prepared to get an exception back from all members of all APIs, including both methods and properties. This is consistent with computing in general within modern ecosystems which use exceptions for error signalling. </p>
+	<h4>For Drivers</h4>
+	<p>This is the basic &quot;contract&quot; between a driver and its client application. Your driver absolutely <i>must</i> either do what it is asked (including providing a correct and current answer) or raise an exception for the client to trap. Unless the client gets an exception, it will always assume you have done what it requested and continue in its logic under that assumption. This means that the driver must not return &quot;illegal&quot; (sentinel) values for properties in lieu of signaling an error, or &quot;try&quot; to do something and <em>return</em> whether it was done or not. Self-destructive behavior is also prohibited (<a href="#selfp">see below</a>). All modern programming environments operate using out-of-band run time exception signalling.</p>
+	<p>Here too, things can be subtle. Using Telescope.SlewToCoordinatesAsync() as an example. It is suposed to <em>start</em> the slew (at which time Slewing becomes true):  If the mount knows <em>at that time</em> that it cannot possibly reach the requested coordinates due to the destination being outside the mount's configured or physical limits, then SlewToCoordinatesAsync() must immediately raise an exception &quot;I can't possibly do this. It's beyond my limits&quot;. That leaves <em>unforeseen</em> error conditions <em>during</em> the slew... cable snag, wall contact, insufficient power to overcome weight or friction, etc. In that case, if such a condition occurs, the mount is simply in an error state requiring some sort of operator intervention. Any call to the <em>compromised</em> logic in the driver must raise an exception &quot;I can't give you the answer or do what you want because I have a serious problem that needs your attention&quot;. For example, it would be fine for the driver to return its name or version while in an error state, but if a slew fails then Telescope.Slewing, RightAscension, Declination, Altitude, Azimuth, etc. must raise an exception.	</p>
+	<h4><a name="selfp" id="selfp"></a>Self Protection of Devices</h4>
+	<p class="note">A device should protect itself against an application's request that would cause damage or degrade its performance. The device must refuse such requests by raising an exception.</p>
+	<p>For example, if an app asks a mount to slew to coordinates that would result in a collision with the pier or a wall, the mount should refuse to accept the request, and instead raise an exception. Less obviously, consider a mount with an internal pointing model. It may be that an app calling SyncToCoordinates() would corrupt the pointing model, degrading its accuracy. In this case, the mount should refuse the call to SyncToCoordinates() with an error message something like &quot;Cannot sync because a pointing model is in effect. consider rebuilding the model to restore accuracy.</p>
+	</div>
+	<!-- #EndEditable --></div>
+<div id="footer">
+	Copyright &copy; 1998-2026, The ASCOM Initiative. 
+	All rights reserved. </div>
+
+</body>
+
+<!-- #EndTemplate --></html>

@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html ><html lang="en-US"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><link rel="shortcut icon" href="../icons/favicon.ico" /><link rel="stylesheet" href="../css/bulma.css" /><link rel="stylesheet" href="../css/font-awesome.min.css" /><link rel="stylesheet" href="../css/presentationStyle.css" /><link rel="stylesheet" href="../css/vs.min.css" /><script src="../scripts/jquery-3.5.1.min.js"></script><script src="../scripts/clipboard.min.js"></script><script src="../scripts/highlight.min.js"></script><script src="../scripts/presentationStyle.js"></script><title>Profile Class</title><meta name="Title" content="Profile" /><meta name="Help.Id" content="T:ASCOM.Utilities.Profile" /><meta name="Help.ContentType" content="Reference" /><meta name="container" content="ASCOM.Utilities" /><meta name="guid" content="T_ASCOM_Utilities_Profile" /><meta name="Description" content="ASCOM Scope Driver Helper Registry Profile Object" /><meta name="tocFile" content="../toc/IDAFI.xml" /></head><body><div class="fixedLayout"><div id="Header" class="fixedHeader"><div class="pageHeader level mb-0 py-2 px-4"><div id="TitleContainer" class="level-left"><div class="level-item"><a target="_blank" rel="noopener noreferrer" href="https://ascom-standards.org/"><img src="../icons/Bug72.jpg" /></a></div><div id="DocumentationTitle" class="level-item">ASCOM Platform Developer Help</div></div><div id="LangFilterSearchContainer" class="level-right"><div class="level-item"><div class="dropdown is-hoverable"><div class="dropdown-trigger"><button class="button" aria-haspopup="true" aria-controls="dropdown-menu"><span id="CurrentLanguage"></span><span class="icon is-small"><i class="fa fa-angle-down" aria-hidden="true"></i></span></button></div><div class="dropdown-menu" role="menu"><div id="LanguageSelections" class="dropdown-content"><a class="dropdown-item languageFilterItem" data-languageId="cs">C#</a><a class="dropdown-item languageFilterItem" data-languageId="vb">VB</a><a class="dropdown-item languageFilterItem" data-languageId="cpp">C++</a></div></div></div></div><div class="level-item"><form id="SearchForm" action="#" onsubmit="TransferToSearchPage(); return false;"><div class="field"><div class="control has-icons-left"><input id="SearchTerms" class="input" type="text" maxlength="200" placeholder="Search" /><span class="icon is-small is-left"><i class="fa fa-search"></i></span><button id="SearchButton" type="submit" class="is-hidden"></button></div></div></form></div></div></div></div><div class="fixedContent"><nav class="breadcrumb my-1 px-2 border-bottom" role="navigation"><ul id="TopicBreadcrumbs" /></nav><div id="ContentContainer" class="columns pl-5 pr-5 fixedContent"><div id="ShowHideTOCColumn" class="column is-hidden-tablet"><a id="ShowHideTOC">Show/Hide TOC</a></div><div id="TOCColumn" class="column is-hidden-mobile"><nav class="toc"><ul id="TableOfContents" class="toc-menu" /></nav></div><div id="Resizer" class="is-hidden"></div><div id="TopicContent" class="column content is-7"><h1>Profile Class</h1><div class="summary">
+            ASCOM Scope Driver Helper Registry Profile Object
+            </div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Definition</h2><div id="IDBSection"><strong>Namespace:</strong> <a href="N_ASCOM_Utilities.htm">ASCOM.Utilities</a><br /><strong>Assembly:</strong> ASCOM.Utilities (in ASCOM.Utilities.dll) Version: 7.1.3+4851.c5da65c2b<div class="codeSnippet" data-codeSnippetLanguage="cs"><div class="codeHeader"><span class="codeHeaderTitle">C#</span><span class="buttons"><button class="button is-small is-light copyCode" title="Copy"><span class="icon is-small"><i class="fa fa-copy"></i></span><span>Copy</span></button></span></div><div class="codePanel hljs"><pre xml:space="preserve"><code class="language-cs"><span class="keyword">public</span> <span class="keyword">class</span> <span class="identifier">Profile</span> : <span class="identifier">IProfile</span>, <span class="identifier">IDisposable</span></code></pre></div></div><div class="codeSnippet is-hidden" data-codeSnippetLanguage="vb"><div class="codeHeader"><span class="codeHeaderTitle">VB</span><span class="buttons"><button class="button is-small is-light copyCode" title="Copy"><span class="icon is-small"><i class="fa fa-copy"></i></span><span>Copy</span></button></span></div><div class="codePanel hljs"><pre xml:space="preserve"><code class="language-vb"><span class="keyword">Public</span> <span class="keyword">Class</span> <span class="identifier">Profile</span>
+	<span class="keyword">Implements</span> <span class="identifier">IProfile</span>, <span class="identifier">IDisposable</span></code></pre></div></div><div class="codeSnippet is-hidden" data-codeSnippetLanguage="cpp"><div class="codeHeader"><span class="codeHeaderTitle">C++</span><span class="buttons"><button class="button is-small is-light copyCode" title="Copy"><span class="icon is-small"><i class="fa fa-copy"></i></span><span>Copy</span></button></span></div><div class="codePanel hljs"><pre xml:space="preserve"><code class="language-cpp"><span class="keyword">public</span> <span class="keyword">ref class</span> <span class="identifier">Profile</span> : <span class="identifier">IProfile</span>, 
+	<span class="identifier">IDisposable</span></code></pre></div></div><dl class="inheritanceHierarchy"><dt>Inheritance</dt><dd><span class="noLink">Object</span>  <span class="icon is-small"><i class="fa fa-arrow-right"></i></span>  <span class="selflink">Profile</span></dd></dl><dl class="implementsList"><dt>Implements</dt><dd><a href="T_ASCOM_Utilities_Interfaces_IProfile.htm">IProfile</a>, <span class="noLink">IDisposable</span></dd></dl></div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Remarks</h2><div id="IDBCSection"><p>This object provides facilities for registering ASCOM drivers with the Chooser, and for storing 
+            persistence information in a shared area of the file system.</p><p>Please code to the IProfile interface</p></div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Constructors</h2><div id="IDAAFASection"><table id="ConstructorList" class="table is-hoverable"><tr><td><a href="M_ASCOM_Utilities_Profile__ctor.htm">Profile<span id="LST9C738E0C_0" data-languageSpecificText="cs=()|vb=|cpp=()|nu=()|fs=()"></span></a></td><td>
+            Create a new Profile object
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile__ctor_1.htm">Profile(Boolean)</a></td><td>
+            Create a new profile object ignoring profile not found exceptions if generated
+            </td></tr></table></div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Properties</h2><div id="IDRFASection"><table id="PropertyList" class="table is-hoverable"><tr><td><a href="P_ASCOM_Utilities_Profile_DeviceType.htm">DeviceType</a></td><td>
+            The type of ASCOM device for which profile data and registration services are provided 
+            (String, default = "Telescope")
+            </td></tr><tr><td><a href="P_ASCOM_Utilities_Profile_RegisteredDeviceTypes.htm">RegisteredDeviceTypes</a></td><td>
+            List the device types registered in the Profile store
+            </td></tr></table></div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Methods</h2><div id="IDBFASection"><table id="MethodList" class="table is-hoverable"><tr><td><a href="M_ASCOM_Utilities_Profile_CreateSubKey.htm">CreateSubKey</a></td><td>
+            Create a registry key for the given DriverID.
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_DeleteSubKey.htm">DeleteSubKey</a></td><td>
+            Delete a registry key for the given DriverID. SubKey may contain \ separated path to key to be deleted.
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_DeleteValue.htm">DeleteValue(String, String)</a></td><td>
+            Delete the value from the registry. Name may be an empty string for the unnamed value. 
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_DeleteValue_1.htm">DeleteValue(String, String, String)</a></td><td>
+            Delete the value from the registry. Name may be an empty string for the unnamed value. Value will be deleted from the sub-key supplied.
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_Dispose.htm">Dispose</a></td><td>
+            Disposes of resources used by the profile object
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_GetProfile.htm">GetProfile</a></td><td>
+            Read an entire device profile and return it as an ASCOMProfile class instance
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_GetProfileXML.htm">GetProfileXML</a></td><td>
+            Read an entire device profile and return it as an XML encoded string
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_GetValue.htm">GetValue(String, String)</a></td><td>
+            Retrieve a string value from the profile for the given Driver ID and variable name
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_GetValue_1.htm">GetValue(String, String, String)</a></td><td>
+            Retrieve a string value from the profile using the supplied sub-key for the given Driver ID and variable name.
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_GetValue_2.htm">GetValue(String, String, String, String)</a></td><td>
+            Retrieve a string value from the profile using the supplied sub-key for the given Driver ID 
+            and variable name. Set and return the default value if the requested variable name has not yet been set.
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_IsRegistered.htm">IsRegistered</a></td><td>
+            Confirms whether a specific driver is registered or unregistered in the profile store
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_Register.htm">Register</a></td><td>
+            Registers a supplied DriverID and associates a descriptive name with the device
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_RegisteredDevices.htm">RegisteredDevices</a></td><td>
+            List the devices of a given device type that are registered in the Profile store
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_SetProfile.htm">SetProfile</a></td><td>
+            Set an entire device profile from an ASCOMProfile class instance
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_SetProfileXML.htm">SetProfileXML</a></td><td>
+            Set an entire device profile from an XML encoded string
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_SubKeys.htm">SubKeys(String)</a></td><td>
+            Return a list of the sub-keys under the root of the given DriverID
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_SubKeys_1.htm">SubKeys(String, String)</a></td><td>
+            Return a list of the sub-keys under the given DriverID
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_Unregister.htm">Unregister</a></td><td>
+            Remove all data for the given DriverID from the registry.
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_Values.htm">Values(String)</a></td><td>
+            Return a list of the (unnamed and named variables) under the root of the given DriverID.
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_Values_1.htm">Values(String, String)</a></td><td>
+            Return a list of the (unnamed and named variables) under the given DriverID and sub-key.
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_WriteValue.htm">WriteValue(String, String, String)</a></td><td>
+            Writes a string value to the profile using the given Driver ID and variable name.
+            </td></tr><tr><td><a href="M_ASCOM_Utilities_Profile_WriteValue_1.htm">WriteValue(String, String, String, String)</a></td><td>
+            Writes a string value to the profile using the supplied sub-key for the given Driver ID and variable name.
+            </td></tr></table></div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>See Also</h2><div id="seeAlsoSection"><h4>Reference</h4><div><a href="N_ASCOM_Utilities.htm">ASCOM.Utilities Namespace</a></div></div></div><div id="InThisArticleColumn" class="column is-hidden-mobile"><nav class="menu sticky is-hidden"><p class="menu-label"><strong>In This Article</strong></p><ul id="InThisArticleMenu" class="menu-list"><li><a class="quickLink">Definition</a></li><li><a class="quickLink">Remarks</a></li><li><a class="quickLink">Constructors</a></li><li><a class="quickLink">Properties</a></li><li><a class="quickLink">Methods</a></li><li><a class="quickLink">See Also</a></li></ul></nav></div></div></div><footer id="PageFooter" class="footer border-top py-3 fixedFooter"><div class="columns"><div id="FooterContent" class="column"><p>Copyright © 2009-25, The ASCOM Initiative</p> 
+				</div></div></footer></div><script>$(function(){
+SetDefaultLanguage("cs");
+LoadTocFile(null, null);
+InitializeQuickLinks();
+
+$(".toggleSection" ).click(function () {
+    SectionExpandCollapse(this);
+});
+
+$(".toggleSection").keypress(function () {
+    SectionExpandCollapseCheckKey(this, event)
+});
+hljs.highlightAll();
+});</script></body></html>

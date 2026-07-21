@@ -307,8 +307,8 @@ A cobertura de **todos** os tipos científicos permanece em `ESCOPO_CITIZEN_SCIE
 
 | Artefato | Conteúdo |
 |----------|----------|
-| `WORKFLOWS.md` | Fluxos UI passo a passo (planejar noite, executar, analisar) |
-| `API_ALVO.md` | Contratos dos serviços de domínio (Site, Ephemeris, Meteo, Program, DailyPlan…) |
+| [WORKFLOWS.md](WORKFLOWS.md) | Fluxos UI passo a passo (planejar noite, executar, analisar) |
+| `API_ALVO.md` | Contratos dos serviços de domínio e API SaaS ↔ Desktop |
 | Atualização `BACKLOG.md` | Épicos BN-* mapeados às RN |
 
 ---

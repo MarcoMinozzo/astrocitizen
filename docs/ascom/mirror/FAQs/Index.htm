@@ -1,0 +1,136 @@
+<!-- #BeginTemplate "/Templates/Fixed_Fluid.dwt" --><!-- DW6 -->
+<!DOCTYPE html>
+ 
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="expires" content="Fri, 1 Jan 1990 00:00:00 GMT">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+
+<!-- #BeginEditable "Title" -->
+<title>Frequently Asked Questions</title>
+
+<style type="text/css">
+<!--
+dt {
+	color: #FF9900;
+	margin-top:12pt;
+	margin-bottom:2pt;
+}
+-->
+</style>
+<!-- #EndEditable -->
+
+<link rel="stylesheet" type="text/css" href="../Styles/Fixed_Fluid.css" />
+
+<script type="text/javascript" language="javascript" src="../jscripts/Navigation.js"></script>
+
+</head>
+ 
+<body>
+
+<div id="banner">
+	<img style="position: absolute; top: 20px; left: 20px;" alt="ASCOM Standards for Astronomy" src="../Images/ASCOM-Logo.jpg" />
+	
+	<div id="breadcrumbs">
+	<script type="text/javascript" language="javascript">
+	<!-- 
+	breadcrumbs(); 
+	-->
+	</script>
+</div>
+
+	<div class="topmenucontainer">
+    <script type="text/javascript" language="javascript">
+      <!-- 
+	        writemainmenu();
+	        -->
+    </script>
+  </div>
+</div>
+
+
+
+<div id="leftcontent">
+
+
+	<div class="LeftNav">
+	<div class="center"><div class="north"><div class="south">
+	<script type="text/javascript" language="javascript">
+	<!-- 
+	writesubmenu(); 
+	-->
+	</script>
+	
+	</div></div></div></div>
+
+	<!-- #BeginEditable "LeftNav" -->	<!-- #EndEditable --></div>
+<div id="centercontent">
+	<!-- #BeginEditable "MainContent" -->
+	<div class="article">
+
+		<h3>Frequently Asked Questions &#8212; ASCOM Alpaca and Classic ASCOM COM</h3>
+			<p style="color:#FF9900;font-size: large;border: 2px solid; background: #222222">NOTE: Alpaca is 100% independent of Windows. Nowhere in the Alpaca ecosystem is Windows (or COM) needed. Please look over <a href="../About/Index.htm">About Alpaca and ASCOM</a> if you haven't yet.</p>		<dl style="margin-top: 0px; margin-bottom: 0px;">
+		    <dt>Where can I learn about ASCOM Alpaca vs Classic ASCOM COM?</dt>
+			<dd>See the <a href="../About/Index.htm">About ASCOM</a> section<a href="#hist"></a>. This is a highly recommended first step.</dd>
+			
+			<dt>How does the ASCOM Model Compare with INDIGO, and Software Bisque X2</dt>
+			<dd>ASCOM (both COM and Alpaca) is a many-to-many universal interfacing system with no dependence on any software or central server. Alpaca is cross-platform, COM is Windows-only. Both <a href="https://github.com/indigo-astronomy/indigo/blob/master/README.md" target="_new">INDIGO</a> and TheSky (<a href="https://www.bisque.com/wp-content/x2standard/" target="_new">X2 Standard</a>) each offer their own cross platform <em>plug-in</em> standards for instrument interfacing. In addition INDIGO has the concept of a central-server-based "bus" via which "clients" can talk to devices. Most importantly, INDIGO's architecture is not a universal interface, it is a "meta-interface" via which a device can freely add and delete properties and methods, and via which clients  perform discovery of properties and methods for each device to be used. ASCOM universal interfaces are <em>strictly curated</em>, guaranteed to be free of breaking changes, open, and free of any technology other than the OS and internet. Again, no central server is needed. 
+				
+			<dt>Why Can't Astronomy Programs Just Compensate For My Device's Problem?</dt>
+			<dd>See the <a href="SoftwareVictory.htm">Correcting for Problems</a> (also in the menu on the left).</dd>
+			
+			<dt>How can I get support for my ASCOM compatible device or application?</dt>
+			<dd>See the <a href="../Support/Index.htm">Support</a> page for details.</dd>
+			
+			<dt>What's the difference between a Classic ASCOM DLL driver and an EXE driver?</dt>
+			<dd>See &quot;Two Types of COM Drivers&quot; in <a href="../About/Conn-COM.htm">ASCOM-COM Connectivity</a> in the About Ascom section.</dd>
+		</dl>
+		
+		<h3><a name="alpaca" id="alpaca"></a>Frequently Asked Questions - Alpaca Cross-Platform and Internet</h3>
+		<dl style="margin-top: 0px; margin-bottom: 0px;">
+			<dt><a href="../AlpacaDeveloper/Alpaca.htm"><img src="../Images/ASCOM Alpaca 300.png" width="128" height="101" hspace="8" vspace="4" border="0" align="right" /></a>What is Alpaca?</dt>
+			<dd>The answer in context is given in the <a href="../About/Index.htm">About ASCOM</a> section here. Take just a bit of time to understand our mission and how Alpaca takes it into the future.</dd>
+			<dt>Will Alpaca change or break my existing Windows ASCOM-compatible astronomy applications?</dt>
+			<dd>No. Windows ASCOM programs will remain compatible with <span class="underline">no changes whatsoever</span>. However, with the Alpaca-aware Chooser, your <span class="underline">unmodified</span> Windows ASCOM programs will be able to use devices and their Alpaca drivers on other platforms as they become available in the future. For example, you will be able to use a self-contained WiFi-connected focuser running on an Arduino or other embedded controller, again with <span class="underline">no modifications to your Windows programs</span>.</dd>
+			<dt>Will Alpaca change or break my existing ASCOM-compatible devices and their drivers or control programs?</dt>
+			<dd>No. Windows Classic ASCOM drivers will remain compatible <span class="underline">with no changes whatever</span>. However, if you install <a href="https://github.com/ASCOMInitiative/ASCOMRemote/releases" target="_new">ASCOM Remote</a>, an add-on middleware package, your <span class="underline">unmodified</span> Windows devices and their drivers will become accessible from from Alpaca-compatible astronomy programs on other platforms such as iOS, Android, Mac, and Linux <em>as  become available in the future</em>. For example, you will be able to control your <span class="underline">unmodified</span> Windows-connected telescope mount and driver from an Alpaca-enabled iOS astronomy program.</dd>
+			<dt>Will the ASCOM Platform be changed by Alpaca? Will the tools go away or change?</dt>
+			<dd>No. The Windows ASCOM Platform will continue as it is. The beauty of Alpaca is that the expansion of the ASCOM-COM ecosystem is provided by the <a href="https://github.com/ASCOMInitiative/ASCOMRemote/releases" target="_new">ASCOM Remote</a> middleware, a layered add-on that provides transparent access to the Alpaca-extended environment from the existing Windows ASCOM environment, with <span class="underline">no changes needed to any Windows programs or drivers</span>.</dd>
+			<dt>When will Alpaca-compatible devices and programs be available?</dt>
+			<dd>It's a chicken-and-egg situation. We have the eggs and a few new chickens, now we need more chickens. The astronomy software and device suppliers that use the other platforms will  incorporate Alpaca to gain access to and from the Windows ASCOM environment. Other than using the Alpaca-aware ASCOM Chooser on Windows and optionally installation and configuration of <a href="https://github.com/ASCOMInitiative/ASCOMRemote/releases" target="_new">ASCOM Remote</a>, <span class="underline">nothing needs to change on the Windows side</span>, however the non-Windows devices will need to add Alpaca interfaces, and non-windows astronomy programs will need to add the ability to use Alpaca to control devices. This should make life  easy for mobile astronomy programs because Alpaca makes <span class="underline">unmodified</span> Windows-connected devices like telescope mounts, imagers, etc. directly accessible from WiFi.</dd>
+		</dl>
+
+		<h3>Frequently Asked Questions &#8212; Classic ASCOM COM</h3>
+		<dl style="margin-top: 0px; margin-bottom: 0px;">
+			
+			<dt><img src="../Images/ASCOM COM 80.png" width="80" height="88" hspace="8" vspace="4" align="right" /></dt>
+			<dt>Why can't 64-bit Apps Load <i>Some</i> 32-bit Drivers</dt>
+			<dd>Drivers come in two flavors: Loadable (DLL) type and Executable (EXE) type. Loadable/DLL drivers load into an app and become part of it. A 32-bit loadable driver cannot load into a 64 bit app. Period. The Platform has nothing to do with this. It is a basic characteristic of Windows that a 32-bit DLL is incompatible with a 64 bit host program. On the other hand, an Executable type driver is bitness-proof. It can be used by both 32- and 64-bit apps without regard to its own bitness.  For more info see the ASCOM Web Site, About ASCOM, <a href="../About/Conn-COM.htm" target="_new">COM Connectivity</a>. Please note that we have deleted DLL type driver templates from our developer tools. </dd>
+			<dt></dt>
+			<dt><a name="hub" id="hub"></a>What is a Classic ASCOM Hub?</dt>
+			<dd> A hub is an executable program that allows multiple ASCOM astronomy programs to share a device which has a DLL driver (which could ordinarily serve only a single app at a time). Also A 32-bit hub can provide 64-bit apps with access to a 32-bit loadable driver. For details in context see <a href="../About/Conn-COM.htm" target="_new">ASCOM-COM Connectivity</a> in the About section. A hub can allow more than one program to connect to it just like an EXE driver, and it in turn provides sharing of the  DLL driver for the real device. Hubs can exist for any type of device. The diagram below shows a telescope hub only as an example. The ASCOM Platform comes with a useful hub. See <a href="DevHub.htm">Using DeviceHub</a> (also in the menu on the left). <br />
+				<img src="../Images/Hub.png" alt="Diagram" width="521" height="233" vspace="6" /> <br />
+				As explained in the previous question, a hub is not needed for an EXE (Local Server) driver. An EXE driver is itself a hub since it is able to serve multiple apps.</dd>
+			
+			<dt>What is DeviceHub? What Can I Use it For? </dt>
+			<dd>See <a href="DevHub.htm">Using DeviceHub</a> (also in the menu on the left).</dd>
+			
+			<dt>How can I use TheSky&trade; in the Classic ASCOM Environment? </dt>
+			<dd>TheSky is compatible with the ASCOM environment. Software Bisque mounts controlled by TheSky may be accessed from ASCOM compatible programs via the Software Bisque supplied <a href="https://www.bisque.com/downloads/ascom2xmount-adaptor-installer/" target="_new">ASCOM 2x Mount Adaptor</a>. From within TheSkyX's device control panels, ASCOM-compatible devices (focusers, cameras, domes, mounts, etc) are accessible via the Chooser. Furthermore, the Chooser's Alpaca support can provide access to Alpaca-based devices from within TheSkyX. For more info contact Software Bisque.</dd>
+			
+						
+		</dl>
+		
+
+	</div>
+<!-- #EndEditable --></div>
+<div id="footer">
+	Copyright &copy; 1998-2026, The ASCOM Initiative. 
+	All rights reserved. </div>
+
+</body>
+
+<!-- #EndTemplate --></html>

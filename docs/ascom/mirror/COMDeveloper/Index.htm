@@ -1,0 +1,132 @@
+<!-- #BeginTemplate "/Templates/Fixed_Fluid_Fixed.dwt" --><!-- DW6 -->
+<!DOCTYPE html>
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="expires" content="Fri, 1 Jan 1990 00:00:00 GMT">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+
+<!-- #BeginEditable "Title" -->
+<title>ASCOM COM Developers</title>
+<!-- #EndEditable -->
+<link rel="stylesheet" type="text/css" href="../Styles/Fixed_Fluid_Fixed.css" />
+<script type="text/javascript" language="javascript" src="../jscripts/Navigation.js"></script>
+</head>
+
+<body>
+
+<div id="banner">
+	<img style="position: absolute; top: 20px; left: 20px;" alt="ASCOM Standards for Astronomy" src="../Images/ASCOM-Logo.jpg" />
+	<div id="breadcrumbs">
+		<script type="text/javascript" language="javascript">
+	<!-- 
+	breadcrumbs(); 
+	-->
+	</script>
+	</div>
+	<div class="topmenucontainer">
+		<script type="text/javascript" language="javascript">
+      <!-- 
+	        writemainmenu();
+	        -->
+    </script>
+	</div>
+</div>
+<div id="leftcontent">
+
+	<div class="LeftNav">
+	<div class="center"><div class="north"><div class="south">
+	<script type="text/javascript" language="javascript">
+	<!-- 
+	writesubmenu(); 
+	-->
+	</script>
+	
+	</div></div></div></div>
+
+
+	<!-- #BeginEditable "LeftNav" -->
+	<!-- #EndEditable --></div>
+<div id="centercontent">
+	<!-- #BeginEditable "MainContent" -->
+<div class="article">
+<h3>This Section is for Developers of Classic ASCOM COM Apps and Drivers</h3>
+	<p>For ASCOM Alpaca application and driver development see the <a href="../AlpacaDeveloper/Index.htm">Alpaca Developers Section</a>.</p>  
+	<p class="note">If you are new to ASCOM, is is strongly suggested that you first go through the <a href="../About/Index.htm">About Alpaca and ASCOM</a> section and then return here. Next familiarize yourself with <span class="underline">all three sections</span> of the Design Principles in the orange menu on the left. This information can save you time and frustration during your development. Please invest some time to check it out before getting heavily into your development.	</p>
+	<h3>Driver Design Principles</h3>
+	
+	<p>The <a href="https://ascom-standards.org/newdocs/" target="_blank">interface specifications</a> aren't the full story! There are some vital design principles that, if adhered-to, will maximize the chances that your driver will operate properly with a variety of client software. See the Design Principles topics in the orange menu at the top left and repearted here: </p>
+	<ul>
+		<li><a href="Principles.htm">The General Principles</a> </li>
+		<li><a href="Async.htm">Asynchronous APIs</a></li>
+		<li><a href="Exceptions.htm">Exceptions in ASCOM</a> (applies to Alpaca!)</li>
+	</ul>
+
+<h3>Developer's Forum</h3>
+	<p>We have two separate forums, one for users and the other for developers. As a developer, we ask that you seek help and information using the <a href="https://ascomtalk.groups.io/g/Developer" target="_new">ASCOM Talk Developers Forum</a>.</p>
+	
+	<p align="center"><a href="https://ascomtalk.groups.io/g/Developer" target="_new" style="font-size: large;"><img src="../Images/Groups.io.jpg" width="188" height="53" vspace="8" border="0" alt="Join or Visit the ASCOM Talk group" /><br />
+	Visit the ASCOM-Talk Developers Forum</a></p>
+	
+	<h3>Application Developer Resources</h3>
+	<p>Once you have become familiar with the ASCOM ecosystem (see above), Look over the COM App Development topics in the orange menu. In particular, the <a href="AppStart.htm">Getting Started</a> info  includes this <a href="AppStart.htm#video">excellent video showing the development of a complete program</a> for controlling any telescope using Visual Studio using Visual Basic .NET. Then, if you are developing your application in one of the Microsoft .NET languages, learn about the <a href="ClientToolkit.htm">ASCOM .NET Client Toolkit</a>.</p>
+
+	<h3>Driver Developer Resources</h3>
+	<p>Once you have become familiar with the ASCOM ecosystem (see above), look over the COM Driver Design topics and the COM Driver Practical Issues in the orange menu. Most of the driver developer tools are now contained within the ASCOM Platform, with driver templates and the ASCOM Cross Platform Library now hosted on NuGet. Driver developers are strongly encouraged to use those tools. This is particularly true for driver developers who write in C# or VB.NET. <span class="underline">NuGet provides ASCOM templates for Local Server type ASCOM/COM drivers</span>. As of Platform 7, We have removed support for DLL type drivers due to the problems with 32- vs 64- bit drivers and apps. Using these new NuGet templates will save you heaps of effort and troubles.	</p>
+	<h3><span style="background:yellow; color:black">NEW</span> Conformance Checker</h3>
+	<p>See <a href="Conformance.htm">Conformance Testing</a>. Once you have your driver working, it's very important to test it with the new cross-platform COM and Alpaca tool. Because it is updated often to include new tests as new developer botches are uncovered, it is a separate download <a href="https://github.com/ASCOMInitiative/ConformU/releases/tag/v4.0.0">Driver Conformance Checker tool ConformU</a>. This tool will exercise your driver and the device it handles, checking for common programming errors. </p>
+
+	<h3><span style="background:yellow; color:black">NEW</span> Role of Simulators</h3>
+	<p>The ASCOM Platform 7 includes an all new simulators package called the Omni Simulators, one for for each of the devices covered by an ASCOM standard. These simulators provide a convenient tool for application software developers to test their programs with known good devices under controlled conditions. The simulators also serve driver developers as <i>reference implementations </i> of the interface standards. If there is a question about the behavior of a property or method, the behavior of the appropriate simulator serves as the reference. </p>
+
+	<h3>Common Traps and Mistakes (mostly for driver developers)</h3>
+	<p>It probably seems unprofessional to start this section with what <i>not</i> to do, but we're just trying to save you time and pain. Over the last 17+ years we've seen the same mistakes repeated by driver developers enough times to rate being listed here. Hopefully a word to the wise is enough.</p>
+	<ul>
+		<li>Not understanding the driver-client architecture and that your driver will be used by many applications, some of which don't  yet exist. See <a href="../About/Index.htm">About Alpaca and ASCOM</a> for the basics.</li>
+		<li>Exposing timing restrictions or other device quirks to driver clients/apps (they don't want to do stuff just for your needy device). See <a href="Principles.htm">The General Principle</a> under the COM Developer info. The principles also apply to Alpaca.</li>
+		<li>Using sources for another driver (or worse, one of the simulators) as a starting point (you start with other peoples' mistakes and the wrong design)</li>
+		<li>Using old templates aand developing a DLL type driver. Executable drivers are strongly recommended and are the only templates we supply now.</li>
+		<li>Insisting on using C++ because that's the only language you know, but you know nothing about COM (bare metal COM in C++ is <i>tough</i>)</li>
+		<li>Ignoring the support services provided by the Platform (Chooser, Profile, Serial, etc.) and rolling your own. You lose the Alpaca compatibility provided by the chooser. </li>
+		<li>Asking users to run BAT files or double-click registry files to install your driver (instead of providing a real installer using our tools)</li>
+		<li>Including (and worse, installing) parts taken from the Platform as part of your driver or applicaition. The key assemblies are in the Global Assembly Cache!</li>
+	</ul>
+	</div>
+&nbsp;<!-- #EndEditable --></div>
+<div id="rightcontent">
+	<!-- #BeginEditable "RightSideBar" -->
+	
+<div class="BlueBorder">
+	<!-- Images for container -->
+	<div class="north">
+	<div class="east">
+	<div class="south">
+	<div class="west">
+	<div class="ne">
+	<div class="se">
+	<div class="sw">
+	<div class="nw">
+	<div>
+		<h3 style="color:#FF9900; text-align: center;">Developer Components &amp; Tools</h3>
+		<p><a href="https://github.com/ASCOMInitiative/ASCOMLibrary#readme" target="_new">.NET Cross-Platform Library</a><br />
+		ASCOM (both Alpaca and Windows/COM) support components written in .NET Standard. These are intended to assist developers in creating effective ASCOM applications and drivers.</p>
+		<p><a href="https://github.com/ASCOMInitiative/ConformU/releases" target="_new">Conform Universal</a><br />
+		New ASCOM (both Alpaca and Windows/COM) Conformance Checker. Binary builds for Linux, MacOS, and Windows. Scroll down to Assets and expand.</p>
+
+	</div>
+
+	</div></div></div></div></div></div></div></div>
+</div>
+	
+	
+	<!-- #EndEditable --></div>
+<div id="footer">
+	Copyright &copy; 1998-2026, The ASCOM Initiative. 
+	All rights reserved. </div>
+
+</body>
+
+<!-- #EndTemplate --></html>

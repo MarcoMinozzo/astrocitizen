@@ -173,5 +173,5 @@ Sugestão de ondas:
 Cada item CS-* deve, no tempo, ter:
 
 - entrada no `BACKLOG.md` (ou épico ligado),
-- workflow em `WORKFLOWS.md` (quando existir),
+- workflow em [WORKFLOWS.md](WORKFLOWS.md),
 - critério de aceite testável (dados reais ou simulador).

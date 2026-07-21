@@ -3,9 +3,11 @@
 ## Comece por aqui
 
 1. [PRODUCT_BACKLOG.md](PRODUCT_BACKLOG.md) — o que construir e em que ordem  
-2. [ARQUITETURA.md](ARQUITETURA.md) — como estruturar o software  
-3. [ESCOPO_GERAL_E_REGRAS_DE_NEGOCIO.md](ESCOPO_GERAL_E_REGRAS_DE_NEGOCIO.md) — regras RN-*  
-4. [PROGRAMAS_OBSERVACIONAIS.md](PROGRAMAS_OBSERVACIONAIS.md) — programas oficiais PO-*  
+2. [TEST_BACKLOG.md](TEST_BACKLOG.md) — testes com hardware real (pendentes de campo)  
+3. [ARQUITETURA.md](ARQUITETURA.md) — como estruturar o software  
+4. [ESCOPO_GERAL_E_REGRAS_DE_NEGOCIO.md](ESCOPO_GERAL_E_REGRAS_DE_NEGOCIO.md) — regras RN-*  
+5. [PROGRAMAS_OBSERVACIONAIS.md](PROGRAMAS_OBSERVACIONAIS.md) — programas oficiais PO-*  
+6. [MODELO_DADOS_V1.md](MODELO_DADOS_V1.md) — schema BD v1  
 
 ## Visão e domínio
 
@@ -23,12 +25,31 @@
 | [atlas/ATLAS_REPORTE_OBSERVACOES.md](atlas/ATLAS_REPORTE_OBSERVACOES.md) | Formulários, formatos e dados oficiais por rede |
 | [atlas/README.md](atlas/README.md) | Índice do atlas |
 
+## Produto e jornada
+
+| Doc | Descrição |
+|-----|-----------|
+| [WORKFLOWS.md](WORKFLOWS.md) | Jornada do usuário, modos, fluxos passo a passo, PO-A01 referência |
+
+## Arquitetura SaaS + Desktop
+
+| Doc | Descrição |
+|-----|-----------|
+| [ARQUITETURA_SAAS_DESKTOP.md](ARQUITETURA_SAAS_DESKTOP.md) | Dois módulos: cloud (workspace, BD, análise) e desktop (observatório) |
+| [AVALIACAO_STACK_MOTORSPORT.md](AVALIACAO_STACK_MOTORSPORT.md) | Stack motorsport → AstroCitizen; BDaaS |
+| [COMPARACAO_DESKTOP_TAURI_VS_PYSIDE.md](COMPARACAO_DESKTOP_TAURI_VS_PYSIDE.md) | Desktop: PySide6 vs Tauri+sidecar |
+| [API_ALVO.md](API_ALVO.md) | Contratos REST Desktop ↔ SaaS |
+| [MODELO_DE_SINCRONIZACAO.md](MODELO_DE_SINCRONIZACAO.md) | Offline-first, fila, conflitos |
+
 ## Tecnologia e dados
 
 | Doc | Descrição |
 |-----|-----------|
 | [STACK_TECNOLOGICA.md](STACK_TECNOLOGICA.md) | Astropy, Alpyca, Astroquery, meteo, BD |
 | [PERSISTENCIA_E_BANCOS.md](PERSISTENCIA_E_BANCOS.md) | Persistência obrigatória |
+| [MODELO_DADOS_V1.md](MODELO_DADOS_V1.md) | Schema relacional v1 (tabelas, JSONB, índices, Parquet) |
+| [ascom/README.md](ascom/README.md) | Espelho documentação ASCOM/Alpaca (hardware Desktop) |
+| [ascom/MAPEAMENTO_EQUIPAMENTO_ASCOM.md](ascom/MAPEAMENTO_EQUIPAMENTO_ASCOM.md) | Equipamento → interface ASCOM → driver → porta |
 | [decisoes/](decisoes/) | Registro de decisões (ADRs leves) |
 
 ## Decisões registradas
@@ -40,4 +61,9 @@
 | D-003 | Arquitetura: monólito modular + hexagonal + DDD + plugins |
 | D-004 | Todo resultado observacional alimenta BD(s) |
 | D-005 | Stack: Astropy + Astroquery + Alpyca/Alpaca + udrv SBIG (adapter) |
-| D-006 | Linux e Windows; montagens diversas; duas vias de câmera; focuser; site por local |
+| D-006 | Linux e Windows; montagens diversas; duas vias de câmera; focuser; site por local; **`.exe` Windows** |
+| D-007 | Atlas de reporte às redes cidadãs |
+| D-008 | Dois módulos: **SaaS** (workspace, BD, análise) + **Desktop** (observatório, hardware) |
+| D-009 | Stack motorsport SaaS (FastAPI/Next/Postgres BDaaS); Desktop ver D-009.4-rev |
+| D-009.4-rev | Desktop = **PySide6** (não Tauri+sidecar no MVP); `.exe` Windows obrigatório |
+| D-010 | **Otimização técnica e uso eficiente de recursos** — critério transversal de desenho |

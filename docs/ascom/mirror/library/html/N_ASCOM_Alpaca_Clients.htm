@@ -1,0 +1,55 @@
+﻿<!DOCTYPE html ><html lang="en-US"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><link rel="shortcut icon" href="../icons/favicon.ico" /><link rel="stylesheet" href="../css/bulma.css" /><link rel="stylesheet" href="../css/font-awesome.min.css" /><link rel="stylesheet" href="../css/presentationStyle.css" /><link rel="stylesheet" href="../css/vs.min.css" /><script src="../scripts/jquery-3.5.1.min.js"></script><script src="../scripts/clipboard.min.js"></script><script src="../scripts/highlight.min.js"></script><script src="../scripts/presentationStyle.js"></script><title>ASCOM.Alpaca.Clients Namespace</title><meta name="Title" content="ASCOM.Alpaca.Clients" /><meta name="Help.Id" content="N:ASCOM.Alpaca.Clients" /><meta name="Help.ContentType" content="Reference" /><meta name="container" content="ASCOM.Alpaca.Clients" /><meta name="guid" content="N_ASCOM_Alpaca_Clients" /><meta name="Description" content="Alpaca Client toolkit providing a standard interface to Alpaca devices. This namespace is delivered in NuGet package: ASCOM.Alpaca.Components." /><meta name="tocFile" content="../toc/IDBN.xml" /></head><body><div class="fixedLayout"><div id="Header" class="fixedHeader"><div class="pageHeader level mb-0 py-2 px-4"><div id="TitleContainer" class="level-left"><div class="level-item"><img src="../icons/Bug72.jpg" /></div><div id="DocumentationTitle" class="level-item">ASCOM Library</div></div><div id="LangFilterSearchContainer" class="level-right"><div class="level-item"><div class="dropdown is-hoverable"><div class="dropdown-trigger"><button class="button" aria-haspopup="true" aria-controls="dropdown-menu"><span id="CurrentLanguage"></span><span class="icon is-small"><i class="fa fa-angle-down" aria-hidden="true"></i></span></button></div><div class="dropdown-menu" role="menu"><div id="LanguageSelections" class="dropdown-content"><a class="dropdown-item languageFilterItem" data-languageId="cs">C#</a><a class="dropdown-item languageFilterItem" data-languageId="vb">VB</a></div></div></div></div><div class="level-item"><form id="SearchForm" action="#" onsubmit="TransferToSearchPage(); return false;"><div class="field"><div class="control has-icons-left"><input id="SearchTerms" class="input" type="text" maxlength="200" placeholder="Search" /><span class="icon is-small is-left"><i class="fa fa-search"></i></span><button id="SearchButton" type="submit" class="is-hidden"></button></div></div></form></div></div></div></div><div class="fixedContent"><nav class="breadcrumb my-1 px-2 border-bottom" role="navigation"><ul id="TopicBreadcrumbs" /></nav><div id="ContentContainer" class="columns pl-5 pr-5 fixedContent"><div id="ShowHideTOCColumn" class="column is-hidden-tablet"><a id="ShowHideTOC">Show/Hide TOC</a></div><div id="TOCColumn" class="column is-hidden-mobile"><nav class="toc"><ul id="TableOfContents" class="toc-menu" /></nav></div><div id="Resizer" class="is-hidden"></div><div id="TopicContent" class="column content is-7"><h1>ASCOM.<wbr />Alpaca.<wbr />Clients Namespace</h1><div class="summary">
+            Alpaca Client toolkit providing a standard interface to Alpaca devices. This namespace is delivered in NuGet package: <b>ASCOM.Alpaca.Components</b>.
+            </div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Remarks</h2><div id="IDBCSection"><p>Please note that you will need to add this PropertyGroup to .NET projects that target Android in order for Alpaca discovery to work as expected:</p><div class="codeSnippet"><div class="codeHeader"><span class="codeHeaderTitle">Add to Project File</span><button class="button is-small is-light copyCode" title="Copy"><span class="icon is-small"><i class="fa fa-copy"></i></span><span>Copy</span></button></div><div class="codeWithNumbers"><div class="lineNumbers"><pre xml:space="preserve">1
+2
+3</pre></div><div class="codePanel hljs numbered"><pre xml:space="preserve"><code class="language-xml">&lt;PropertyGroup Condition = "$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'"&gt;
+   &lt;UseNativeHttpHandler&gt;false&lt;/UseNativeHttpHandler&gt;
+&lt;/PropertyGroup&gt;</code></pre></div></div></div><p>This may also be the case for projects that target IOS, but has not yet been confirmed</p></div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Classes</h2><div id="IDACASection"><table id="classList" class="table is-hoverable"><tr><td><a href="T_ASCOM_Alpaca_Clients_AlpacaCamera.htm">AlpacaCamera</a></td><td>
+            ASCOM Alpaca Camera client
+            </td></tr><tr><td><a href="T_ASCOM_Alpaca_Clients_AlpacaClient.htm">AlpacaClient</a></td><td>
+            Helper functions to return an instance of an Alpaca client
+            </td></tr><tr><td><a href="T_ASCOM_Alpaca_Clients_AlpacaConfiguration.htm">AlpacaConfiguration</a></td><td>
+            Represents all configuration parameters required to create and operate an Alpaca client.
+            </td></tr><tr><td><a href="T_ASCOM_Alpaca_Clients_AlpacaCoverCalibrator.htm">AlpacaCoverCalibrator</a></td><td>
+            ASCOM Alpaca CoverCalibrator client
+            </td></tr><tr><td><a href="T_ASCOM_Alpaca_Clients_AlpacaDeviceBaseClass.htm">AlpacaDeviceBaseClass</a></td><td>
+            Base class for Alpaca client devices
+            </td></tr><tr><td><a href="T_ASCOM_Alpaca_Clients_AlpacaDome.htm">AlpacaDome</a></td><td>
+            ASCOM Alpaca Dome client.
+            </td></tr><tr><td><a href="T_ASCOM_Alpaca_Clients_AlpacaFilterWheel.htm">AlpacaFilterWheel</a></td><td>
+            ASCOM Alpaca FilterWheel client
+            </td></tr><tr><td><a href="T_ASCOM_Alpaca_Clients_AlpacaFocuser.htm">AlpacaFocuser</a></td><td>
+            ASCOM Alpaca Focuser client
+            </td></tr><tr><td><a href="T_ASCOM_Alpaca_Clients_AlpacaObservingConditions.htm">AlpacaObservingConditions</a></td><td>
+            ASCOM Alpaca ObservingConditions client
+            </td></tr><tr><td><a href="T_ASCOM_Alpaca_Clients_AlpacaRotator.htm">AlpacaRotator</a></td><td>
+            ASCOM Alpaca Rotator client
+            </td></tr><tr><td><a href="T_ASCOM_Alpaca_Clients_AlpacaSafetyMonitor.htm">AlpacaSafetyMonitor</a></td><td>
+            ASCOM Alpaca SafetyMonitor client
+            </td></tr><tr><td><a href="T_ASCOM_Alpaca_Clients_AlpacaSwitch.htm">AlpacaSwitch</a></td><td>
+            ASCOM Alpaca Switch client
+            </td></tr><tr><td><a href="T_ASCOM_Alpaca_Clients_AlpacaTelescope.htm">AlpacaTelescope</a></td><td>
+            ASCOM Alpaca Telescope client
+            </td></tr><tr><td><a href="T_ASCOM_Alpaca_Clients_ClientConfiguration.htm">ClientConfiguration</a></td><td>
+            Class presenting client specific configuration
+            </td></tr><tr><td><a href="T_ASCOM_Alpaca_Clients_InvalidJsonDateTimeException.htm">InvalidJsonDateTimeException</a></td><td>
+            This exception is used when a JSON date-time value returned by the device is not a UTC date-time.
+            </td></tr></table></div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Interfaces</h2><div id="IDOCASection"><table id="interfaceList" class="table is-hoverable"><tr><td><a href="T_ASCOM_Alpaca_Clients_IAlpacaClientV1.htm">IAlpacaClientV1</a></td><td>
+            Interface to expose the common ASCOM methods plus the Alpaca device configuration property
+            </td></tr><tr><td><a href="T_ASCOM_Alpaca_Clients_IAlpacaClientV2.htm">IAlpacaClientV2</a></td><td>
+            Interface to expose the common Platform 7 ASCOM methods plus the Alpaca device configuration property
+            </td></tr></table></div></div><div id="InThisArticleColumn" class="column is-hidden-mobile"><nav class="menu sticky is-hidden"><p class="menu-label"><strong>In This Article</strong></p><ul id="InThisArticleMenu" class="menu-list"><li><a class="quickLink">Remarks</a></li><li><a class="quickLink">Classes</a></li><li><a class="quickLink">Interfaces</a></li></ul></nav></div></div></div><footer id="PageFooter" class="footer border-top py-3 fixedFooter"><div class="columns"><div id="FooterContent" class="column"><p><a href="https://www.ascom-standards.org" target="_blank" rel="noopener noreferrer">Copyright © 2021 - 2025 ASCOM Initiative</a></p> 
+				</div></div></footer></div><script>$(function(){
+SetDefaultLanguage("cs");
+LoadTocFile(null, null);
+InitializeQuickLinks();
+
+$(".toggleSection" ).click(function () {
+    SectionExpandCollapse(this);
+});
+
+$(".toggleSection").keypress(function () {
+    SectionExpandCollapseCheckKey(this, event)
+});
+hljs.highlightAll();
+});</script></body></html>

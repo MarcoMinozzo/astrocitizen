@@ -1,0 +1,106 @@
+<!-- #BeginTemplate "/Templates/Fixed_Fluid.dwt" --><!-- DW6 -->
+<!DOCTYPE html>
+ 
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="expires" content="Fri, 1 Jan 1990 00:00:00 GMT">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+
+<!-- #BeginEditable "Title" -->
+<title>Best Practices</title><!-- #EndEditable -->
+
+<link rel="stylesheet" type="text/css" href="../Styles/Fixed_Fluid.css" />
+
+<script type="text/javascript" language="javascript" src="../jscripts/Navigation.js"></script>
+
+</head>
+ 
+<body>
+
+<div id="banner">
+	<img style="position: absolute; top: 20px; left: 20px;" alt="ASCOM Standards for Astronomy" src="../Images/ASCOM-Logo.jpg" />
+	
+	<div id="breadcrumbs">
+	<script type="text/javascript" language="javascript">
+	<!-- 
+	breadcrumbs(); 
+	-->
+	</script>
+</div>
+
+	<div class="topmenucontainer">
+    <script type="text/javascript" language="javascript">
+      <!-- 
+	        writemainmenu();
+	        -->
+    </script>
+  </div>
+</div>
+
+
+
+<div id="leftcontent">
+
+
+	<div class="LeftNav">
+	<div class="center"><div class="north"><div class="south">
+	<script type="text/javascript" language="javascript">
+	<!-- 
+	writesubmenu(); 
+	-->
+	</script>
+	
+	</div></div></div></div>
+
+	<!-- #BeginEditable "LeftNav" -->	<!-- #EndEditable --></div>
+<div id="centercontent">
+	<!-- #BeginEditable "MainContent" -->
+	<div class="article">
+	<h3>Best Practices</h3>
+
+    <h4>ASCOM Command Priority</h4>
+        
+	<p>Ensuring the safety of people and equipment is an important aspect of observatory design and operation. A recent example where a relatively unimportant command interrupted a park operation highlighted the need to establish a best practice command hierarchy to ensure that safety related commands complete successfully.</p>
+	<p>Though not formally required by the specifications, we suggest that device designers classify commands into three categories and implement logic so that commands in a lower category are not allowed to interrupt commands in a higher category. The  categories are:</p>
+	<ol>
+	    <li><strong>Commands that provide safety for both people and equipment</strong></li>
+	    <li><strong>Commands that only provide safety for equipment</strong></li>
+	    <li><strong>All other commands</strong></li>
+    </ol>
+	<p>The  command assignments for categories 1 and 2 are:</p>
+	<div><strong>Category 1</strong></div>
+	   <ul>
+	        <li><a href="https://ascom-standards.org/newdocs/covercalibrator.html#CoverCalibrator.HaltCover" target="new">CoverCalibrator.HaltCover</a></li>
+	        <li><a href="https://ascom-standards.org/newdocs/dome.html#Dome.AbortSlew" target="new">Dome.AbortSlew</a></li>
+	        <li><a href="https://ascom-standards.org/newdocs/focuser.html#Focuser.Halt" target="new">Focuser.Halt</a></li>
+	        <li><a href="https://ascom-standards.org/newdocs/rotator.html#Rotator.Halt" target="new">Rotator.Halt</a></li>
+	        <li><a href="https://ascom-standards.org/newdocs/telescope.html#Telescope.AbortSlew" target="new">Telescope.AbortSlew</a></li>
+	   </ul>
+
+	<div><strong>Category 2</strong></div>
+        <ul>
+            <li>Common - Set Connected</li>
+            <li>Common - Connect</li>
+            <li>Common - Disconnect</li>
+            <li><a href="https://ascom-standards.org/newdocs/camera.html#Camera.AbortExposure" target="new">Camera.AbortExposure</a></li>
+            <li><a href="https://ascom-standards.org/newdocs/camera.html#Camera.StopExposure" target="new">Camera.StopExposure</a></li>
+            <li><a href="https://ascom-standards.org/newdocs/covercalibrator.html#CoverCalibrator.CloseCover" target="new">CoverCalibrator.CloseCover</a></li>
+            <li><a href="https://ascom-standards.org/newdocs/covercalibrator.html#CoverCalibrator.CalibratorOff" target="new">CoverCalibrator.CalibratorOff</a></li>
+            <li><a href="https://ascom-standards.org/newdocs/dome.html#Dome.CloseShutter" target="new">Dome.CloseShutter</a></li>
+            <li><a href="https://ascom-standards.org/newdocs/dome.html#Dome.Park" target="new">Dome.Park</a></li>
+            <li><a href="https://ascom-standards.org/newdocs/telescope.html#Telescope.Park" target="new">Telescope.Park</a></li>
+        </ul>
+        
+        
+	</div>
+	<!-- #EndEditable --></div>
+<div id="footer">
+	Copyright &copy; 1998-2026, The ASCOM Initiative. 
+	All rights reserved. </div>
+
+</body>
+
+<!-- #EndTemplate --></html>

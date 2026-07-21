@@ -57,6 +57,10 @@ Inventário científico CS-*: [`ESCOPO_CITIZEN_SCIENCE.md`](ESCOPO_CITIZEN_SCIEN
 
 > Documentar visão, escopo, arquitetura-alvo e roadmap. **Não alterar software** até o plano ser revisado e priorizado.
 
+### Princípio de engenharia (D-010)
+
+> Todas as soluções devem privilegiar a **melhor otimização técnica** e o **melhor uso de recursos computacionais** (CPU, RAM, I/O, número de processos, latência no caminho crítico). Alinhamento a outros produtos não prevalece sobre este critério. Detalhe: [`decisoes/D-010-otimizacao-recursos.md`](decisoes/D-010-otimizacao-recursos.md).
+
 ---
 
 ## 2. Situação atual (baseline)
@@ -364,7 +368,7 @@ Marcos (ex.: “primeira noite SBIG + fotometria”) medem **progresso**, não r
 4. Inventariar hardware disponível (câmeras ST, CFW, espectrógrafo Lhires/Alpy/DSS, montagem).  
 5. Selecionar um **corpus mínimo** de dados de teste a partir do Gramadão + espectros de exemplo.
 
-### Artefatos a criar na Fase 0 (documentação apenas)
+### Artefatos da Fase 0 (documentação)
 
 | Artefato | Descrição |
 |----------|-----------|
@@ -376,8 +380,16 @@ Marcos (ex.: “primeira noite SBIG + fotometria”) medem **progresso**, não r
 | `docs/BACKLOG.md` | Fila de implementação |
 | `docs/LITERATURA_INDICE.md` | Índice curado: obra → módulo |
 | `docs/STACK_TECNOLOGICA.md` | Astropy / Alpyca / Astroquery |
-| `docs/WORKFLOWS.md` | Fluxos-alvo (a criar) |
-| `docs/API_ALVO.md` | Interfaces (a criar) |
+| `docs/WORKFLOWS.md` | Jornada do usuário e fluxos-alvo |
+| `docs/ARQUITETURA_SAAS_DESKTOP.md` | Módulos SaaS + Desktop |
+| `docs/API_ALVO.md` | Contratos Desktop ↔ SaaS |
+| `docs/MODELO_DE_SINCRONIZACAO.md` | Sincronização offline-first |
+| `docs/MODELO_DADOS_V1.md` | Schema relacional v1 |
+| `docs/AVALIACAO_STACK_MOTORSPORT.md` / D-009 / D-010 | Stack SaaS + otimização |
+| `docs/COMPARACAO_DESKTOP_TAURI_VS_PYSIDE.md` | Desktop = PySide6 |
+| `docs/ascom/` | Espelho ASCOM + mapeamento equipamento |
+| `docs/TEST_BACKLOG.md` | Testes hardware |
+| `docs/ascom/MAPEAMENTO_EQUIPAMENTO_ASCOM.md` | Hardware → ASCOM → driver → porta Desktop |
 
 ### Explicitamente fora desta fase
 

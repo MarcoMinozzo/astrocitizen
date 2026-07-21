@@ -1,0 +1,146 @@
+<!-- #BeginTemplate "/Templates/Fixed_Fluid_Fixed.dwt" --><!-- DW6 -->
+<!DOCTYPE html>
+
+<head>
+
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta http-equiv="Content-Style-Type" content="text/css">
+<meta http-equiv="expires" content="Fri, 1 Jan 1990 00:00:00 GMT">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
+
+<!-- #BeginEditable "Title" -->
+<title>ASCOM Alpaca Developers</title>
+<!-- #EndEditable -->
+<link rel="stylesheet" type="text/css" href="../Styles/Fixed_Fluid_Fixed.css" />
+<script type="text/javascript" language="javascript" src="../jscripts/Navigation.js"></script>
+</head>
+
+<body>
+
+<div id="banner">
+	<img style="position: absolute; top: 20px; left: 20px;" alt="ASCOM Standards for Astronomy" src="../Images/ASCOM-Logo.jpg" />
+	<div id="breadcrumbs">
+		<script type="text/javascript" language="javascript">
+	<!-- 
+	breadcrumbs(); 
+	-->
+	</script>
+	</div>
+	<div class="topmenucontainer">
+		<script type="text/javascript" language="javascript">
+      <!-- 
+	        writemainmenu();
+	        -->
+    </script>
+	</div>
+</div>
+<div id="leftcontent">
+
+	<div class="LeftNav">
+	<div class="center"><div class="north"><div class="south">
+	<script type="text/javascript" language="javascript">
+	<!-- 
+	writesubmenu(); 
+	-->
+	</script>
+	
+	</div></div></div></div>
+
+
+	<!-- #BeginEditable "LeftNav" -->
+		<img src="../Images/WebSiteDestinations.png" width="211" height="160" /><br />
+	<!-- #EndEditable --></div>
+<div id="centercontent">
+	<!-- #BeginEditable "MainContent" -->
+<div class="article">
+<h3>ASCOM Alpaca - ASCOM is not just for Windows any more</h3>
+	<p class="note"><img src="../Images/AlpacaLogo128.png" width="128" height="101" hspace="10" align="right" />If you are new to ASCOM in general and plan to develop an Alpaca app or driver, is is strongly suggested that you first go through the <a href="../About/Index.htm">About Alpaca and ASCOM</a> section and then return here. Next, please understand the <strong>critical</strong> <a href="#scope">Alpaca Scope of Application</a> below in order to prevent a naive disappointment. Then familiarize yourself with <span class="underline">all three sections</span> of the Design Principles in the orange menu on the left.  Please invest some time to check it out before getting heavily into your development. Finally in the Resources section on the right, as well as in the orange menu on the left are libraries and templates that you can use for applications and devices using both C# and Python, <span class="underline">both of which are cross-platform</span></p>
+    
+<h3>Classes of Alpaca Hosts</h3>
+	<p>Alpaca hosts can take several forms including both combined device/driver and the classic separate device and driver forms used with classic ASCOM/COM:</p>
+	<ul>
+	    <li><strong>Microcontrollers:</strong> e.g. Arduino / Pi Pico / ESP32. These are less expensive, lower
+	        capability devices that are challenging to code and where coding is done at the Posix /
+	        BSD socket level. Development is done on other devices and code downloaded to the
+	        devices. Dedicated libraries can help development on these systems e.g. the <a href="https://github.com/darkdragonsastro/esp32-idf-" target="new">Dark
+	        Dragons Astro library for ESP32 devices</a>.</li>
+	    <li><strong>Single Board Computers:</strong> Raspberry Pi / RADXA &ndash; A range of devices with differing
+	        capabilities and price points e.g. Pi 0/4/5, RADXA X4. These most often run Linux and can host
+	        <a href="https://github.com/ASCOMInitiative/AlpycaDevice#alpycadevice---python-alpaca-device-driver-sdk" target="new">Python SDK</a> devices or <a href="CSharpTemplate.htm">C# Alpaca Device Template</a> devices. </li>
+	    <li><strong>Separate Device and Driver</strong>: This reflects the traditional ASCOM/COM architecture where a device is separate from its Alpaca driver. Typical use cases would be existing devices where ASCOM capability is not yet avaailable. In this case the Alpaca driver is hosted on a PC, Mac, or Linux, typically with serial or USB connections, just like  ASCOM/COM drivers of the past. In fact we recommend that newly  developed separate drivers be Alpaca instead of COM. Drivers can be developed using the <a href="CSharpTemplate.htm">C# Alpaca Device Template</a> or  the <a href="https://github.com/ASCOMInitiative/AlpycaDevice#alpycadevice---python-alpaca-device-driver-sdk" target="new">Python SDK</a>.</li>
+	    </ul>
+
+<h3><a name="scope"></a><span  style="color: black; background: yellow">CRITICAL</span> Alpaca Scope of Application <span  style="color: black; background: yellow">CRITICAL</span></h3>
+	<p>Alpaca is designed to provide simple point-to-point universal connectivity <em>within an observatory</em> between client applications and devices in the same way that COM does in classic ASCOM. While it is a network protocol, Alpaca's design purposely does not include device-level hardened security measures that would be needed on the open public or campus internet. Instead it is intended to be used within an <em>isolated protected  in-observatory local network</em>. This keeps coding minimal, implementations lightweight, and management simple. </p>
+	<p>Simply stated, Alpaca and network security are <em>separate things</em>. Alpaca does the job of providing apps with device access. Since security is an open-ended topic, combining the two could easily cause a device's astronomy functions to be completely drowned out by its internal security provisions. Keeping them separate also eliminates the need to prove to security personnel  the &quot;safety&quot; of the implementations within each device in the observatory, an impractical task for manufacturers of the devices and for observatory managers as well. Finally, device level security means that applications have to become more complex in order to manage every device security scenario, thus more complexity and safety testing/certification. </p>
+	<p>Placing control apps and devices within a secure envelope offloads the need for security to well known trusted network tools and topologies with the strengths needed by the user. A simple home or club observatory can operate behind a common NAT router with appropriate IP whitelisting and port mapping without practical risks of hacking the devices. A multi-tenant shared observatory might not be a hostile environment, but if a hostile or bumbling tenant were encountered, it could cause trouble for other tenants. Most remote shared facilities eventually find that they need to use use VLANs or tenant VPNs to provide isolation and protection. </p>
+	<p>Also, Alpaca is not designed to provide an entertainment system for providing read-only monitoring of devices. Such a facility would need to use a hub of some sort both to  protect the devices from high-demand read accesses, as well as to provide the high-security required for public or campus network access. An example hub would be a multi-homed Apache web server with carefully controlled and <em>cached</em> back-end access to the observatory net's control system and devices, plus front end high-security access to the public / campus net. </p>
+	<h3>Driver Design Principles</h3>
+	
+	<p>The interface specifications aren't the full story! There are some vital design principles that, if adhered-to, will maximize the chances that your driver will operate properly with a variety of client software. See the Design Principles topics in the orange menu at the top left and repearted here:	</p>
+	<ul>
+		<li><a href="Principles.htm">The General Principles</a> </li>
+		<li><a href="Async.htm">Asynchronous APIs</a></li>
+		<li><a href="Exceptions.htm">Exceptions in ASCOM</a> (applies to Alpaca!)</li>
+	</ul>
+<h3>Alpaca Documentation</h3>
+<p>We have extensive developer level introductory and API reference documentation for Alpaca online here. See the links in the orange box menu at the upper left, as well as the <a href="../Documentation/Index.htm#dev">Developer section of our Documentation Center</a>.</p>
+<h3>Help - Use the Developer's Forum</h3>
+	<p>As a developer, we ask that you seek help and information using the <a href="https://ascomtalk.groups.io/g/Developer" target="_new">ASCOM Talk Developers Forum</a>.</p>
+	
+	<p align="center"><a href="https://ascomtalk.groups.io/g/Developer" target="_new" style="font-size: large;"><img src="../Images/Groups.io.jpg" width="188" height="53" vspace="8" border="0" alt="Join or Visit the ASCOM Talk group" /><br />
+	Visit the ASCOM-Talk Developers Forum</a></p>
+	
+	<h3>Common Traps and Mistakes (mostly for Alpaca driver developers)</h3>
+	<p>It probably seems unprofessional to start this section with what <i>not</i> to do, but we're just trying to save you time and pain.</p>
+	<ul>
+		<li>Not understanding the driver-client architecture and that your driver will be used by many applications, some of which don't  yet exist. See <a href="../About/Index.htm">About Alpaca and ASCOM</a>.</li>
+		<li>Using sources for another driver (or worse, one of the simulators) as a starting point (you start with other peoples' mistakes and the wrong design)</li>
+		<li>Exposing timing restrictions or other device quirks to driver clients (they don't want to do stuff just for your goofy device)</li>
+		<li>Not following the capitalization of key words in Alpaca REST-Like/JSON messages as documented in the <a href="ASCOMAlpacaAPIReference.html" target="_new">API Specification</a>. JSON is case sensitive. JSON also always uses '.' for the numeric decimal point, not ','. </li>
+	</ul>
+	</div>
+&nbsp;<!-- #EndEditable --></div>
+<div id="rightcontent">
+	<!-- #BeginEditable "RightSideBar" -->
+	
+<div class="BlueBorder">
+	<!-- Images for container -->
+	<div class="north">
+	<div class="east">
+	<div class="south">
+	<div class="west">
+	<div class="ne">
+	<div class="se">
+	<div class="sw">
+	<div class="nw">
+	<div>
+		<h3 style="color:#FF9900; text-align: center;">Alpaca Resources</h3>
+		<p><a href="https://github.com/ASCOMInitiative/ASCOM.Alpaca.Simulators/releases" target="_new">ASCOM.Alpaca.Simulators</a><br />
+		(Included in Platform 7) Simulators for <em>all</em> Alpaca devices. Binary builds for Linux, MacOS, and Windows. Scroll down to assets.</p>
+		<p><a href="https://github.com/ASCOMInitiative/ConformU/releases" target="_new">Conform Universal</a><br />
+		ASCOM Conformance Checker. Binary builds for Linux, MacOS, and Windows. Scroll down to Assets and expand.</p>
+		<p><a href="https://github.com/ASCOMInitiative/ASCOMLibrary#readme" target="_new">.NET Cross-Platform ASCOM COM/Alpaca Library</a><br />
+		ASCOM support components written in .NET Standard. These are intended to assist developers in creating effective ASCOM Alpaca applications and drivers.</p>
+		<p><a href="CSharpTemplate.htm">C# Alpaca Device Template</a><br />Creates an Alpaca device using Microsoft ASP.NET and Blazor technologies. The generated Alpaca device provides supports Alpaca discovery out-of-the box.</p>
+		<p><a href="https://ascom-standards.org/alpyca/" target="_new">Alpyca - Python Alpaca API Package</a> (<a href="https://ascom-standards.org/alpyca/alpyca.pdf" target="_new">also PDF</a>)<br />
+		Client/app library provides API-level access to all of the standard ASCOM universal interfaces to Python Programs. Install via <tt>pip install alpyca</tt> </p>
+        <p><a href="https://github.com/ASCOMInitiative/AlpycaDevice#alpycadevice---python-alpaca-device-driver-sdk" target="_new">AlpycaDevice - Python Alpaca Device Driver SDK</a><br />
+        Lightweight Python framework for a device driver that supports the latest Alpaca protocol as of Platform 7. All ASCOM device types included. </p>
+		<!--<p><a href="https://download.ascom-standards.org/dev/AlpacaWorkbenchV32.tar.xz" target="_new">Alpaca Workbench for Raspberry Pi (v3.2)</a><br />
+		Instructions and resources for installing and using Alpaca simulators, ConformU, and Wireshark on a Raspberry Pi (32-bit OS). <a href="https://download.ascom-standards.org/dev/WorkbenchReadMe.pdf" target="_new">Here are the instructions</a> (ReadMe, also included, PDF).</p>-->
+	</div>
+
+	</div></div></div></div></div></div></div></div>
+</div>
+	
+	
+	<!-- #EndEditable --></div>
+<div id="footer">
+	Copyright &copy; 1998-2026, The ASCOM Initiative. 
+	All rights reserved. </div>
+
+</body>
+
+<!-- #EndTemplate --></html>

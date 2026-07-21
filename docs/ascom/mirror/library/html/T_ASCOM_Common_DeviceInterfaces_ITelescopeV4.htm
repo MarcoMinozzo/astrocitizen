@@ -1,0 +1,212 @@
+﻿<!DOCTYPE html ><html lang="en-US"><head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /><link rel="shortcut icon" href="../icons/favicon.ico" /><link rel="stylesheet" href="../css/bulma.css" /><link rel="stylesheet" href="../css/font-awesome.min.css" /><link rel="stylesheet" href="../css/presentationStyle.css" /><link rel="stylesheet" href="../css/vs.min.css" /><script src="../scripts/jquery-3.5.1.min.js"></script><script src="../scripts/clipboard.min.js"></script><script src="../scripts/highlight.min.js"></script><script src="../scripts/presentationStyle.js"></script><title>ITelescopeV4 Interface</title><meta name="Title" content="ITelescopeV4" /><meta name="Help.Id" content="T:ASCOM.Common.DeviceInterfaces.ITelescopeV4" /><meta name="Help.ContentType" content="Reference" /><meta name="container" content="ASCOM.Common.DeviceInterfaces" /><meta name="guid" content="T_ASCOM_Common_DeviceInterfaces_ITelescopeV4" /><meta name="Description" content="Defines the ITelescopeV4 Interface" /><meta name="tocFile" content="../toc/IDDDN.xml" /></head><body><div class="fixedLayout"><div id="Header" class="fixedHeader"><div class="pageHeader level mb-0 py-2 px-4"><div id="TitleContainer" class="level-left"><div class="level-item"><img src="../icons/Bug72.jpg" /></div><div id="DocumentationTitle" class="level-item">ASCOM Library</div></div><div id="LangFilterSearchContainer" class="level-right"><div class="level-item"><div class="dropdown is-hoverable"><div class="dropdown-trigger"><button class="button" aria-haspopup="true" aria-controls="dropdown-menu"><span id="CurrentLanguage"></span><span class="icon is-small"><i class="fa fa-angle-down" aria-hidden="true"></i></span></button></div><div class="dropdown-menu" role="menu"><div id="LanguageSelections" class="dropdown-content"><a class="dropdown-item languageFilterItem" data-languageId="cs">C#</a><a class="dropdown-item languageFilterItem" data-languageId="vb">VB</a></div></div></div></div><div class="level-item"><form id="SearchForm" action="#" onsubmit="TransferToSearchPage(); return false;"><div class="field"><div class="control has-icons-left"><input id="SearchTerms" class="input" type="text" maxlength="200" placeholder="Search" /><span class="icon is-small is-left"><i class="fa fa-search"></i></span><button id="SearchButton" type="submit" class="is-hidden"></button></div></div></form></div></div></div></div><div class="fixedContent"><nav class="breadcrumb my-1 px-2 border-bottom" role="navigation"><ul id="TopicBreadcrumbs" /></nav><div id="ContentContainer" class="columns pl-5 pr-5 fixedContent"><div id="ShowHideTOCColumn" class="column is-hidden-tablet"><a id="ShowHideTOC">Show/Hide TOC</a></div><div id="TOCColumn" class="column is-hidden-mobile"><nav class="toc"><ul id="TableOfContents" class="toc-menu" /></nav></div><div id="Resizer" class="is-hidden"></div><div id="TopicContent" class="column content is-7"><h1>ITelescope<wbr />V<wbr />4 Interface</h1><div class="summary">
+            Defines the ITelescopeV4 Interface
+            </div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Definition</h2><div id="IDBSection"><strong>Namespace:</strong> <a href="N_ASCOM_Common_DeviceInterfaces.htm">ASCOM.Common.DeviceInterfaces</a><br /><strong>Assembly:</strong> ASCOM.Common (in ASCOM.Common.dll) Version: 3.0.0-rc.1+86c25ce733aebb4d8b1b8a62e84770ea5e972bea<div class="codeSnippet" data-codeSnippetLanguage="cs"><div class="codeHeader"><span class="codeHeaderTitle">C#</span><span class="buttons"><button class="button is-small is-light copyCode" title="Copy"><span class="icon is-small"><i class="fa fa-copy"></i></span><span>Copy</span></button></span></div><div class="codePanel hljs"><pre xml:space="preserve"><code class="language-cs"><span class="keyword">public</span> <span class="keyword">interface</span> <span class="identifier">ITelescopeV4</span> : <span class="identifier">IAscomDeviceV2</span>, 
+	<span class="identifier">IAscomDevice</span>, <span class="identifier">ITelescopeV3</span></code></pre></div></div><div class="codeSnippet is-hidden" data-codeSnippetLanguage="vb"><div class="codeHeader"><span class="codeHeaderTitle">VB</span><span class="buttons"><button class="button is-small is-light copyCode" title="Copy"><span class="icon is-small"><i class="fa fa-copy"></i></span><span>Copy</span></button></span></div><div class="codePanel hljs"><pre xml:space="preserve"><code class="language-vb"><span class="keyword">Public</span> <span class="keyword">Interface</span> <span class="identifier">ITelescopeV4</span>
+	<span class="keyword">Inherits</span> <span class="identifier">IAscomDeviceV2</span>, <span class="identifier">IAscomDevice</span>, <span class="identifier">ITelescopeV3</span></code></pre></div></div><dl class="implementsList"><dt>Implements</dt><dd><a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>, <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDeviceV2.htm">IAscomDeviceV2</a>, <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a></dd></dl></div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Properties</h2><div id="ID0DB0FASection"><table id="PropertyList" class="table is-hoverable"><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_AlignmentMode.htm">AlignmentMode</a></td><td>
+            The alignment mode of the mount (Alt/Az, Polar, German Polar).
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_Altitude.htm">Altitude</a></td><td>
+            The Altitude above the local horizon of the telescope's current position (degrees, positive up)
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_ApertureArea.htm">ApertureArea</a></td><td>
+            The area of the telescope's aperture, taking into account any obstructions (square meters)
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_ApertureDiameter.htm">ApertureDiameter</a></td><td>
+            The telescope's effective aperture diameter (meters)
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV4_AtHome.htm">AtHome</a></td><td>
+            True if the telescope is stopped in the Home position. Set only following a <a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV4_FindHome.htm">FindHome<span id="LST2396065_0" data-languageSpecificText="cs=()|vb=|cpp=()|nu=()|fs=()"></span></a> operation,
+            and reset with any slew operation. This property must be False if the telescope does not support homing. 
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_AtPark.htm">AtPark</a></td><td>
+            True if the telescope has been put into the parked state by the see <a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV3_Park.htm">Park<span id="LST2396065_1" data-languageSpecificText="cs=()|vb=|cpp=()|nu=()|fs=()"></span></a> method. Set False by calling the Unpark() method.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_Azimuth.htm">Azimuth</a></td><td>
+            The azimuth at the local horizon of the telescope's current position (degrees, North-referenced, positive East/clockwise).
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_CanFindHome.htm">CanFindHome</a></td><td>
+            True if this telescope is capable of programmed finding its home position (<a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV3_FindHome.htm">FindHome<span id="LST2396065_2" data-languageSpecificText="cs=()|vb=|cpp=()|nu=()|fs=()"></span></a> method).
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_CanPark.htm">CanPark</a></td><td>
+            True if this telescope is capable of programmed parking (<a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV3_Park.htm">Park<span id="LST2396065_3" data-languageSpecificText="cs=()|vb=|cpp=()|nu=()|fs=()"></span></a>method)
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_CanPulseGuide.htm">CanPulseGuide</a></td><td>
+            True if this telescope is capable of software-pulsed guiding (via the <a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV3_PulseGuide.htm">PulseGuide(GuideDirection, Int32)</a> method)
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_CanSetDeclinationRate.htm">CanSetDeclinationRate</a></td><td>
+            True if the <a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_DeclinationRate.htm">DeclinationRate</a> property can be changed to provide offset tracking in the declination axis.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_CanSetGuideRates.htm">CanSetGuideRates</a></td><td>
+            True if the guide rate properties used for <a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV3_PulseGuide.htm">PulseGuide(GuideDirection, Int32)</a> can be adjusted.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_CanSetPark.htm">CanSetPark</a></td><td>
+            True if this telescope is capable of programmed setting of its park position (<a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV3_SetPark.htm">SetPark<span id="LST2396065_4" data-languageSpecificText="cs=()|vb=|cpp=()|nu=()|fs=()"></span></a> method)
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_CanSetPierSide.htm">CanSetPierSide</a></td><td>
+            True if the <a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_SideOfPier.htm">SideOfPier</a> property can be set, meaning that the mount can be forced to flip.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_CanSetRightAscensionRate.htm">CanSetRightAscensionRate</a></td><td>
+            True if the <a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_RightAscensionRate.htm">RightAscensionRate</a> property can be changed to provide offset tracking in the right ascension axis.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_CanSetTracking.htm">CanSetTracking</a></td><td>
+            True if the <a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_Tracking.htm">Tracking</a> property can be changed, turning telescope sidereal tracking on and off.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV4_CanSlew.htm">CanSlew</a></td><td>
+            True if this telescope is capable of programmed slewing (synchronous or asynchronous) to equatorial coordinates
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV4_CanSlewAltAz.htm">CanSlewAltAz</a></td><td>
+            True if this telescope is capable of programmed slewing (synchronous or asynchronous) to local horizontal coordinates
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV4_CanSlewAltAzAsync.htm">CanSlewAltAzAsync</a></td><td>
+            True if this telescope is capable of programmed asynchronous slewing to local horizontal coordinates
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV4_CanSlewAsync.htm">CanSlewAsync</a></td><td>
+            True if this telescope is capable of programmed asynchronous slewing to equatorial coordinates.
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_CanSync.htm">CanSync</a></td><td>
+            True if this telescope is capable of programmed synching to equatorial coordinates.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_CanSyncAltAz.htm">CanSyncAltAz</a></td><td>
+            True if this telescope is capable of programmed synching to local horizontal coordinates
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_CanUnpark.htm">CanUnpark</a></td><td>
+            True if this telescope is capable of programmed unparking (<a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV3_Unpark.htm">Unpark<span id="LST2396065_5" data-languageSpecificText="cs=()|vb=|cpp=()|nu=()|fs=()"></span></a> method).
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_Connected.htm">Connected</a></td><td>
+            Set True to enable the link. Set False to disable the link.
+            You can also read the property to check whether it is connected.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDeviceV2_Connecting.htm">Connecting</a></td><td>
+            Completion variable for asynchronous connect and disconnect operations
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDeviceV2.htm">IAscomDeviceV2</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_Declination.htm">Declination</a></td><td>
+            The declination (degrees) of the telescope's current equatorial coordinates, in the coordinate system given by the <a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_EquatorialSystem.htm">EquatorialSystem</a> property.
+            Reading the property will raise an error if the value is unavailable. 
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_DeclinationRate.htm">DeclinationRate</a></td><td>
+            The declination tracking rate (arcseconds per SI second, default = 0.0)
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_Description.htm">Description</a></td><td>
+            Returns a description of the driver, such as manufacturer and model number.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDeviceV2_DeviceState.htm">DeviceState</a></td><td>
+            Returns the device's operational state in a single call
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDeviceV2.htm">IAscomDeviceV2</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_DoesRefraction.htm">DoesRefraction</a></td><td>
+            True if the telescope or driver applies atmospheric refraction to coordinates.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_DriverInfo.htm">DriverInfo</a></td><td>
+            Descriptive and version information about this ASCOM driver.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_DriverVersion.htm">DriverVersion</a></td><td>
+            A string in the form "n.n" containing only the major and minor version of the driver.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_EquatorialSystem.htm">EquatorialSystem</a></td><td>
+            Equatorial coordinate system used by this telescope (e.g. Topocentric or J2000).
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_FocalLength.htm">FocalLength</a></td><td>
+            The telescope's focal length, meters
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_GuideRateDeclination.htm">GuideRateDeclination</a></td><td>
+            The current Declination movement rate offset for telescope guiding (degrees/sec)
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_GuideRateRightAscension.htm">GuideRateRightAscension</a></td><td>
+            The current Right Ascension movement rate offset for telescope guiding (degrees/sec)
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_InterfaceVersion.htm">InterfaceVersion</a></td><td>
+            The interface version number that this device implements.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_IsPulseGuiding.htm">IsPulseGuiding</a></td><td>
+            True if a <a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV3_PulseGuide.htm">PulseGuide(GuideDirection, Int32)</a> command is in progress, False otherwise
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_Name.htm">Name</a></td><td>
+            The short name of the driver, for display purposes
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_RightAscension.htm">RightAscension</a></td><td>
+            The right ascension (hours) of the telescope's current equatorial coordinates,
+            in the coordinate system given by the EquatorialSystem property
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_RightAscensionRate.htm">RightAscensionRate</a></td><td>
+            The right ascension tracking rate offset from sidereal (seconds per sidereal second, default = 0.0)
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV4_SideOfPier.htm">SideOfPier</a></td><td>
+            Indicates the pointing state of the mount.
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_SiderealTime.htm">SiderealTime</a></td><td>
+            The local apparent sidereal time from the telescope's internal clock (hours, sidereal)
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_SiteElevation.htm">SiteElevation</a></td><td>
+            The elevation above mean sea level (meters) of the site at which the telescope is located
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_SiteLatitude.htm">SiteLatitude</a></td><td>
+            The geodetic(map) latitude (degrees, positive North, WGS84) of the site at which the telescope is located.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_SiteLongitude.htm">SiteLongitude</a></td><td>
+            The longitude (degrees, positive East, WGS84) of the site at which the telescope is located.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_Slewing.htm">Slewing</a></td><td>
+            True if telescope is currently moving in response to one of the
+            Slew methods or the <a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV3_MoveAxis.htm">MoveAxis(TelescopeAxis, Double)</a> method, False at all other times.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_SlewSettleTime.htm">SlewSettleTime</a></td><td>
+            Specifies a post-slew settling time (sec.).
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_IAscomDevice_SupportedActions.htm">SupportedActions</a></td><td>
+            Returns the list of action names supported by this driver.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_TargetDeclination.htm">TargetDeclination</a></td><td>
+            The declination (degrees, positive North) for the target of an equatorial slew or sync operation
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_TargetRightAscension.htm">TargetRightAscension</a></td><td>
+            The right ascension (hours) for the target of an equatorial slew or sync operation
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV4_Tracking.htm">Tracking</a></td><td>
+            The state of the telescope's sidereal tracking drive.
+            </td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_TrackingRate.htm">TrackingRate</a></td><td>
+            The current tracking rate of the telescope's sidereal drive
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_TrackingRates.htm">TrackingRates</a></td><td>
+            Returns a collection of supported <a href="T_ASCOM_Common_DeviceInterfaces_DriveRate.htm">DriveRate</a> values that describe the permissible
+            values of the <a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_TrackingRate.htm">TrackingRate</a> property for this telescope type.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_UTCDate.htm">UTCDate</a></td><td>
+            The UTC date/time of the telescope's internal clock
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr></table></div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Methods</h2><div id="IDJFASection"><table id="MethodList" class="table is-hoverable"><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV4_AbortSlew.htm">AbortSlew</a></td><td>
+            Stops a slew in progress.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IAscomDevice_Action.htm">Action</a></td><td>
+            Invokes the specified device-specific action.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV3_AxisRates.htm">AxisRates</a></td><td>
+            Determine the rates at which the telescope may be moved about the specified axis by the <a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV3_MoveAxis.htm">MoveAxis(TelescopeAxis, Double)</a> method.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV3_CanMoveAxis.htm">CanMoveAxis</a></td><td>
+            True if this telescope can move the requested axis
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IAscomDevice_CommandBlind.htm">CommandBlind</a></td><td>
+            Transmits an arbitrary string to the device and does not wait for a response.
+            Optionally, protocol framing characters may be added to the string before transmission.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IAscomDevice_CommandBool.htm">CommandBool</a></td><td>
+            Transmits an arbitrary string to the device and waits for a boolean response.
+            Optionally, protocol framing characters may be added to the string before transmission.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IAscomDevice_CommandString.htm">CommandString</a></td><td>
+            Transmits an arbitrary string to the device and waits for a string response.
+            Optionally, protocol framing characters may be added to the string before transmission.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IAscomDeviceV2_Connect.htm">Connect</a></td><td>
+            Connect to device asynchronously
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDeviceV2.htm">IAscomDeviceV2</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV3_DestinationSideOfPier.htm">DestinationSideOfPier</a></td><td>
+            Predict side of pier for German equatorial mounts
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IAscomDeviceV2_Disconnect.htm">Disconnect</a></td><td>
+            Disconnect from device asynchronously
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDeviceV2.htm">IAscomDeviceV2</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_IAscomDevice_Dispose.htm">Dispose</a></td><td>
+            This method is a "clean-up" method that is primarily of use to drivers that are written in languages such as C# and VB.NET where resource clean-up is initially managed by the language's 
+            runtime garbage collection mechanic. Driver authors should take care to ensure that a client or runtime calling Dispose() does not adversely affect other connected clients.
+            Applications should not call this method.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_IAscomDevice.htm">IAscomDevice</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV4_FindHome.htm">FindHome</a></td><td>
+            Locates the telescope's "home" position
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV4_MoveAxis.htm">MoveAxis</a></td><td>
+            Move the telescope in one axis at the given rate.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV4_Park.htm">Park</a></td><td>
+            Move the telescope to its park position, stop all motion (or restrict to a small safe range), and set <a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_AtPark.htm">AtPark</a> to True.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV4_PulseGuide.htm">PulseGuide</a></td><td>
+            Moves the scope in the given direction for the given interval or time at 
+            the rate given by the corresponding guide rate property 
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV3_SetPark.htm">SetPark</a></td><td>
+            Sets the telescope's park position to be its current position.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV4_SlewToAltAz.htm">SlewToAltAz</a></td><td>
+            Move the telescope to the given local horizontal coordinates, return when slew is complete
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV4_SlewToAltAzAsync.htm">SlewToAltAzAsync</a></td><td>
+            This Method must be implemented if <a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV4_CanSlewAltAzAsync.htm">CanSlewAltAzAsync</a> returns True.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV4_SlewToCoordinates.htm">SlewToCoordinates</a></td><td>
+            Move the telescope to the given equatorial coordinates, return when slew is complete
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV4_SlewToCoordinatesAsync.htm">SlewToCoordinatesAsync</a></td><td>
+            Move the telescope to the given equatorial coordinates, return immediately after starting the slew.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV4_SlewToTarget.htm">SlewToTarget</a></td><td>
+            Move the telescope to the <a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_TargetRightAscension.htm">TargetRightAscension</a> and <a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_TargetDeclination.htm">TargetDeclination</a> coordinates, return when slew complete.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV4_SlewToTargetAsync.htm">SlewToTargetAsync</a></td><td>
+            Move the telescope to the <a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_TargetRightAscension.htm">TargetRightAscension</a> and <a href="P_ASCOM_Common_DeviceInterfaces_ITelescopeV3_TargetDeclination.htm">TargetDeclination</a>  coordinates,
+            returns immediately after starting the slew.
+            </td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV3_SyncToAltAz.htm">SyncToAltAz</a></td><td>
+            Matches the scope's local horizontal coordinates to the given local horizontal coordinates.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV3_SyncToCoordinates.htm">SyncToCoordinates</a></td><td>
+            Matches the scope's equatorial coordinates to the given equatorial coordinates.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV3_SyncToTarget.htm">SyncToTarget</a></td><td>
+            Matches the scope's equatorial coordinates to the given equatorial coordinates.
+            <br />(Inherited from <a href="T_ASCOM_Common_DeviceInterfaces_ITelescopeV3.htm">ITelescopeV3</a>)</td></tr><tr><td><a href="M_ASCOM_Common_DeviceInterfaces_ITelescopeV4_Unpark.htm">Unpark</a></td><td>
+            Takes telescope out of the Parked state.
+            </td></tr></table></div><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>Extension Methods</h2><div id="IDAFASection"><table id="ExtensionList" class="table is-hoverable"><tr><td><a href="M_ASCOM_Common_ClientExtensions_AbortSlewAsync_1.htm">AbortSlewAsync</a></td><td>
+            Returns an awaitable, running, <a href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task" target="_blank" rel="noopener noreferrer">Task</a> that stops telescope slewing movement
+            <br />(Defined by <a href="T_ASCOM_Common_ClientExtensions.htm">ClientExtensions</a>)</td></tr><tr><td><a href="M_ASCOM_Common_ClientExtensions_ConnectAsync.htm">ConnectAsync</a></td><td>
+            Returns an awaitable, running, <a href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task" target="_blank" rel="noopener noreferrer">Task</a> that connects to the device. (Polls IAscomDeviceV2.Connecting)
+            <br />(Defined by <a href="T_ASCOM_Common_ClientExtensions.htm">ClientExtensions</a>)</td></tr><tr><td><a href="M_ASCOM_Common_ClientExtensions_DisconnectAsync.htm">DisconnectAsync</a></td><td>
+            Returns an awaitable, running, <a href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task" target="_blank" rel="noopener noreferrer">Task</a> that disconnects from the device. (Polls IAscomDeviceV2.Connecting)
+            <br />(Defined by <a href="T_ASCOM_Common_ClientExtensions.htm">ClientExtensions</a>)</td></tr><tr><td><a href="M_ASCOM_Common_ClientExtensions_FindHomeAsync_1.htm">FindHomeAsync</a></td><td>
+            Returns an awaitable, running, <a href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task" target="_blank" rel="noopener noreferrer">Task</a> that moves the telescope to the home position
+            <br />(Defined by <a href="T_ASCOM_Common_ClientExtensions.htm">ClientExtensions</a>)</td></tr><tr><td><a href="M_ASCOM_Common_ClientExtensions_ParkAsync_1.htm">ParkAsync</a></td><td>
+            Returns an awaitable, running, <a href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task" target="_blank" rel="noopener noreferrer">Task</a> that parks the telescope
+            <br />(Defined by <a href="T_ASCOM_Common_ClientExtensions.htm">ClientExtensions</a>)</td></tr><tr><td><a href="M_ASCOM_Common_ClientExtensions_SlewToAltAzTaskAsync.htm">SlewToAltAzTaskAsync</a></td><td>
+            Returns an awaitable, running, <a href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task" target="_blank" rel="noopener noreferrer">Task</a> that slews the telescope to the specified altitude / azimuth coordinates
+            <br />(Defined by <a href="T_ASCOM_Common_ClientExtensions.htm">ClientExtensions</a>)</td></tr><tr><td><a href="M_ASCOM_Common_ClientExtensions_SlewToCoordinatesTaskAsync.htm">SlewToCoordinatesTaskAsync</a></td><td>
+            Returns an awaitable, running, <a href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task" target="_blank" rel="noopener noreferrer">Task</a> that slews the telescope to the specified RA/Dec coordinates
+            <br />(Defined by <a href="T_ASCOM_Common_ClientExtensions.htm">ClientExtensions</a>)</td></tr><tr><td><a href="M_ASCOM_Common_ClientExtensions_SlewToTargetTaskAsync.htm">SlewToTargetTaskAsync</a></td><td>
+            Returns an awaitable, running, <a href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task" target="_blank" rel="noopener noreferrer">Task</a> that slews the telescope to the coordinates specified by the TargetRA and TargetDeclination properties
+            <br />(Defined by <a href="T_ASCOM_Common_ClientExtensions.htm">ClientExtensions</a>)</td></tr><tr><td><a href="M_ASCOM_Common_ClientExtensions_UnparkAsync.htm">UnparkAsync</a></td><td>
+            Returns an awaitable, running, <a href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task" target="_blank" rel="noopener noreferrer">Task</a> that un-parks the telescope
+            <br />(Defined by <a href="T_ASCOM_Common_ClientExtensions.htm">ClientExtensions</a>)</td></tr></table></div><h4 class="quickLinkHeader">Version Information</h4><h4 class="quickLinkHeader">.NET Standard</h4>Supported in: 2.0<br /><h2 class="quickLinkHeader"><span class="icon toggleSection" tabindex="0"><i class="fa fa-angle-down"></i></span>See Also</h2><div id="seeAlsoSection"><h4>Reference</h4><div><a href="N_ASCOM_Common_DeviceInterfaces.htm">ASCOM.Common.DeviceInterfaces Namespace</a></div></div></div><div id="InThisArticleColumn" class="column is-hidden-mobile"><nav class="menu sticky is-hidden"><p class="menu-label"><strong>In This Article</strong></p><ul id="InThisArticleMenu" class="menu-list"><li><a class="quickLink">Definition</a></li><li><a class="quickLink">Properties</a></li><li><a class="quickLink">Methods</a></li><li><a class="quickLink">Extension Methods</a><ul class="menu"><li><a class="quickLink">Version Information</a></li><li><a class="quickLink">.NET Standard</a></li></ul></li><li><a class="quickLink">See Also</a></li></ul></nav></div></div></div><footer id="PageFooter" class="footer border-top py-3 fixedFooter"><div class="columns"><div id="FooterContent" class="column"><p><a href="https://www.ascom-standards.org" target="_blank" rel="noopener noreferrer">Copyright © 2021 - 2025 ASCOM Initiative</a></p> 
+				</div></div></footer></div><script>$(function(){
+SetDefaultLanguage("cs");
+LoadTocFile(null, null);
+InitializeQuickLinks();
+
+$(".toggleSection" ).click(function () {
+    SectionExpandCollapse(this);
+});
+
+$(".toggleSection").keypress(function () {
+    SectionExpandCollapseCheckKey(this, event)
+});
+hljs.highlightAll();
+});</script></body></html>

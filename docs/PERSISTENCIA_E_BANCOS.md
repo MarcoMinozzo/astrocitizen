@@ -2,7 +2,7 @@
 
 **Decisão:** 2026-07-21  
 **Status:** regra de produto e arquitetura (sem implementação nesta fase)  
-**Relacionados:** `ESCOPO_GERAL_E_REGRAS_DE_NEGOCIO.md` · `ARQUITETURA.md` (a criar/atualizar) · `STACK_TECNOLOGICA.md`
+**Relacionados:** `ESCOPO_GERAL_E_REGRAS_DE_NEGOCIO.md` · `ARQUITETURA.md` · `STACK_TECNOLOGICA.md` · `AVALIACAO_STACK_MOTORSPORT.md` (D-009 BDaaS)
 
 ---
 
@@ -11,6 +11,8 @@
 **Todo resultado observacional alimenta bancos de dados.**
 
 Não existe “só arquivo solto” como estado final do fluxo. Arquivos (FITS, CSV, plots) são **artefatos**; a **verdade operacional e científica** da plataforma vive em bases de dados consultáveis, relacionáveis aos programas PO-*, Site, sessão, meteo e equipamento.
+
+Em **produção SaaS**, persistência mestre e storage de artefatos são **serviços geridos (BDaaS / object storage as a service)** — decisão D-009.
 
 Isso vale para:
 
@@ -44,17 +46,24 @@ Isso vale para:
 └─────────────────────────────────────────────────────────┘
 ```
 
-### Separação recomendada (pode ser 1 ou N arquivos/engines)
+### Separação recomendada (pode ser 1 ou N engines)
 
-| Store | Conteúdo | Exemplos de tecnologia (a decidir na implementação) |
-|-------|----------|-----------------------------------------------------|
-| **Domínio / operacional** | Site, equipamentos, programas, programa diário, sessão, usuários/prefs | SQLite (local) → PostgreSQL (observatório/multi-user) |
-| **Resultados científicos** | Observacoes, produtos de análise, medições, versões | Mesmo BD ou schema separado |
-| **Séries / pontos** | Pontos de curva de luz, amostras de espectro, timings | Tabelas normalizadas ou particionadas; Parquet opcional depois |
-| **Blob / arquivos** | FITS, PNG, PDF de relatório | Disco local ou object store; **sempre** com registro no BD |
+| Store | Conteúdo | Tipo de dado | Tecnologia (D-009) |
+|-------|----------|--------------|--------------------|
+| **Domínio / operacional** | Site, equipamentos, programas, programa diário, sessão, usuários | **Estruturado** | **PostgreSQL BDaaS** (SaaS) · SQLite (Desktop) |
+| **Resultados científicos** | Observacoes, produtos, medições, versões | Estruturado + JSONB | Mesmo Postgres |
+| **Semi-estruturado** | Snapshots meteo/efemérides, headers, planos, configs PO-* | **Semi** | **JSONB** no Postgres |
+| **Séries / pontos** | Curva de luz, espectro 1D, timings | Semi / colunar | Tabelas Postgres (MVP) → **Parquet** em object store |
+| **Blob / arquivos** | FITS, PNG, PDF, exports | **Não estruturado** | **Object storage BDaaS** (S3/Azure Blob/R2); URI no BD |
+| **Cache / fila** (opcional) | Jobs, rate limit | — | Redis BDaaS (P2+) |
 
-Início típico (pequeno observatório): **SQLite + diretório de dados**.  
-Evolução: **PostgreSQL** (ou compatível) sem mudar o domínio — via porta `ArchivePort` / `UnitOfWork`.
+**Produção SaaS:** zero estado mestre em disco da VM de aplicação.  
+**Desktop:** SQLite + filesystem local → sync para BDaaS.  
+**CI:** SQLite in-memory / Postgres de teste (sem BDaaS obrigatório).
+
+Início típico de desenvolvimento: Postgres Docker local com o **mesmo contrato** `DATABASE_URL` do DBaaS.  
+**Schema detalhado:** [MODELO_DADOS_V1.md](MODELO_DADOS_V1.md).  
+Detalhe BDaaS: [AVALIACAO_STACK_MOTORSPORT.md](AVALIACAO_STACK_MOTORSPORT.md) §6.
 
 ---
 
@@ -119,6 +128,9 @@ Todo registro relevante carrega, quando aplicável:
 
 ## 8. Fora de escopo (por enquanto)
 
-- Escolher engine definitiva (SQLite vs PostgreSQL) — decisão de implementação.  
-- Data lake / warehouse na nuvem — evolução possível, não requisito do MVP.  
-- BD científico externo (ex.: só AAVSO) — a plataforma **alimenta o BD próprio** e **exporta**; o BD da rede é destino, não substituto do arquivo local.
+- Escolher **provedor** concreto de BDaaS (Azure vs AWS vs Neon…) — decisão de ops/deploy.  
+- MongoDB/Cosmos como BD mestre — rejeitado no MVP (D-009); reavaliar se JSONB não bastar.  
+- Data warehouse / lakehouse completo — evolução possível após Parquet estável.  
+- BD científico externo (ex.: só AAVSO) — a plataforma **alimenta o BD próprio** e **exporta**; o BD da rede é destino, não substituto do arquivo.
+
+Schema lógico e limiar Parquet: [MODELO_DADOS_V1.md](MODELO_DADOS_V1.md).

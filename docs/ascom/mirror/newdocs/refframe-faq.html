@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>What are the equatorial coordinate reference frames? &mdash; ASCOM Master Interfaces 1.0.24 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="_static/css/ascom.css?v=b0cb383b" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=665f1cdb"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="What is DestinationSideOfPier and why would I want to use it?" href="dsop-faq.html" />
+    <link rel="prev" title="What does MoveAxis() do and how do I use it?" href="moveaxis-faq.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search"  style="background: #000040" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            ASCOM Master Interfaces
+              <img src="_static/Bug72.jpg" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                1.0.24
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Important Information</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="introduction.html">Essential Information</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#essential-information-for-developers">Essential Information for Developers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#data-types-used-in-this-document">Data Types Used in This Document</a></li>
+<li class="toctree-l2"><a class="reference internal" href="introduction.html#status-of-this-document-1-0-24-as-of-15-apr-2026">Status of This Document (1.0.24 as of 15-Apr-2026)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="relnotes.html">Release Notes for Interfaces as of ASCOM Platform 7</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="relnotes.html#non-blocking-asynchronous-behavior-documentation">Non-Blocking (Asynchronous) Behavior - Documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relnotes.html#non-blocking-asynchronous-enhancement-device-connections">Non-Blocking (Asynchronous) Enhancement - Device Connections</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relnotes.html#expanded-application-camera-readoutmode">Expanded Application - Camera.ReadoutMode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relnotes.html#non-blocking-asynchronous-enhancement-covercalibrator">Non-Blocking (Asynchronous) Enhancement - CoverCalibrator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relnotes.html#non-blocking-asynchronous-enhancement-dome">Non-Blocking (Asynchronous) Enhancement - Dome</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relnotes.html#non-blocking-asynchronous-enhancement-switch">Non-Blocking (Asynchronous) Enhancement - Switch</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relnotes.html#non-blocking-asynchronous-and-other-enhancements-telescope">Non-Blocking (Asynchronous) and Other Enhancements - Telescope</a></li>
+<li class="toctree-l2"><a class="reference internal" href="relnotes.html#enhancement-aggregated-reading-of-operational-properties">Enhancement - Aggregated Reading of Operational Properties</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="reference internal" href="faq.html">Frequently Asked Questions</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="async-faq.html">Asynchronous Operations in ASCOM</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="async-faq.html#background-for-developers">Background for Developers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="async-faq.html#how-can-i-tell-if-my-asynchronous-request-fails">How can I tell if my asynchronous request fails?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="async-faq.html#what-do-i-do-if-something-goes-wrong">What do I do if something goes wrong?</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="readall-faq.html">What is the “read all” feature and what are its rules?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="timestamp-faq.html">TimeStamp Value</a></li>
+<li class="toctree-l2"><a class="reference internal" href="camera-sensor-faq.html">MaxADU, ElectronsPerADU, and FullWellCapacity in the <span class="xref std std-doc">Camera Interface</span></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="camera-sensor-faq.html#values-must-reflect-current-camera-modes">Values Must Reflect Current Camera Modes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="camera-sensor-faq.html#purpose-of-maxadu">Purpose of MaxADU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="camera-sensor-faq.html#meaning-of-maxadu">Meaning of MaxADU</a></li>
+<li class="toctree-l3"><a class="reference internal" href="camera-sensor-faq.html#inflation-of-data-values-upscaling-to-higher-bit-depth">Inflation of Data Values - Upscaling to Higher Bit depth</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="camera-state-diagram.html">State Transition Diagram for <code class="xref py py-attr docutils literal notranslate"><span class="pre">Camera.CameraState</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="dome-faq.html">The <span class="xref std std-doc">Dome Interface</span> seems complex and confusing. Help me.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotator-faq.html">What are the Angles that <span class="xref std std-doc">Rotator</span> uses, and How Do They Relate?</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rotator-faq.html#rotator-on-an-alt-az-mount">Rotator on an Alt-Az Mount</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="scope-slew-faq.html">Synchronous Slewing in the <span class="xref std std-doc">Telescope Interface</span></a></li>
+<li class="toctree-l2"><a class="reference internal" href="mount-time-place-faq.html">Managing a Telescope Mount’s Knowledge of Time and Place</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="mount-time-place-faq.html#simple-internal-clock">Simple Internal Clock</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mount-time-place-faq.html#internal-precision-time-source">Internal Precision Time Source</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mount-time-place-faq.html#internal-source-of-position">Internal Source of Position</a></li>
+<li class="toctree-l3"><a class="reference internal" href="mount-time-place-faq.html#unavailablilty-of-internal-precision-time-or-location-source">Unavailablilty of Internal Precision Time or Location Source</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="ptgstate-faq.html">What is the meaning of “pointing state” in the docs for <code class="xref py py-attr docutils literal notranslate"><span class="pre">SideOfPier</span></code></a><ul>
+<li class="toctree-l3"><a class="reference internal" href="ptgstate-faq.html#ascom-convention">ASCOM Convention</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ptgstate-faq.html#context">Context</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ptgstate-faq.html#pointing-state-and-side-of-pier-help-for-driver-developers">Pointing State and Side of Pier - Help for Driver Developers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="moveaxis-faq.html">What does <code class="xref py py-meth docutils literal notranslate"><span class="pre">MoveAxis()</span></code> do and how do I use it?</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="moveaxis-faq.html#behavior-of-the-tracking-property">Behavior of the <code class="xref py py-attr docutils literal notranslate"><span class="pre">Tracking</span></code> Property</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">What are the equatorial coordinate reference frames?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="dsop-faq.html">What is <code class="xref py py-attr docutils literal notranslate"><span class="pre">DestinationSideOfPier</span></code> and why would I want to use it?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trkoffset-faq.html">What are <code class="xref py py-attr docutils literal notranslate"><span class="pre">RightAscensionRate</span></code> and <code class="xref py py-attr docutils literal notranslate"><span class="pre">DeclinationRate</span></code> and how are they used?</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="trkoffset-faq.html#units-of-rightascensionrate">Units of <code class="xref py py-attr docutils literal notranslate"><span class="pre">RightAscensionRate</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="trkoffset-faq.html#invalidoperationexception-when-trackingrate-is-not-drivesidereal"><code class="xref py py-class docutils literal notranslate"><span class="pre">InvalidOperationException</span></code> When <code class="xref py py-attr docutils literal notranslate"><span class="pre">TrackingRate</span></code> is not <code class="docutils literal notranslate"><span class="pre">driveSidereal</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="pulseguide-faq.html">What Does <code class="xref py py-meth docutils literal notranslate"><span class="pre">PulseGuide()</span></code> Do? I’m Confused.</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pulseguide-faq.html#magnitude-of-move">Magnitude of Move</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="switch-faq.html">The <span class="xref std std-doc">Switch Interface</span> seems complex and confusing. Help me.</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="switch-faq.html#for-application-developers">For Application Developers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="switch-faq.html#for-device-developers">For Device Developers</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="definitions-faq.html">What do we mean by the terms Mandatory, Optional and Deprecated?</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Master Interfaces</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="interfaces.html">ASCOM Master Interface Definitions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="camera.html">ICameraV4 Interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="camera.html#Camera"><code class="docutils literal notranslate"><span class="pre">Camera</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="camera.html#methods">Methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.AbortExposure"><code class="docutils literal notranslate"><span class="pre">Camera.AbortExposure()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.Action"><code class="docutils literal notranslate"><span class="pre">Camera.Action()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.CommandBlind"><code class="docutils literal notranslate"><span class="pre">Camera.CommandBlind()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.CommandBool"><code class="docutils literal notranslate"><span class="pre">Camera.CommandBool()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.CommandString"><code class="docutils literal notranslate"><span class="pre">Camera.CommandString()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.Connect"><code class="docutils literal notranslate"><span class="pre">Camera.Connect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.Disconnect"><code class="docutils literal notranslate"><span class="pre">Camera.Disconnect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.PulseGuide"><code class="docutils literal notranslate"><span class="pre">Camera.PulseGuide()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.SetupDialog"><code class="docutils literal notranslate"><span class="pre">Camera.SetupDialog()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.StartExposure"><code class="docutils literal notranslate"><span class="pre">Camera.StartExposure()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.StopExposure"><code class="docutils literal notranslate"><span class="pre">Camera.StopExposure()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="camera.html#properties">Properties</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.BayerOffsetX"><code class="docutils literal notranslate"><span class="pre">Camera.BayerOffsetX</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.BayerOffsetY"><code class="docutils literal notranslate"><span class="pre">Camera.BayerOffsetY</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.BinX"><code class="docutils literal notranslate"><span class="pre">Camera.BinX</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.BinY"><code class="docutils literal notranslate"><span class="pre">Camera.BinY</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.CameraState"><code class="docutils literal notranslate"><span class="pre">Camera.CameraState</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.CameraXSize"><code class="docutils literal notranslate"><span class="pre">Camera.CameraXSize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.CameraYSize"><code class="docutils literal notranslate"><span class="pre">Camera.CameraYSize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.CanAbortExposure"><code class="docutils literal notranslate"><span class="pre">Camera.CanAbortExposure</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.CanAsymmetricBin"><code class="docutils literal notranslate"><span class="pre">Camera.CanAsymmetricBin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.CanFastReadout"><code class="docutils literal notranslate"><span class="pre">Camera.CanFastReadout</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.CanGetCoolerPower"><code class="docutils literal notranslate"><span class="pre">Camera.CanGetCoolerPower</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.CanPulseGuide"><code class="docutils literal notranslate"><span class="pre">Camera.CanPulseGuide</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.CanSetCCDTemperature"><code class="docutils literal notranslate"><span class="pre">Camera.CanSetCCDTemperature</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.CanStopExposure"><code class="docutils literal notranslate"><span class="pre">Camera.CanStopExposure</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.CCDTemperature"><code class="docutils literal notranslate"><span class="pre">Camera.CCDTemperature</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.Connected"><code class="docutils literal notranslate"><span class="pre">Camera.Connected</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.Connecting"><code class="docutils literal notranslate"><span class="pre">Camera.Connecting</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.CoolerOn"><code class="docutils literal notranslate"><span class="pre">Camera.CoolerOn</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.CoolerPower"><code class="docutils literal notranslate"><span class="pre">Camera.CoolerPower</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.Description"><code class="docutils literal notranslate"><span class="pre">Camera.Description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.DeviceState"><code class="docutils literal notranslate"><span class="pre">Camera.DeviceState</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.DriverInfo"><code class="docutils literal notranslate"><span class="pre">Camera.DriverInfo</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.DriverVersion"><code class="docutils literal notranslate"><span class="pre">Camera.DriverVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.ElectronsPerADU"><code class="docutils literal notranslate"><span class="pre">Camera.ElectronsPerADU</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.ExposureMax"><code class="docutils literal notranslate"><span class="pre">Camera.ExposureMax</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.ExposureMin"><code class="docutils literal notranslate"><span class="pre">Camera.ExposureMin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.ExposureResolution"><code class="docutils literal notranslate"><span class="pre">Camera.ExposureResolution</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.FastReadout"><code class="docutils literal notranslate"><span class="pre">Camera.FastReadout</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.FullWellCapacity"><code class="docutils literal notranslate"><span class="pre">Camera.FullWellCapacity</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.Gain"><code class="docutils literal notranslate"><span class="pre">Camera.Gain</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.GainMax"><code class="docutils literal notranslate"><span class="pre">Camera.GainMax</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.GainMin"><code class="docutils literal notranslate"><span class="pre">Camera.GainMin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.Gains"><code class="docutils literal notranslate"><span class="pre">Camera.Gains</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.HasShutter"><code class="docutils literal notranslate"><span class="pre">Camera.HasShutter</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.HeatSinkTemperature"><code class="docutils literal notranslate"><span class="pre">Camera.HeatSinkTemperature</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.ImageArray"><code class="docutils literal notranslate"><span class="pre">Camera.ImageArray</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.ImageArrayVariant"><code class="docutils literal notranslate"><span class="pre">Camera.ImageArrayVariant</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.ImageReady"><code class="docutils literal notranslate"><span class="pre">Camera.ImageReady</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.InterfaceVersion"><code class="docutils literal notranslate"><span class="pre">Camera.InterfaceVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.IsPulseGuiding"><code class="docutils literal notranslate"><span class="pre">Camera.IsPulseGuiding</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.LastExposureDuration"><code class="docutils literal notranslate"><span class="pre">Camera.LastExposureDuration</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.LastExposureStartTime"><code class="docutils literal notranslate"><span class="pre">Camera.LastExposureStartTime</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.MaxADU"><code class="docutils literal notranslate"><span class="pre">Camera.MaxADU</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.MaxBinX"><code class="docutils literal notranslate"><span class="pre">Camera.MaxBinX</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.MaxBinY"><code class="docutils literal notranslate"><span class="pre">Camera.MaxBinY</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.Name"><code class="docutils literal notranslate"><span class="pre">Camera.Name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.NumX"><code class="docutils literal notranslate"><span class="pre">Camera.NumX</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.NumY"><code class="docutils literal notranslate"><span class="pre">Camera.NumY</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.Offset"><code class="docutils literal notranslate"><span class="pre">Camera.Offset</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.OffsetMax"><code class="docutils literal notranslate"><span class="pre">Camera.OffsetMax</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.OffsetMin"><code class="docutils literal notranslate"><span class="pre">Camera.OffsetMin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.Offsets"><code class="docutils literal notranslate"><span class="pre">Camera.Offsets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.PercentCompleted"><code class="docutils literal notranslate"><span class="pre">Camera.PercentCompleted</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.PixelSizeX"><code class="docutils literal notranslate"><span class="pre">Camera.PixelSizeX</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.PixelSizeY"><code class="docutils literal notranslate"><span class="pre">Camera.PixelSizeY</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.ReadoutMode"><code class="docutils literal notranslate"><span class="pre">Camera.ReadoutMode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.ReadoutModes"><code class="docutils literal notranslate"><span class="pre">Camera.ReadoutModes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.SensorName"><code class="docutils literal notranslate"><span class="pre">Camera.SensorName</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.SensorType"><code class="docutils literal notranslate"><span class="pre">Camera.SensorType</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.SetCCDTemperature"><code class="docutils literal notranslate"><span class="pre">Camera.SetCCDTemperature</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.StartX"><code class="docutils literal notranslate"><span class="pre">Camera.StartX</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.StartY"><code class="docutils literal notranslate"><span class="pre">Camera.StartY</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.SubExposureDuration"><code class="docutils literal notranslate"><span class="pre">Camera.SubExposureDuration</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.SupportedActions"><code class="docutils literal notranslate"><span class="pre">Camera.SupportedActions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="camera.html#enumerated-constants">Enumerated Constants</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.CameraStates"><code class="docutils literal notranslate"><span class="pre">Camera.CameraStates</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.GuideDirections"><code class="docutils literal notranslate"><span class="pre">Camera.GuideDirections</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="camera.html#Camera.SensrType"><code class="docutils literal notranslate"><span class="pre">Camera.SensοrType</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="covercalibrator.html">ICoverCalibratorV2 Interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="covercalibrator.html#CoverCalibrator"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="covercalibrator.html#methods">Methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.Action"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.Action()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.CalibratorOff"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.CalibratorOff()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.CalibratorOn"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.CalibratorOn()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.CloseCover"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.CloseCover()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.CommandBlind"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.CommandBlind()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.CommandBool"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.CommandBool()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.CommandString"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.CommandString()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.Connect"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.Connect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.Disconnect"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.Disconnect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.HaltCover"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.HaltCover()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.OpenCover"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.OpenCover()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.SetupDialog"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.SetupDialog()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="covercalibrator.html#properties">Properties</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.Brightness"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.Brightness</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.CalibratorChanging"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.CalibratorChanging</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.CalibratorState"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.CalibratorState</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.Connected"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.Connected</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.Connecting"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.Connecting</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.CoverMoving"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.CoverMoving</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.CoverState"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.CoverState</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.Description"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.Description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.DeviceState"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.DeviceState</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.DriverInfo"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.DriverInfo</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.DriverVersion"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.DriverVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.InterfaceVersion"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.InterfaceVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.MaxBrightness"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.MaxBrightness</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.Name"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.Name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverCalibrator.SupportedActions"><code class="docutils literal notranslate"><span class="pre">CoverCalibrator.SupportedActions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="covercalibrator.html#enumerated-constants">Enumerated Constants</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CalibratorStatus"><code class="docutils literal notranslate"><span class="pre">CalibratorStatus</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="covercalibrator.html#CoverStatus"><code class="docutils literal notranslate"><span class="pre">CoverStatus</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="dome.html">IDomeV3 Interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="dome.html#Dome"><code class="docutils literal notranslate"><span class="pre">Dome</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="dome.html#methods">Methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.AbortSlew"><code class="docutils literal notranslate"><span class="pre">Dome.AbortSlew()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.Action"><code class="docutils literal notranslate"><span class="pre">Dome.Action()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.CloseShutter"><code class="docutils literal notranslate"><span class="pre">Dome.CloseShutter()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.CommandBlind"><code class="docutils literal notranslate"><span class="pre">Dome.CommandBlind()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.CommandBool"><code class="docutils literal notranslate"><span class="pre">Dome.CommandBool()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.CommandString"><code class="docutils literal notranslate"><span class="pre">Dome.CommandString()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.Connect"><code class="docutils literal notranslate"><span class="pre">Dome.Connect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.Disconnect"><code class="docutils literal notranslate"><span class="pre">Dome.Disconnect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.FindHome"><code class="docutils literal notranslate"><span class="pre">Dome.FindHome()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.OpenShutter"><code class="docutils literal notranslate"><span class="pre">Dome.OpenShutter()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.Park"><code class="docutils literal notranslate"><span class="pre">Dome.Park()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.SetPark"><code class="docutils literal notranslate"><span class="pre">Dome.SetPark()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.SetupDialog"><code class="docutils literal notranslate"><span class="pre">Dome.SetupDialog()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.SlewToAltitude"><code class="docutils literal notranslate"><span class="pre">Dome.SlewToAltitude()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.SlewToAzimuth"><code class="docutils literal notranslate"><span class="pre">Dome.SlewToAzimuth()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.SyncToAzimuth"><code class="docutils literal notranslate"><span class="pre">Dome.SyncToAzimuth()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dome.html#properties">Properties</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.Altitude"><code class="docutils literal notranslate"><span class="pre">Dome.Altitude</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.AtHome"><code class="docutils literal notranslate"><span class="pre">Dome.AtHome</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.AtPark"><code class="docutils literal notranslate"><span class="pre">Dome.AtPark</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.Azimuth"><code class="docutils literal notranslate"><span class="pre">Dome.Azimuth</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.CanFindHome"><code class="docutils literal notranslate"><span class="pre">Dome.CanFindHome</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.CanPark"><code class="docutils literal notranslate"><span class="pre">Dome.CanPark</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.CanSetAltitude"><code class="docutils literal notranslate"><span class="pre">Dome.CanSetAltitude</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.CanSetAzimuth"><code class="docutils literal notranslate"><span class="pre">Dome.CanSetAzimuth</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.CanSetPark"><code class="docutils literal notranslate"><span class="pre">Dome.CanSetPark</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.CanSetShutter"><code class="docutils literal notranslate"><span class="pre">Dome.CanSetShutter</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.CanSlave"><code class="docutils literal notranslate"><span class="pre">Dome.CanSlave</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.CanSyncAzimuth"><code class="docutils literal notranslate"><span class="pre">Dome.CanSyncAzimuth</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.Connected"><code class="docutils literal notranslate"><span class="pre">Dome.Connected</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.Connecting"><code class="docutils literal notranslate"><span class="pre">Dome.Connecting</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.Description"><code class="docutils literal notranslate"><span class="pre">Dome.Description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.DeviceState"><code class="docutils literal notranslate"><span class="pre">Dome.DeviceState</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.DriverInfo"><code class="docutils literal notranslate"><span class="pre">Dome.DriverInfo</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.DriverVersion"><code class="docutils literal notranslate"><span class="pre">Dome.DriverVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.InterfaceVersion"><code class="docutils literal notranslate"><span class="pre">Dome.InterfaceVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.Name"><code class="docutils literal notranslate"><span class="pre">Dome.Name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.ShutterStatus"><code class="docutils literal notranslate"><span class="pre">Dome.ShutterStatus</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.Slaved"><code class="docutils literal notranslate"><span class="pre">Dome.Slaved</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.Slewing"><code class="docutils literal notranslate"><span class="pre">Dome.Slewing</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#Dome.SupportedActions"><code class="docutils literal notranslate"><span class="pre">Dome.SupportedActions</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="dome.html#enumerated-constants">Enumerated Constants</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="dome.html#ShutterState"><code class="docutils literal notranslate"><span class="pre">ShutterState</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="filterwheel.html">IFilterWheelV3Class</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="filterwheel.html#FilterWheel"><code class="docutils literal notranslate"><span class="pre">FilterWheel</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="filterwheel.html#methods">Methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="filterwheel.html#FilterWheel.Action"><code class="docutils literal notranslate"><span class="pre">FilterWheel.Action()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="filterwheel.html#FilterWheel.CommandBlind"><code class="docutils literal notranslate"><span class="pre">FilterWheel.CommandBlind()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="filterwheel.html#FilterWheel.CommandBool"><code class="docutils literal notranslate"><span class="pre">FilterWheel.CommandBool()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="filterwheel.html#FilterWheel.CommandString"><code class="docutils literal notranslate"><span class="pre">FilterWheel.CommandString()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="filterwheel.html#FilterWheel.Connect"><code class="docutils literal notranslate"><span class="pre">FilterWheel.Connect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="filterwheel.html#FilterWheel.Disconnect"><code class="docutils literal notranslate"><span class="pre">FilterWheel.Disconnect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="filterwheel.html#FilterWheel.SetupDialog"><code class="docutils literal notranslate"><span class="pre">FilterWheel.SetupDialog()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="filterwheel.html#properties">Properties</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="filterwheel.html#FilterWheel.Connected"><code class="docutils literal notranslate"><span class="pre">FilterWheel.Connected</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="filterwheel.html#FilterWheel.Connecting"><code class="docutils literal notranslate"><span class="pre">FilterWheel.Connecting</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="filterwheel.html#FilterWheel.Description"><code class="docutils literal notranslate"><span class="pre">FilterWheel.Description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="filterwheel.html#FilterWheel.DeviceState"><code class="docutils literal notranslate"><span class="pre">FilterWheel.DeviceState</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="filterwheel.html#FilterWheel.DriverInfo"><code class="docutils literal notranslate"><span class="pre">FilterWheel.DriverInfo</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="filterwheel.html#FilterWheel.DriverVersion"><code class="docutils literal notranslate"><span class="pre">FilterWheel.DriverVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="filterwheel.html#FilterWheel.FocusOffsets"><code class="docutils literal notranslate"><span class="pre">FilterWheel.FocusOffsets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="filterwheel.html#FilterWheel.InterfaceVersion"><code class="docutils literal notranslate"><span class="pre">FilterWheel.InterfaceVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="filterwheel.html#FilterWheel.Name"><code class="docutils literal notranslate"><span class="pre">FilterWheel.Name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="filterwheel.html#FilterWheel.Names"><code class="docutils literal notranslate"><span class="pre">FilterWheel.Names</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="filterwheel.html#FilterWheel.Position"><code class="docutils literal notranslate"><span class="pre">FilterWheel.Position</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="filterwheel.html#FilterWheel.SupportedActions"><code class="docutils literal notranslate"><span class="pre">FilterWheel.SupportedActions</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="focuser.html">IFocuserV4 Interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="focuser.html#Focuser"><code class="docutils literal notranslate"><span class="pre">Focuser</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="focuser.html#methods">Methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.Action"><code class="docutils literal notranslate"><span class="pre">Focuser.Action()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.CommandBlind"><code class="docutils literal notranslate"><span class="pre">Focuser.CommandBlind()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.CommandBool"><code class="docutils literal notranslate"><span class="pre">Focuser.CommandBool()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.CommandString"><code class="docutils literal notranslate"><span class="pre">Focuser.CommandString()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.Connect"><code class="docutils literal notranslate"><span class="pre">Focuser.Connect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.Disconnect"><code class="docutils literal notranslate"><span class="pre">Focuser.Disconnect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.Halt"><code class="docutils literal notranslate"><span class="pre">Focuser.Halt()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.Move"><code class="docutils literal notranslate"><span class="pre">Focuser.Move()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.SetupDialog"><code class="docutils literal notranslate"><span class="pre">Focuser.SetupDialog()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="focuser.html#properties">Properties</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.Absolute"><code class="docutils literal notranslate"><span class="pre">Focuser.Absolute</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.Connected"><code class="docutils literal notranslate"><span class="pre">Focuser.Connected</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.Connecting"><code class="docutils literal notranslate"><span class="pre">Focuser.Connecting</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.Description"><code class="docutils literal notranslate"><span class="pre">Focuser.Description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.DeviceState"><code class="docutils literal notranslate"><span class="pre">Focuser.DeviceState</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.DriverInfo"><code class="docutils literal notranslate"><span class="pre">Focuser.DriverInfo</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.DriverVersion"><code class="docutils literal notranslate"><span class="pre">Focuser.DriverVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.InterfaceVersion"><code class="docutils literal notranslate"><span class="pre">Focuser.InterfaceVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.IsMoving"><code class="docutils literal notranslate"><span class="pre">Focuser.IsMoving</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.Link"><code class="docutils literal notranslate"><span class="pre">Focuser.Link</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.MaxIncrement"><code class="docutils literal notranslate"><span class="pre">Focuser.MaxIncrement</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.MaxStep"><code class="docutils literal notranslate"><span class="pre">Focuser.MaxStep</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.Name"><code class="docutils literal notranslate"><span class="pre">Focuser.Name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.Position"><code class="docutils literal notranslate"><span class="pre">Focuser.Position</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.StepSize"><code class="docutils literal notranslate"><span class="pre">Focuser.StepSize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.SupportedActions"><code class="docutils literal notranslate"><span class="pre">Focuser.SupportedActions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.TempComp"><code class="docutils literal notranslate"><span class="pre">Focuser.TempComp</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.TempCompAvailable"><code class="docutils literal notranslate"><span class="pre">Focuser.TempCompAvailable</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="focuser.html#Focuser.Temperature"><code class="docutils literal notranslate"><span class="pre">Focuser.Temperature</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="observingconditions.html">IObservingConditionsV2 Interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="observingconditions.html#ObservingConditions"><code class="docutils literal notranslate"><span class="pre">ObservingConditions</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="observingconditions.html#methods">Methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.Action"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.Action()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.CommandBlind"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.CommandBlind()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.CommandBool"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.CommandBool()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.CommandString"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.CommandString()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.Connect"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.Connect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.Disconnect"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.Disconnect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.Refresh"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.Refresh()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.SensorDescription"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.SensorDescription()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.SetupDialog"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.SetupDialog()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.TimeSinceLastUpdate"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.TimeSinceLastUpdate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="observingconditions.html#properties">Properties</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.AveragePeriod"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.AveragePeriod</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.CloudCover"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.CloudCover</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.Connected"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.Connected</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.Connecting"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.Connecting</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.Description"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.Description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.DeviceState"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.DeviceState</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.DewPoint"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.DewPoint</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.DriverInfo"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.DriverInfo</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.DriverVersion"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.DriverVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.Humidity"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.Humidity</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.InterfaceVersion"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.InterfaceVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.Name"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.Name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.Pressure"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.Pressure</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.RainRate"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.RainRate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.SkyBrightness"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.SkyBrightness</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.SkyQuality"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.SkyQuality</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.SkyTemperature"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.SkyTemperature</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.StarFWHM"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.StarFWHM</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.SupportedActions"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.SupportedActions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.Temperature"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.Temperature</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.WindDirection"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.WindDirection</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.WindGust"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.WindGust</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="observingconditions.html#ObservingConditions.WindSpeed"><code class="docutils literal notranslate"><span class="pre">ObservingConditions.WindSpeed</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rate.html">IRate Interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rate.html#Rate"><code class="docutils literal notranslate"><span class="pre">Rate</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="rate.html#properties">Properties</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="rotator.html">IRotatorV4 Class</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="rotator.html#Rotator"><code class="docutils literal notranslate"><span class="pre">Rotator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="rotator.html#methods">Methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.Action"><code class="docutils literal notranslate"><span class="pre">Rotator.Action()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.CommandBlind"><code class="docutils literal notranslate"><span class="pre">Rotator.CommandBlind()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.CommandBool"><code class="docutils literal notranslate"><span class="pre">Rotator.CommandBool()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.CommandString"><code class="docutils literal notranslate"><span class="pre">Rotator.CommandString()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.Connect"><code class="docutils literal notranslate"><span class="pre">Rotator.Connect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.Disconnect"><code class="docutils literal notranslate"><span class="pre">Rotator.Disconnect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.Halt"><code class="docutils literal notranslate"><span class="pre">Rotator.Halt()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.Move"><code class="docutils literal notranslate"><span class="pre">Rotator.Move()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.MoveAbsolute"><code class="docutils literal notranslate"><span class="pre">Rotator.MoveAbsolute()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.MoveMechanical"><code class="docutils literal notranslate"><span class="pre">Rotator.MoveMechanical()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.Sync"><code class="docutils literal notranslate"><span class="pre">Rotator.Sync()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.SetupDialog"><code class="docutils literal notranslate"><span class="pre">Rotator.SetupDialog()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="rotator.html#properties">Properties</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.CanReverse"><code class="docutils literal notranslate"><span class="pre">Rotator.CanReverse</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.Connected"><code class="docutils literal notranslate"><span class="pre">Rotator.Connected</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.Connecting"><code class="docutils literal notranslate"><span class="pre">Rotator.Connecting</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.Description"><code class="docutils literal notranslate"><span class="pre">Rotator.Description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.DeviceState"><code class="docutils literal notranslate"><span class="pre">Rotator.DeviceState</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.DriverInfo"><code class="docutils literal notranslate"><span class="pre">Rotator.DriverInfo</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.DriverVersion"><code class="docutils literal notranslate"><span class="pre">Rotator.DriverVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.InterfaceVersion"><code class="docutils literal notranslate"><span class="pre">Rotator.InterfaceVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.IsMoving"><code class="docutils literal notranslate"><span class="pre">Rotator.IsMoving</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.MechanicalPosition"><code class="docutils literal notranslate"><span class="pre">Rotator.MechanicalPosition</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.Name"><code class="docutils literal notranslate"><span class="pre">Rotator.Name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.Position"><code class="docutils literal notranslate"><span class="pre">Rotator.Position</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.Reverse"><code class="docutils literal notranslate"><span class="pre">Rotator.Reverse</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.StepSize"><code class="docutils literal notranslate"><span class="pre">Rotator.StepSize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.SupportedActions"><code class="docutils literal notranslate"><span class="pre">Rotator.SupportedActions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="rotator.html#Rotator.TargetPosition"><code class="docutils literal notranslate"><span class="pre">Rotator.TargetPosition</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="safetymonitor.html">ISafetyMonitorV3 Interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="safetymonitor.html#SafetyMonitor"><code class="docutils literal notranslate"><span class="pre">SafetyMonitor</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="safetymonitor.html#methods">Methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="safetymonitor.html#SafetyMonitor.Action"><code class="docutils literal notranslate"><span class="pre">SafetyMonitor.Action()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="safetymonitor.html#SafetyMonitor.CommandBlind"><code class="docutils literal notranslate"><span class="pre">SafetyMonitor.CommandBlind()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="safetymonitor.html#SafetyMonitor.CommandBool"><code class="docutils literal notranslate"><span class="pre">SafetyMonitor.CommandBool()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="safetymonitor.html#SafetyMonitor.CommandString"><code class="docutils literal notranslate"><span class="pre">SafetyMonitor.CommandString()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="safetymonitor.html#SafetyMonitor.Connect"><code class="docutils literal notranslate"><span class="pre">SafetyMonitor.Connect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="safetymonitor.html#SafetyMonitor.Disconnect"><code class="docutils literal notranslate"><span class="pre">SafetyMonitor.Disconnect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="safetymonitor.html#SafetyMonitor.SetupDialog"><code class="docutils literal notranslate"><span class="pre">SafetyMonitor.SetupDialog()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="safetymonitor.html#properties">Properties</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="safetymonitor.html#SafetyMonitor.Connected"><code class="docutils literal notranslate"><span class="pre">SafetyMonitor.Connected</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="safetymonitor.html#SafetyMonitor.Connecting"><code class="docutils literal notranslate"><span class="pre">SafetyMonitor.Connecting</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="safetymonitor.html#SafetyMonitor.Description"><code class="docutils literal notranslate"><span class="pre">SafetyMonitor.Description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="safetymonitor.html#SafetyMonitor.DeviceState"><code class="docutils literal notranslate"><span class="pre">SafetyMonitor.DeviceState</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="safetymonitor.html#SafetyMonitor.DriverInfo"><code class="docutils literal notranslate"><span class="pre">SafetyMonitor.DriverInfo</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="safetymonitor.html#SafetyMonitor.DriverVersion"><code class="docutils literal notranslate"><span class="pre">SafetyMonitor.DriverVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="safetymonitor.html#SafetyMonitor.InterfaceVersion"><code class="docutils literal notranslate"><span class="pre">SafetyMonitor.InterfaceVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="safetymonitor.html#SafetyMonitor.IsSafe"><code class="docutils literal notranslate"><span class="pre">SafetyMonitor.IsSafe</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="safetymonitor.html#SafetyMonitor.Name"><code class="docutils literal notranslate"><span class="pre">SafetyMonitor.Name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="safetymonitor.html#SafetyMonitor.SupportedActions"><code class="docutils literal notranslate"><span class="pre">SafetyMonitor.SupportedActions</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="statevalue.html">IStateValue Interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="statevalue.html#StateValue"><code class="docutils literal notranslate"><span class="pre">StateValue</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="statevalue.html#properties">Properties</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="statevalue.html#Name"><code class="docutils literal notranslate"><span class="pre">Name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="statevalue.html#Value"><code class="docutils literal notranslate"><span class="pre">Value</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="switch.html">ISwitchV3 Interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="switch.html#Switch"><code class="docutils literal notranslate"><span class="pre">Switch</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="switch.html#methods">Methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.Action"><code class="docutils literal notranslate"><span class="pre">Switch.Action()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.CanAsync"><code class="docutils literal notranslate"><span class="pre">Switch.CanAsync()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.CancelAsync"><code class="docutils literal notranslate"><span class="pre">Switch.CancelAsync()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.CanWrite"><code class="docutils literal notranslate"><span class="pre">Switch.CanWrite()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.CommandBlind"><code class="docutils literal notranslate"><span class="pre">Switch.CommandBlind()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.CommandBool"><code class="docutils literal notranslate"><span class="pre">Switch.CommandBool()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.CommandString"><code class="docutils literal notranslate"><span class="pre">Switch.CommandString()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.Connect"><code class="docutils literal notranslate"><span class="pre">Switch.Connect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.Disconnect"><code class="docutils literal notranslate"><span class="pre">Switch.Disconnect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.GetSwitch"><code class="docutils literal notranslate"><span class="pre">Switch.GetSwitch()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.GetSwitchDescription"><code class="docutils literal notranslate"><span class="pre">Switch.GetSwitchDescription()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.GetSwitchName"><code class="docutils literal notranslate"><span class="pre">Switch.GetSwitchName()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.GetSwitchValue"><code class="docutils literal notranslate"><span class="pre">Switch.GetSwitchValue()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.MaxSwitchValue"><code class="docutils literal notranslate"><span class="pre">Switch.MaxSwitchValue()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.MinSwitchValue"><code class="docutils literal notranslate"><span class="pre">Switch.MinSwitchValue()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.SetAsync"><code class="docutils literal notranslate"><span class="pre">Switch.SetAsync()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.SetAsyncValue"><code class="docutils literal notranslate"><span class="pre">Switch.SetAsyncValue()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.SetSwitch"><code class="docutils literal notranslate"><span class="pre">Switch.SetSwitch()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.SetSwitchName"><code class="docutils literal notranslate"><span class="pre">Switch.SetSwitchName()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.SetSwitchValue"><code class="docutils literal notranslate"><span class="pre">Switch.SetSwitchValue()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.SetupDialog"><code class="docutils literal notranslate"><span class="pre">Switch.SetupDialog()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.StateChangeComplete"><code class="docutils literal notranslate"><span class="pre">Switch.StateChangeComplete()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.SwitchStep"><code class="docutils literal notranslate"><span class="pre">Switch.SwitchStep()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="switch.html#properties">Properties</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.Connected"><code class="docutils literal notranslate"><span class="pre">Switch.Connected</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.Connecting"><code class="docutils literal notranslate"><span class="pre">Switch.Connecting</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.Description"><code class="docutils literal notranslate"><span class="pre">Switch.Description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.DeviceState"><code class="docutils literal notranslate"><span class="pre">Switch.DeviceState</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.DriverInfo"><code class="docutils literal notranslate"><span class="pre">Switch.DriverInfo</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.DriverVersion"><code class="docutils literal notranslate"><span class="pre">Switch.DriverVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.InterfaceVersion"><code class="docutils literal notranslate"><span class="pre">Switch.InterfaceVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.MaxSwitch"><code class="docutils literal notranslate"><span class="pre">Switch.MaxSwitch</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.Name"><code class="docutils literal notranslate"><span class="pre">Switch.Name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="switch.html#Switch.SupportedActions"><code class="docutils literal notranslate"><span class="pre">Switch.SupportedActions</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="telescope.html">ITelescope V4 Interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="telescope.html#Telescope"><code class="docutils literal notranslate"><span class="pre">Telescope</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="telescope.html#methods">Methods</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.AbortSlew"><code class="docutils literal notranslate"><span class="pre">Telescope.AbortSlew()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.Action"><code class="docutils literal notranslate"><span class="pre">Telescope.Action()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.AxisRates"><code class="docutils literal notranslate"><span class="pre">Telescope.AxisRates()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CanMoveAxis"><code class="docutils literal notranslate"><span class="pre">Telescope.CanMoveAxis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CommandBlind"><code class="docutils literal notranslate"><span class="pre">Telescope.CommandBlind()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CommandBool"><code class="docutils literal notranslate"><span class="pre">Telescope.CommandBool()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CommandString"><code class="docutils literal notranslate"><span class="pre">Telescope.CommandString()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.Connect"><code class="docutils literal notranslate"><span class="pre">Telescope.Connect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.DestinationSideOfPier"><code class="docutils literal notranslate"><span class="pre">Telescope.DestinationSideOfPier()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.Disconnect"><code class="docutils literal notranslate"><span class="pre">Telescope.Disconnect()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.FindHome"><code class="docutils literal notranslate"><span class="pre">Telescope.FindHome()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.MoveAxis"><code class="docutils literal notranslate"><span class="pre">Telescope.MoveAxis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.Park"><code class="docutils literal notranslate"><span class="pre">Telescope.Park()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.PulseGuide"><code class="docutils literal notranslate"><span class="pre">Telescope.PulseGuide()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.SetPark"><code class="docutils literal notranslate"><span class="pre">Telescope.SetPark()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.SetupDialog"><code class="docutils literal notranslate"><span class="pre">Telescope.SetupDialog()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.SlewToAltAz"><code class="docutils literal notranslate"><span class="pre">Telescope.SlewToAltAz()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.SlewToAltAzAsync"><code class="docutils literal notranslate"><span class="pre">Telescope.SlewToAltAzAsync()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.SlewToCoordinates"><code class="docutils literal notranslate"><span class="pre">Telescope.SlewToCoordinates()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.SlewToCoordinatesAsync"><code class="docutils literal notranslate"><span class="pre">Telescope.SlewToCoordinatesAsync()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.SlewToTarget"><code class="docutils literal notranslate"><span class="pre">Telescope.SlewToTarget()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.SlewToTargetAsync"><code class="docutils literal notranslate"><span class="pre">Telescope.SlewToTargetAsync()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.SyncToAltAz"><code class="docutils literal notranslate"><span class="pre">Telescope.SyncToAltAz()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.SyncToCoordinates"><code class="docutils literal notranslate"><span class="pre">Telescope.SyncToCoordinates()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.SyncToTarget"><code class="docutils literal notranslate"><span class="pre">Telescope.SyncToTarget()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.Unpark"><code class="docutils literal notranslate"><span class="pre">Telescope.Unpark()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="telescope.html#properties">Properties</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.AlignmentMode"><code class="docutils literal notranslate"><span class="pre">Telescope.AlignmentMode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.Altitude"><code class="docutils literal notranslate"><span class="pre">Telescope.Altitude</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.ApertureArea"><code class="docutils literal notranslate"><span class="pre">Telescope.ApertureArea</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.ApertureDiameter"><code class="docutils literal notranslate"><span class="pre">Telescope.ApertureDiameter</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.AtHome"><code class="docutils literal notranslate"><span class="pre">Telescope.AtHome</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.AtPark"><code class="docutils literal notranslate"><span class="pre">Telescope.AtPark</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.Azimuth"><code class="docutils literal notranslate"><span class="pre">Telescope.Azimuth</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CanFindHome"><code class="docutils literal notranslate"><span class="pre">Telescope.CanFindHome</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CanPark"><code class="docutils literal notranslate"><span class="pre">Telescope.CanPark</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CanPulseGuide"><code class="docutils literal notranslate"><span class="pre">Telescope.CanPulseGuide</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CanSetDeclinationRate"><code class="docutils literal notranslate"><span class="pre">Telescope.CanSetDeclinationRate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CanSetGuideRates"><code class="docutils literal notranslate"><span class="pre">Telescope.CanSetGuideRates</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CanSetPark"><code class="docutils literal notranslate"><span class="pre">Telescope.CanSetPark</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CanSetPierSide"><code class="docutils literal notranslate"><span class="pre">Telescope.CanSetPierSide</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CanSetRightAscensionRate"><code class="docutils literal notranslate"><span class="pre">Telescope.CanSetRightAscensionRate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CanSetTracking"><code class="docutils literal notranslate"><span class="pre">Telescope.CanSetTracking</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CanSlew"><code class="docutils literal notranslate"><span class="pre">Telescope.CanSlew</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CanSlewAltAz"><code class="docutils literal notranslate"><span class="pre">Telescope.CanSlewAltAz</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CanSlewAltAzAsync"><code class="docutils literal notranslate"><span class="pre">Telescope.CanSlewAltAzAsync</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CanSlewAsync"><code class="docutils literal notranslate"><span class="pre">Telescope.CanSlewAsync</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CanSync"><code class="docutils literal notranslate"><span class="pre">Telescope.CanSync</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CanSyncAltAz"><code class="docutils literal notranslate"><span class="pre">Telescope.CanSyncAltAz</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.CanUnpark"><code class="docutils literal notranslate"><span class="pre">Telescope.CanUnpark</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.Connected"><code class="docutils literal notranslate"><span class="pre">Telescope.Connected</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.Connecting"><code class="docutils literal notranslate"><span class="pre">Telescope.Connecting</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.Declination"><code class="docutils literal notranslate"><span class="pre">Telescope.Declination</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.DeclinationRate"><code class="docutils literal notranslate"><span class="pre">Telescope.DeclinationRate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.Description"><code class="docutils literal notranslate"><span class="pre">Telescope.Description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.DeviceState"><code class="docutils literal notranslate"><span class="pre">Telescope.DeviceState</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.DoesRefraction"><code class="docutils literal notranslate"><span class="pre">Telescope.DoesRefraction</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.DriverInfo"><code class="docutils literal notranslate"><span class="pre">Telescope.DriverInfo</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.DriverVersion"><code class="docutils literal notranslate"><span class="pre">Telescope.DriverVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.EquatorialSystem"><code class="docutils literal notranslate"><span class="pre">Telescope.EquatorialSystem</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.FocalLength"><code class="docutils literal notranslate"><span class="pre">Telescope.FocalLength</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.GuideRateDeclination"><code class="docutils literal notranslate"><span class="pre">Telescope.GuideRateDeclination</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.GuideRateRightAscension"><code class="docutils literal notranslate"><span class="pre">Telescope.GuideRateRightAscension</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.InterfaceVersion"><code class="docutils literal notranslate"><span class="pre">Telescope.InterfaceVersion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.IsPulseGuiding"><code class="docutils literal notranslate"><span class="pre">Telescope.IsPulseGuiding</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.Name"><code class="docutils literal notranslate"><span class="pre">Telescope.Name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.RightAscension"><code class="docutils literal notranslate"><span class="pre">Telescope.RightAscension</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.RightAscensionRate"><code class="docutils literal notranslate"><span class="pre">Telescope.RightAscensionRate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.SideOfPier"><code class="docutils literal notranslate"><span class="pre">Telescope.SideOfPier</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.SiderealTime"><code class="docutils literal notranslate"><span class="pre">Telescope.SiderealTime</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.SiteElevation"><code class="docutils literal notranslate"><span class="pre">Telescope.SiteElevation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.SiteLatitude"><code class="docutils literal notranslate"><span class="pre">Telescope.SiteLatitude</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.SiteLongitude"><code class="docutils literal notranslate"><span class="pre">Telescope.SiteLongitude</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.SlewSettleTime"><code class="docutils literal notranslate"><span class="pre">Telescope.SlewSettleTime</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.Slewing"><code class="docutils literal notranslate"><span class="pre">Telescope.Slewing</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.SupportedActions"><code class="docutils literal notranslate"><span class="pre">Telescope.SupportedActions</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.TargetDeclination"><code class="docutils literal notranslate"><span class="pre">Telescope.TargetDeclination</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.TargetRightAscension"><code class="docutils literal notranslate"><span class="pre">Telescope.TargetRightAscension</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.Tracking"><code class="docutils literal notranslate"><span class="pre">Telescope.Tracking</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.TrackingRate"><code class="docutils literal notranslate"><span class="pre">Telescope.TrackingRate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.TrackingRates"><code class="docutils literal notranslate"><span class="pre">Telescope.TrackingRates</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.UTCDate"><code class="docutils literal notranslate"><span class="pre">Telescope.UTCDate</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="telescope.html#enumerated-constants">Enumerated Constants</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.AlignmentModes"><code class="docutils literal notranslate"><span class="pre">Telescope.AlignmentModes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.DriveRates"><code class="docutils literal notranslate"><span class="pre">Telescope.DriveRates</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.EquatorialCoordinateType"><code class="docutils literal notranslate"><span class="pre">Telescope.EquatorialCoordinateType</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.GuideDirections"><code class="docutils literal notranslate"><span class="pre">Telescope.GuideDirections</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.PierSide"><code class="docutils literal notranslate"><span class="pre">Telescope.PierSide</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="telescope.html#Telescope.TelescopeAxes"><code class="docutils literal notranslate"><span class="pre">Telescope.TelescopeAxes</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="exceptions.html">Exception Classes</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="exceptions.html#ActionNotImplementedException"><code class="docutils literal notranslate"><span class="pre">ActionNotImplementedException</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exceptions.html#DriverException"><code class="docutils literal notranslate"><span class="pre">DriverException</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exceptions.html#InvalidOperationException"><code class="docutils literal notranslate"><span class="pre">InvalidOperationException</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exceptions.html#InvalidValueException"><code class="docutils literal notranslate"><span class="pre">InvalidValueException</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exceptions.html#MethodNotImplementedException"><code class="docutils literal notranslate"><span class="pre">MethodNotImplementedException</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exceptions.html#NotConnectedException"><code class="docutils literal notranslate"><span class="pre">NotConnectedException</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exceptions.html#OperationCancelledException"><code class="docutils literal notranslate"><span class="pre">OperationCancelledException</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exceptions.html#ParkedException"><code class="docutils literal notranslate"><span class="pre">ParkedException</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exceptions.html#PropertyNotImplementedException"><code class="docutils literal notranslate"><span class="pre">PropertyNotImplementedException</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exceptions.html#SlavedException"><code class="docutils literal notranslate"><span class="pre">SlavedException</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="exceptions.html#ValueNotSetException"><code class="docutils literal notranslate"><span class="pre">ValueNotSetException</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="genindex.html">Index</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu"  style="background: #000040" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">ASCOM Master Interfaces</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="faq.html">Frequently Asked Questions</a></li>
+      <li class="breadcrumb-item active">What are the equatorial coordinate reference frames?</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/ASCOMInitiative/ASCOM-Master-Interface-Docs/edit/master/source/refframe-faq.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul><div class="rst-breadcrumbs-buttons" role="navigation" aria-label="Sequential page navigation">
+        <a href="moveaxis-faq.html" class="btn btn-neutral float-left" title="What does MoveAxis() do and how do I use it?" accesskey="p"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="dsop-faq.html" class="btn btn-neutral float-right" title="What is DestinationSideOfPier and why would I want to use it?" accesskey="n">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+  </div>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <a class="reference external image-reference" href="https://ascom-standards.org/"><img alt="_images/Bug72.jpg" class="align-right" src="_images/Bug72.jpg" style="width: 72px; height: 72px;" /></a>
+<section id="what-are-the-equatorial-coordinate-reference-frames">
+<span id="refframe-faq"></span><h1>What are the equatorial coordinate reference frames?<a class="headerlink" href="#what-are-the-equatorial-coordinate-reference-frames" title="Link to this heading"></a></h1>
+<p>The <a class="reference internal" href="telescope.html#Telescope.EquatorialSystem" title="Telescope.EquatorialSystem"><code class="xref py py-attr docutils literal notranslate"><span class="pre">EquatorialSystem</span></code></a> property refers to the “flavor” of
+equatorial coordinates that the telescope (mount) uses for slewing input and
+current coordinate readout.</p>
+<p>Not all equatorial coordinates are equal. For aiming a telescope (and neglecting
+atmospheric refraction), the Right Ascension and Declination refer to the
+rotational state of the Earth <em>at the current time</em>, and at the <em>location</em> of
+the observer on the earth. You can think of these as a simple transformation
+from Alt/Az to RA/Dec using the current <em>local</em> Sidereal Time, the latitude of
+the observer, and the current tilt of the earth’s axis. The proper name for this
+flavor of celestial coordinates is <strong>topocentric</strong>. In
+<a class="reference internal" href="telescope.html#Telescope.EquatorialCoordinateType" title="Telescope.EquatorialCoordinateType"><code class="xref py py-class docutils literal notranslate"><span class="pre">EquatorialCoordinateType</span></code></a> it is <code class="docutils literal notranslate"><span class="pre">equTopocentric</span></code>. This is
+often referred to as “JNow”, but this is a slang term. <code class="docutils literal notranslate"><span class="pre">equTopocentric</span></code> is the
+<a class="reference internal" href="telescope.html#Telescope.EquatorialSystem" title="Telescope.EquatorialSystem"><code class="xref py py-attr docutils literal notranslate"><span class="pre">EquatorialSystem</span></code></a> that the vast majority of commercial and DIY
+mounts use.</p>
+<p>Catalogs of stars and deep space objects obvioualy cannot refer to topocentric
+equatorial coordinates since the time and location of the observer are unknown.
+Therefore, the listed coordinates are instead referred to a specific time and
+place, which defines the earth rotation state and other things like parallax,
+light deflection abberration, and space motion of the object. Most common
+catalogs use a reference system based on the mean pole and equinox for the
+standard epoch J2000.0 (The Gregorian date January 1, 2000, at 12:00 Terrestrial
+Time.). In <a class="reference internal" href="telescope.html#Telescope.EquatorialCoordinateType" title="Telescope.EquatorialCoordinateType"><code class="xref py py-class docutils literal notranslate"><span class="pre">EquatorialCoordinateType</span></code></a> J2000 is <code class="docutils literal notranslate"><span class="pre">equJ2000</span></code>.
+The other coordinate types are less common.</p>
+<p>The most precise system is the International Celestial Reference System
+(ICRS). For a deep dive into this, see <a href="http://www.iausofa.org/sofa_ast_c.pdf" target="_blank">
+Standards of Fundamental (SOFA) Astrometry Tools</a> (external, PDF) specifically <em>Chapter 2, The
+Supported Coordinate Systems</em>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The ASCOM Initiative has published .NET / COM implementations of the
+high level methods in the <a href="http://iausofa.org/" target="_blank">
+full SOFA library</a> (external) and the full <a href="https://aa.usno.navy.mil/software/novas_info" target="_blank">
+Naval Observatory Vector Astrometry Software (NOVAS)</a> (external) library.
+These are both available in the <a href="https://ascom-standards.org/Downloads/PlatDevComponents.htm" target="_blank">
+ASCOM Platform Developer Components</a> (external) and in the cross platform <a href="https://github.com/ASCOMInitiative/ASCOMLibrary#readme" target="_blank">
+ASCOM Library</a> (external).</p>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="moveaxis-faq.html" class="btn btn-neutral float-left" title="What does MoveAxis() do and how do I use it?" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="dsop-faq.html" class="btn btn-neutral float-right" title="What is DestinationSideOfPier and why would I want to use it?" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023-2026, ASCOM Initiative, MIT License.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
