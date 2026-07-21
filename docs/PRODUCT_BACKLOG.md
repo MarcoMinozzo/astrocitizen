@@ -166,10 +166,10 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | AC-080 | PO-J01/J03/J05 Calibração + meteo site | P1 | M | E3, E6 | ✅ S5 — workflows P1 |
 | AC-081 | PO-A01 Variáveis (AAVSO) — esqueleto programa | P1 | M | E2, E9 | ✅ S5 — workflow + fotometria + export |
 | AC-082 | PO-A05 Trânsitos — esqueleto | P1 | M | E9 | ✅ export ExoClock LC |
-| AC-083 | PO-B01 Espectroscopia slit — esqueleto | P1 | M | E10 | |
+| AC-083 | PO-B01 Espectroscopia slit — esqueleto | P1 | M | E10 | ✅ workflow + `analyze spectrum` + BeSS `--product` |
 | AC-084 | PO-B02/B03 Be/ARAS — esqueleto | P1 | M | E10 | ✅ BeSS FITS 1D export |
-| AC-085 | PO-C01/C02 NEO/MPC — esqueleto | P1 | M | E11 |
-| AC-086 | PO-C03 Supernovas blink — esqueleto | P1 | M | E11 |
+| AC-085 | PO-C01/C02 NEO/MPC — esqueleto | P1 | M | E11 | ✅ workflow + `analyze astrometry` + MPC `--product` |
+| AC-086 | PO-C03 Supernovas blink — esqueleto | P1 | M | E11 | ✅ workflow + `analyze blink` + TNS `--product` |
 | AC-087 | PO-D01 Ocultações IOTA — esqueleto | P1 | M | E12 | ✅ pacote IOTA-ES |
 | AC-088 | PO-E03 Sol manchas — esqueleto | P1 | M | E13 |
 

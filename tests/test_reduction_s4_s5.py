@@ -122,3 +122,6 @@ def test_p1_workflows() -> None:
     assert "PO-J01" in P1_WORKFLOWS
     assert "PO-J03" in P1_WORKFLOWS
     assert "PO-J05" in P1_WORKFLOWS
+    assert workflow_for("PO-B01") is not None
+    assert workflow_for("PO-C01") is not None
+    assert workflow_for("PO-C03") is not None

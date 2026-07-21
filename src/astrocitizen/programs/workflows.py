@@ -1,8 +1,8 @@
-"""Metadados de workflow para templates P1 (AC-080/081)."""
+"""Metadados de workflow para templates P1 (AC-080/081/083/085/086)."""
 
 from __future__ import annotations
 
-# Esqueletos de pipeline por template PO-* (S5)
+# Esqueletos de pipeline por template PO-* (S5+)
 P1_WORKFLOWS: dict[str, dict] = {
     "PO-J01": {
         "name": "Bias / dark / flat masters",
@@ -34,6 +34,97 @@ P1_WORKFLOWS: dict[str, dict] = {
         "networks": ["AAVSO"],
         "analysis": "photometry",
         "export": "aavso_extended",
+    },
+    "PO-A05": {
+        "name": "Transitos exoplanetarios (ExoClock)",
+        "steps": [
+            "plan_targets",
+            "acquire_lights",
+            "calibrate",
+            "aperture_photometry",
+            "export_exoclock",
+        ],
+        "networks": ["ExoClock"],
+        "analysis": "photometry",
+        "export": "exoclock_lc",
+    },
+    "PO-B01": {
+        "name": "Espectroscopia slit (1D + lambda)",
+        "steps": [
+            "plan_targets",
+            "acquire_spectrum_2d",
+            "calibrate",
+            "extract_spectrum_1d",
+            "wavelength_linear",
+            "export_bess",
+        ],
+        "networks": ["BeSS", "ARAS"],
+        "analysis": "spectroscopy",
+        "export": "bess_fits_1d",
+    },
+    "PO-B02": {
+        "name": "Be / ARAS (monitoramento de linhas)",
+        "steps": [
+            "plan_targets",
+            "acquire_spectrum_2d",
+            "extract_spectrum_1d",
+            "line_measures",
+            "export_bess",
+        ],
+        "networks": ["ARAS", "BeSS"],
+        "analysis": "spectroscopy",
+        "export": "bess_fits_1d",
+    },
+    "PO-C01": {
+        "name": "Astrometria asteroides / NEOs (MPC)",
+        "steps": [
+            "plan_targets",
+            "acquire_lights",
+            "calibrate",
+            "measure_astrometry",
+            "export_mpc_ades",
+        ],
+        "networks": ["MPC"],
+        "analysis": "astrometry",
+        "export": "mpc_ades_psv",
+    },
+    "PO-C02": {
+        "name": "Follow-up NEO (tracking nao-sideral)",
+        "steps": [
+            "plan_ephemeris",
+            "acquire_nonsidereal",
+            "calibrate",
+            "measure_astrometry",
+            "export_mpc_ades",
+        ],
+        "networks": ["MPC"],
+        "analysis": "astrometry",
+        "export": "mpc_ades_psv",
+    },
+    "PO-C03": {
+        "name": "Supernovas blink / TNS",
+        "steps": [
+            "plan_fields",
+            "acquire_pair",
+            "calibrate",
+            "blink_diff",
+            "export_tns",
+        ],
+        "networks": ["TNS"],
+        "analysis": "blink",
+        "export": "tns_at_rep",
+    },
+    "PO-D01": {
+        "name": "Ocultacoes IOTA",
+        "steps": [
+            "import_prediction",
+            "acquire_timed",
+            "reduce_contacts",
+            "export_iota_pack",
+        ],
+        "networks": ["IOTA"],
+        "analysis": "timing",
+        "export": "iota_es_pack",
     },
 }
 

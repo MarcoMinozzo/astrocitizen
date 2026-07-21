@@ -12,7 +12,12 @@ from astrocitizen.adapters.hardware import create_camera
 from astrocitizen.adapters.meteo import ManualMeteo, OpenMeteo, RainViewerRadar
 from astrocitizen.adapters.sky import AstropyEphemeris, SimbadResolver
 from astrocitizen.adapters.sqlite import SqliteArchive
-from astrocitizen.analysis import AperturePhotometry
+from astrocitizen.analysis import (
+    AperturePhotometry,
+    BlinkDiff,
+    ExtractSpectrum1D,
+    MeasureAstrometry,
+)
 from astrocitizen.contribution.aavso import ExportAavso
 from astrocitizen.contribution.bess import annotate_existing_fits, write_bess_fits
 from astrocitizen.contribution.credentials import LocalCredentialsStore
@@ -449,6 +454,85 @@ def _cmd_analyze_photometry(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_analyze_spectrum(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    store = LocalArtifactStore(Path(args.artifacts))
+    product = ExtractSpectrum1D(archive, store).execute(
+        workspace_id=ws.id,
+        fits_uri=args.fits_uri,
+        trace_y=args.trace_y,
+        half_width=args.half_width,
+        axis=args.axis,
+        wave0_nm=args.wave0,
+        wave1_nm=args.wave1,
+        pix_a=args.pix_a,
+        wave_a_nm=args.wave_a,
+        pix_b=args.pix_b,
+        wave_b_nm=args.wave_b,
+        program_id=UUID(args.program) if args.program else None,
+        objname=args.objname,
+    )
+    print(
+        f"product={product.id}\ttype={product.product_type}\t"
+        f"wave={product.summary.get('wave0_nm')}-{product.summary.get('wave1_nm')}nm\t"
+        f"uri={product.parameters.get('spectrum_uri')}"
+    )
+    archive.close()
+    return 0
+
+
+def _cmd_analyze_astrometry(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    store = LocalArtifactStore(Path(args.artifacts))
+    product = MeasureAstrometry(archive, store).execute(
+        workspace_id=ws.id,
+        fits_uri=args.fits_uri,
+        x=args.x,
+        y=args.y,
+        ra0_deg=args.ra0,
+        dec0_deg=args.dec0,
+        scale_arcsec=args.scale_arcsec,
+        pa_deg=args.pa,
+        designation=args.designation,
+        band=args.band,
+        nonsidereal=bool(args.nonsidereal),
+        program_id=UUID(args.program) if args.program else None,
+    )
+    print(
+        f"product={product.id}\tra={product.summary.get('ra_deg')}\t"
+        f"dec={product.summary.get('dec_deg')}\tmag={product.summary.get('mag')}\t"
+        f"epoch={product.summary.get('epoch_utc')}"
+    )
+    archive.close()
+    return 0
+
+
+def _cmd_analyze_blink(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    store = LocalArtifactStore(Path(args.artifacts))
+    product = BlinkDiff(archive, store).execute(
+        workspace_id=ws.id,
+        new_uri=args.new_uri,
+        ref_uri=args.ref_uri,
+        ra0_deg=args.ra0,
+        dec0_deg=args.dec0,
+        scale_arcsec=args.scale_arcsec,
+        pa_deg=args.pa,
+        program_id=UUID(args.program) if args.program else None,
+        internal_name=args.name,
+    )
+    print(
+        f"product={product.id}\tsnr={product.summary.get('snr')}\t"
+        f"ra={product.summary.get('ra_deg')}\tdec={product.summary.get('dec_deg')}\t"
+        f"peak={product.summary.get('peak')}"
+    )
+    archive.close()
+    return 0
+
+
 def _cmd_analyze_export_aavso(args: argparse.Namespace) -> int:
     archive = _open_archive(Path(args.db))
     out = ExportAavso(archive).execute(
@@ -576,18 +660,46 @@ def _cmd_contribute_mpc(args: argparse.Namespace) -> int:
         print("falta --obs-code ou credentials mpc.observatory_code")
         archive.close()
         return 1
+    designation = args.designation
+    epoch = args.epoch
+    ra = args.ra
+    dec = args.dec
+    mag = args.mag
+    band = args.band
+    product_id = None
+    if args.product:
+        product = archive.get_analysis_product(UUID(args.product))
+        if product is None:
+            print(f"produto nao encontrado: {args.product}")
+            archive.close()
+            return 1
+        product_id = product.id
+        designation = designation or str(product.parameters.get("designation") or "NEO")
+        epoch = epoch or str(product.summary.get("epoch_utc") or "")
+        ra = ra if ra is not None else product.summary.get("ra_deg")
+        dec = dec if dec is not None else product.summary.get("dec_deg")
+        mag = mag if mag is not None else product.summary.get("mag")
+        band = band or str(product.parameters.get("band") or "R")
+    if ra is None or dec is None or not epoch:
+        print("falta RA/Dec/epoch (--ra/--dec/--epoch ou --product astrometry)")
+        archive.close()
+        return 1
+    if not designation:
+        print("falta --designation")
+        archive.close()
+        return 1
     out = Path(args.out)
     write_ades_psv(
         out,
         observatory_code=str(code),
-        designation=args.designation,
+        designation=designation,
         observations=[
             {
-                "epoch_utc": args.epoch,
-                "ra_deg": args.ra,
-                "dec_deg": args.dec,
-                "mag": args.mag,
-                "band": args.band,
+                "epoch_utc": epoch,
+                "ra_deg": float(ra),
+                "dec_deg": float(dec),
+                "mag": mag,
+                "band": band,
                 "ra_err_arcsec": args.ra_err,
                 "dec_err_arcsec": args.dec_err,
             }
@@ -613,7 +725,8 @@ def _cmd_contribute_mpc(args: argparse.Namespace) -> int:
         network="mpc",
         status=str(meta.get("status") or "draft"),
         artifact_uri=uri,
-        payload_summary={"designation": args.designation, "meta": meta},
+        product_id=product_id,
+        payload_summary={"designation": designation, "meta": meta},
         remote_ack=str(meta.get("response") or meta.get("ack") or "")[:500] or None,
     )
     archive.save_network_submission(sub)
@@ -630,14 +743,37 @@ def _cmd_contribute_tns(args: argparse.Namespace) -> int:
     api_key = args.api_key or tns_cred.get("api_key") or "dry-run-key"
     user_id = args.user_id or tns_cred.get("user_id") or "0"
     groupid = args.groupid if args.groupid is not None else tns_cred.get("groupid", 0)
+    ra = args.ra
+    dec = args.dec
+    mag = args.mag
+    internal_name = args.internal_name
+    product_id = None
+    if args.product:
+        product = archive.get_analysis_product(UUID(args.product))
+        if product is None:
+            print(f"produto nao encontrado: {args.product}")
+            archive.close()
+            return 1
+        product_id = product.id
+        ra = ra if ra is not None else product.summary.get("ra_deg")
+        dec = dec if dec is not None else product.summary.get("dec_deg")
+        internal_name = internal_name or str(
+            product.parameters.get("internal_name") or "AstroCitizen-AT"
+        )
+    if ra is None or dec is None:
+        print("falta RA/Dec (--ra/--dec ou --product blink_candidate)")
+        archive.close()
+        return 1
+    if mag is None:
+        mag = 99.0
     report = format_tns_at_report(
-        ra_deg=args.ra,
-        dec_deg=args.dec,
+        ra_deg=float(ra),
+        dec_deg=float(dec),
         groupid=int(groupid),
         reporter=args.reporter,
-        discovery_mag=args.mag,
+        discovery_mag=float(mag),
         filter_value=args.filter,
-        internal_name=args.internal_name,
+        internal_name=internal_name,
     )
     out = Path(args.out)
     write_tns_report(out, report)
@@ -659,7 +795,8 @@ def _cmd_contribute_tns(args: argparse.Namespace) -> int:
         network="tns",
         status=str(meta.get("status") or "draft"),
         artifact_uri=uri,
-        payload_summary={"ra": args.ra, "dec": args.dec, "meta": meta},
+        product_id=product_id,
+        payload_summary={"ra": float(ra), "dec": float(dec), "meta": meta},
         remote_ack=str(meta.get("response") or "")[:500] or None,
     )
     archive.save_network_submission(sub)
@@ -687,7 +824,34 @@ def _cmd_contribute_bess(args: argparse.Namespace) -> int:
     cred = LocalCredentialsStore(Path(args.credentials) if args.credentials else None)
     observer = args.observer or cred.get_network("bess").get("observer") or "AstroCitizen"
     out = Path(args.out)
-    if args.fits:
+    product_id = None
+    objname = args.objname
+    if args.product:
+        product = archive.get_analysis_product(UUID(args.product))
+        if product is None:
+            print(f"produto nao encontrado: {args.product}")
+            archive.close()
+            return 1
+        if product.product_type != "spectrum_1d":
+            print(f"produto nao e spectrum_1d: {product.product_type}")
+            archive.close()
+            return 1
+        product_id = product.id
+        objname = objname or str(product.parameters.get("objname") or "SPEC")
+        spectrum_uri = product.parameters.get("spectrum_uri")
+        if not spectrum_uri:
+            print("produto sem spectrum_uri")
+            archive.close()
+            return 1
+        store0 = LocalArtifactStore(Path(args.artifacts))
+        annotate_existing_fits(
+            store0.resolve(str(spectrum_uri)),
+            out,
+            observer=str(observer),
+            site=args.site,
+            instrument=args.instrument,
+        )
+    elif args.fits:
         annotate_existing_fits(
             Path(args.fits),
             out,
@@ -703,7 +867,7 @@ def _cmd_contribute_bess(args: argparse.Namespace) -> int:
         flux = np.ones(n, dtype=float)
         write_bess_fits(
             out,
-            objname=args.objname,
+            objname=objname,
             observer=str(observer),
             date_obs=args.date_obs,
             exptime_s=args.exptime,
@@ -722,7 +886,8 @@ def _cmd_contribute_bess(args: argparse.Namespace) -> int:
         network="bess",
         status="draft",
         artifact_uri=uri,
-        payload_summary={"objname": args.objname, "note": "upload BeSS portal"},
+        product_id=product_id,
+        payload_summary={"objname": objname, "note": "upload BeSS portal"},
     )
     archive.save_network_submission(sub)
     print(f"wrote={out}\turi={uri}\tsubmission={sub.id}\tportal=http://basebe.obspm.fr/")
@@ -1064,7 +1229,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_rl.add_argument("--kind", default=None)
     p_rl.set_defaults(func=_cmd_reduce_masters_list)
 
-    p_an = sub.add_parser("analyze", help="Analise (fotometria / export)")
+    p_an = sub.add_parser("analyze", help="Analise (fotometria / espectro / astrometria / blink)")
     an_sub = p_an.add_subparsers(dest="an_cmd", required=True)
     p_ph = an_sub.add_parser("photometry", help="Fotometria de abertura")
     _add_db_arg(p_ph)
@@ -1076,6 +1241,49 @@ def build_parser() -> argparse.ArgumentParser:
     p_ph.add_argument("--program", default=None)
     p_ph.add_argument("--artifacts", default=str(default_artifacts_root()))
     p_ph.set_defaults(func=_cmd_analyze_photometry)
+    p_sp = an_sub.add_parser("spectrum", help="Extracao espectro 1D (PO-B01)")
+    _add_db_arg(p_sp)
+    p_sp.add_argument("--fits-uri", required=True)
+    p_sp.add_argument("--trace-y", type=float, required=True)
+    p_sp.add_argument("--half-width", type=int, default=3)
+    p_sp.add_argument("--axis", choices=("x", "y"), default="x")
+    p_sp.add_argument("--wave0", type=float, default=None, help="nm")
+    p_sp.add_argument("--wave1", type=float, default=None, help="nm")
+    p_sp.add_argument("--pix-a", type=float, default=None)
+    p_sp.add_argument("--wave-a", type=float, default=None, help="nm")
+    p_sp.add_argument("--pix-b", type=float, default=None)
+    p_sp.add_argument("--wave-b", type=float, default=None, help="nm")
+    p_sp.add_argument("--objname", default=None)
+    p_sp.add_argument("--program", default=None)
+    p_sp.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_sp.set_defaults(func=_cmd_analyze_spectrum)
+    p_as = an_sub.add_parser("astrometry", help="Medida astrometrica (PO-C01/C02)")
+    _add_db_arg(p_as)
+    p_as.add_argument("--fits-uri", required=True)
+    p_as.add_argument("--x", type=float, required=True)
+    p_as.add_argument("--y", type=float, required=True)
+    p_as.add_argument("--ra0", type=float, default=None, help="apontamento RA deg")
+    p_as.add_argument("--dec0", type=float, default=None, help="apontamento Dec deg")
+    p_as.add_argument("--scale-arcsec", type=float, default=None)
+    p_as.add_argument("--pa", type=float, default=0.0, help="PA degrees")
+    p_as.add_argument("--designation", default=None)
+    p_as.add_argument("--band", default="R")
+    p_as.add_argument("--nonsidereal", action="store_true")
+    p_as.add_argument("--program", default=None)
+    p_as.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_as.set_defaults(func=_cmd_analyze_astrometry)
+    p_bl = an_sub.add_parser("blink", help="Blink / diff (PO-C03)")
+    _add_db_arg(p_bl)
+    p_bl.add_argument("--new-uri", required=True)
+    p_bl.add_argument("--ref-uri", required=True)
+    p_bl.add_argument("--ra0", type=float, default=None)
+    p_bl.add_argument("--dec0", type=float, default=None)
+    p_bl.add_argument("--scale-arcsec", type=float, default=None)
+    p_bl.add_argument("--pa", type=float, default=0.0)
+    p_bl.add_argument("--name", default=None, help="internal name TNS")
+    p_bl.add_argument("--program", default=None)
+    p_bl.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_bl.set_defaults(func=_cmd_analyze_blink)
     p_ex = an_sub.add_parser("export-aavso", help="Export AAVSO Extended")
     _add_db_arg(p_ex)
     p_ex.add_argument("--product", required=True)
@@ -1085,7 +1293,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_ex.add_argument("--band", default="V")
     p_ex.set_defaults(func=_cmd_analyze_export_aavso)
 
-    p_wf = sub.add_parser("workflow", help="Workflows P1 (PO-J*, PO-A01)")
+    p_wf = sub.add_parser("workflow", help="Workflows P1 (PO-J*/A*/B*/C*/D*)")
     wf_sub = p_wf.add_subparsers(dest="wf_cmd", required=True)
     p_wfl = wf_sub.add_parser("list", help="Listar workflows P1")
     p_wfl.add_argument("-v", "--verbose", action="store_true")
@@ -1156,17 +1364,18 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_cm = c_sub.add_parser("mpc", help="ADES PSV + submit MPC (default dry-run)")
     _add_db_arg(p_cm)
-    p_cm.add_argument("--designation", required=True)
+    p_cm.add_argument("--designation", default=None)
     p_cm.add_argument("--obs-code", default=None)
-    p_cm.add_argument("--epoch", required=True, help="UTC ISO")
-    p_cm.add_argument("--ra", type=float, required=True, help="RA degrees")
-    p_cm.add_argument("--dec", type=float, required=True, help="Dec degrees")
+    p_cm.add_argument("--epoch", default=None, help="UTC ISO")
+    p_cm.add_argument("--ra", type=float, default=None, help="RA degrees")
+    p_cm.add_argument("--dec", type=float, default=None, help="Dec degrees")
     p_cm.add_argument("--mag", type=float, default=None)
     p_cm.add_argument("--band", default="V")
     p_cm.add_argument("--ra-err", type=float, default=0.5)
     p_cm.add_argument("--dec-err", type=float, default=0.5)
     p_cm.add_argument("--obj-type", default="NEO")
     p_cm.add_argument("--email", default=None)
+    p_cm.add_argument("--product", default=None, help="Produto astrometry")
     p_cm.add_argument("--out", required=True)
     p_cm.add_argument("--artifacts", default=str(default_artifacts_root()))
     p_cm.add_argument("--credentials", default=None)
@@ -1175,13 +1384,14 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_ct = c_sub.add_parser("tns", help="TNS AT-rep JSON (default sandbox dry-run)")
     _add_db_arg(p_ct)
-    p_ct.add_argument("--ra", type=float, required=True)
-    p_ct.add_argument("--dec", type=float, required=True)
-    p_ct.add_argument("--mag", type=float, required=True)
+    p_ct.add_argument("--ra", type=float, default=None)
+    p_ct.add_argument("--dec", type=float, default=None)
+    p_ct.add_argument("--mag", type=float, default=None)
     p_ct.add_argument("--groupid", type=int, default=None)
     p_ct.add_argument("--reporter", default="AstroCitizen")
     p_ct.add_argument("--filter", default="Clear")
     p_ct.add_argument("--internal-name", default=None)
+    p_ct.add_argument("--product", default=None, help="Produto blink_candidate")
     p_ct.add_argument("--api-key", default=None)
     p_ct.add_argument("--user-id", default=None)
     p_ct.add_argument("--out", required=True)
@@ -1205,6 +1415,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_cb.add_argument("--site", default=None)
     p_cb.add_argument("--instrument", default=None)
     p_cb.add_argument("--fits", default=None, help="Anotar FITS 1D existente")
+    p_cb.add_argument("--product", default=None, help="Produto spectrum_1d")
     p_cb.add_argument("--out", required=True)
     p_cb.add_argument("--artifacts", default=str(default_artifacts_root()))
     p_cb.add_argument("--credentials", default=None)
