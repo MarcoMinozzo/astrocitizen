@@ -12,9 +12,21 @@ Repositório **independente** do `sbig-suite` (que permanece o núcleo de aquisi
 
 ## Estado atual
 
-Fase **0 — especificação** (fechamento documental): domínio, regras RN-*, programas PO-*, arquitectura SaaS+Desktop, stack, BDaaS, modelo de dados v1, workflows, ASCOM, backlog e testes de hardware.
+Fase **1 — implementação** iniciada.
 
-**Implementação de aplicação** ainda não iniciada (skeleton Python mínimo pode existir). Próximo: Fase 1 / sprints S0–S1 do backlog.
+| Sprint | Estado |
+|--------|--------|
+| **S0** | Skeleton hexagonal, ports, CLI, CI Linux+Windows (AC-001…004) |
+| S1 | Seguinte — BD + Site + Equipamento + Programas (AC-010…024) |
+
+```bash
+pip install -e ".[dev]"
+pytest -q
+astrocitizen version
+astrocitizen modules
+```
+
+Ver [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 

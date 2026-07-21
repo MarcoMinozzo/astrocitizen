@@ -2,7 +2,7 @@
 
 **Versão:** 1.0  
 **Data:** 2026-07-21  
-**Estado:** Fase 0 (especificação) → pronto para iniciar Fase 1  
+**Estado:** Fase 1 — implementação · **S0 concluído** (AC-001…004) · seguinte **S1** (AC-010…024)  
 **Fontes:** escopo, RN-*, PO-*, arquitetura, persistência, stack  
 
 ---
@@ -55,10 +55,10 @@
 
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
-| AC-001 | Skeleton Python (src layout, pyproject, lint/test) | P0 | S | — | Pacote `astrocitizen` |
-| AC-002 | Módulos vazios dos bounded contexts | P0 | S | AC-001 | planning, archive, … |
-| AC-003 | CI GitHub Actions (Linux + Windows, pytest) | P0 | S | AC-001 | |
-| AC-004 | Documentação de contribuição / CONTRIBUTING | P0 | S | — | |
+| AC-001 | Skeleton Python (src layout, pyproject, lint/test) | P0 | S | — | ✅ S0 — pacote `astrocitizen` 0.0.1 |
+| AC-002 | Módulos vazios dos bounded contexts | P0 | S | AC-001 | ✅ S0 — + ports hexagonais |
+| AC-003 | CI GitHub Actions (Linux + Windows, pytest) | P0 | S | AC-001 | ✅ S0 — `.github/workflows/ci.yml` |
+| AC-004 | Documentação de contribuição / CONTRIBUTING | P0 | S | — | ✅ S0 — `CONTRIBUTING.md` |
 
 ---
 
