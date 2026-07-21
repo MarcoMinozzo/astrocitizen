@@ -148,6 +148,7 @@
 | AC-071 | GUI shell PySide6 (navegação por módulos) | P1 | L | AC-001 | ✅ S4 — `astrocitizen gui` |
 | AC-072 | Telas: Sites, Equipamento, Programas | P1 | M | AC-071, E2 | ✅ S4 |
 | AC-073 | Telas: Programa diário, Sessão, Arquivo | P1 | L | AC-071, E3, E5 | ✅ S4 |
+| AC-073a | Painel **Noite**: forecast hourly + radar + estado do plano | P1 | M | AC-071, AC-032 | ✅ — `desktop/night.py` · `astrocitizen gui` |
 | AC-074 | Painel gestão multi-programa | P2 | M | AC-071, AC-022 | |
 | AC-075 | Empacote **Windows `.exe`** (PyInstaller onedir/onefile) | P1 | M | AC-071 | DoD Desktop — espelhar sbig-suite CI |
 | AC-076 | CI: build + smoke test do `.exe` (simulator) em `windows-latest` | P1 | S | AC-075, AC-003 | Artefacto descarregável |

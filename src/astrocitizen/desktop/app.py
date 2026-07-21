@@ -1,4 +1,4 @@
-"""Shell GUI PySide6 (AC-071...073)  navegacao por modulos."""
+"""Shell GUI PySide6 (AC-071...073) - navegacao por modulos + painel Noite."""
 
 from __future__ import annotations
 
@@ -29,44 +29,45 @@ def run_gui(db_path: str | None = None) -> int:
         return 1
 
     from astrocitizen.adapters.sqlite import SqliteArchive
-    from astrocitizen.shared.paths import default_db_path
+    from astrocitizen.desktop.night import build_night_dashboard
+    from astrocitizen.shared.paths import default_artifacts_root, default_db_path
+
+    NightDashboard = build_night_dashboard()
 
     class MainWindow(QMainWindow):
         def __init__(self, archive: SqliteArchive) -> None:
             super().__init__()
             self.archive = archive
             self.setWindowTitle("AstroCitizen")
-            self.resize(1000, 640)
+            self.resize(1100, 700)
 
             root = QWidget()
             layout = QHBoxLayout(root)
             self.nav = QListWidget()
-            self.nav.addItems(
-                ["Sites", "Equipamento", "Programas", "Plano diario", "Sessao", "Arquivo"]
-            )
-            self.nav.setFixedWidth(160)
-            self.stack = QStackedWidget()
-            layout.addWidget(self.nav)
-            layout.addWidget(self.stack, 1)
-            self.setCentralWidget(root)
-
-            self.pages = {
-                "Sites": self._table_page(),
-                "Equipamento": self._table_page(),
-                "Programas": self._table_page(),
-                "Plano diario": self._table_page(),
-                "Sessao": self._table_page(),
-                "Arquivo": self._table_page(),
-            }
-            for name in [
+            self.nav_names = [
+                "Noite",
                 "Sites",
                 "Equipamento",
                 "Programas",
                 "Plano diario",
                 "Sessao",
                 "Arquivo",
-            ]:
-                self.stack.addWidget(self.pages[name])
+            ]
+            self.nav.addItems(self.nav_names)
+            self.nav.setFixedWidth(160)
+            self.stack = QStackedWidget()
+            layout.addWidget(self.nav)
+            layout.addWidget(self.stack, 1)
+            self.setCentralWidget(root)
+
+            self.night = NightDashboard(archive, artifacts_root=default_artifacts_root())
+            self.stack.addWidget(self.night)
+
+            self.pages: dict[str, QWidget] = {}
+            for name in self.nav_names[1:]:
+                page = self._table_page()
+                self.pages[name] = page
+                self.stack.addWidget(page)
 
             self.nav.currentRowChanged.connect(self.stack.setCurrentIndex)
             self.nav.setCurrentRow(0)
@@ -85,6 +86,7 @@ def run_gui(db_path: str | None = None) -> int:
             return w
 
         def refresh(self) -> None:
+            self.night.load_sites()
             workspaces = self.archive.list_workspaces()
             if not workspaces:
                 return
