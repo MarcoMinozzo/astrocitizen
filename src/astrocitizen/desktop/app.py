@@ -1,4 +1,4 @@
-"""Shell GUI PySide6 (AC-071...073) - navegacao por modulos + painel Noite."""
+"""Shell GUI PySide6 - navegacao + Noite + Contribute."""
 
 from __future__ import annotations
 
@@ -29,23 +29,26 @@ def run_gui(db_path: str | None = None) -> int:
         return 1
 
     from astrocitizen.adapters.sqlite import SqliteArchive
+    from astrocitizen.desktop.contribute import build_contribute_dashboard
     from astrocitizen.desktop.night import build_night_dashboard
     from astrocitizen.shared.paths import default_artifacts_root, default_db_path
 
     NightDashboard = build_night_dashboard()
+    ContributeDashboard = build_contribute_dashboard()
 
     class MainWindow(QMainWindow):
         def __init__(self, archive: SqliteArchive) -> None:
             super().__init__()
             self.archive = archive
             self.setWindowTitle("AstroCitizen")
-            self.resize(1100, 700)
+            self.resize(1100, 720)
 
             root = QWidget()
             layout = QHBoxLayout(root)
             self.nav = QListWidget()
             self.nav_names = [
                 "Noite",
+                "Contribute",
                 "Sites",
                 "Equipamento",
                 "Programas",
@@ -60,11 +63,14 @@ def run_gui(db_path: str | None = None) -> int:
             layout.addWidget(self.stack, 1)
             self.setCentralWidget(root)
 
-            self.night = NightDashboard(archive, artifacts_root=default_artifacts_root())
+            arts = default_artifacts_root()
+            self.night = NightDashboard(archive, artifacts_root=arts)
+            self.contribute = ContributeDashboard(archive, artifacts_root=arts)
             self.stack.addWidget(self.night)
+            self.stack.addWidget(self.contribute)
 
             self.pages: dict[str, QWidget] = {}
-            for name in self.nav_names[1:]:
+            for name in self.nav_names[2:]:
                 page = self._table_page()
                 self.pages[name] = page
                 self.stack.addWidget(page)
@@ -87,6 +93,7 @@ def run_gui(db_path: str | None = None) -> int:
 
         def refresh(self) -> None:
             self.night.load_sites()
+            self.contribute.load_workspace()
             workspaces = self.archive.list_workspaces()
             if not workspaces:
                 return

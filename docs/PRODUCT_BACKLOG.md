@@ -241,7 +241,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | AC-140 | Modelo ContribuicaoRede + status | P2 | S | E1 | ✅ `network_submissions` schema v5 |
 | AC-141 | Validação produto mínimo por PO-* | P2 | M | AC-140 | |
 | AC-142 | Segredos locais (credenciais) | P2 | S | AC-140 | ✅ `credentials.json` local |
-| AC-143 | Painel de envios pendentes | P2 | M | E7 | CLI `contribute list` (GUI depois) |
+| AC-143 | Painel de envios pendentes | P2 | M | E7 | ✅ GUI **Contribute** + CLI list |
 | AC-144 | TNS Bulk API AT-rep | P1 | M | AC-140 | ✅ sandbox + dry-run · `contribute tns` |
 
 ---
