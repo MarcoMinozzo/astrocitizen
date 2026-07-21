@@ -1481,3 +1481,110 @@ class SqliteArchive:
             "SELECT uri FROM artifacts WHERE id = ?", (str(artifact_id),)
         ).fetchone()
         return None if row is None else row["uri"]
+
+    # --- network submissions (v5) ---
+    def save_network_submission(self, sub: Any) -> Any:
+        from astrocitizen.contribution.models import NetworkSubmission
+
+        assert isinstance(sub, NetworkSubmission)
+        now = utc_now_iso()
+        existing = self.get_network_submission(sub.id)
+        if existing is None:
+            self._conn.execute(
+                """
+                INSERT INTO network_submissions(
+                    id, workspace_id, network, status, artifact_uri, product_id,
+                    payload_summary, remote_ack, error, created_at, updated_at, version
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    str(sub.id),
+                    str(sub.workspace_id),
+                    sub.network,
+                    sub.status,
+                    sub.artifact_uri,
+                    str(sub.product_id) if sub.product_id else None,
+                    _j(sub.payload_summary),
+                    sub.remote_ack,
+                    sub.error,
+                    now,
+                    now,
+                    sub.version,
+                ),
+            )
+            sub.created_at = now
+        else:
+            self._conn.execute(
+                """
+                UPDATE network_submissions SET
+                    status = ?, artifact_uri = ?, product_id = ?,
+                    payload_summary = ?, remote_ack = ?, error = ?,
+                    updated_at = ?, version = version + 1
+                WHERE id = ? AND deleted_at IS NULL
+                """,
+                (
+                    sub.status,
+                    sub.artifact_uri,
+                    str(sub.product_id) if sub.product_id else None,
+                    _j(sub.payload_summary),
+                    sub.remote_ack,
+                    sub.error,
+                    now,
+                    str(sub.id),
+                ),
+            )
+        sub.updated_at = now
+        self._conn.commit()
+        return sub
+
+    def get_network_submission(self, submission_id: UUID) -> Any | None:
+        from astrocitizen.contribution.models import NetworkSubmission
+
+        row = self._conn.execute(
+            "SELECT * FROM network_submissions WHERE id = ? AND deleted_at IS NULL",
+            (str(submission_id),),
+        ).fetchone()
+        if row is None:
+            return None
+        return NetworkSubmission(
+            id=UUID(row["id"]),
+            workspace_id=UUID(row["workspace_id"]),
+            network=row["network"],
+            status=row["status"],
+            artifact_uri=row["artifact_uri"],
+            product_id=UUID(row["product_id"]) if row["product_id"] else None,
+            payload_summary=_loads(row["payload_summary"], {}),
+            remote_ack=row["remote_ack"],
+            error=row["error"],
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+            version=int(row["version"]),
+        )
+
+    def list_network_submissions(
+        self, workspace_id: UUID, *, network: str | None = None
+    ) -> list[Any]:
+        if network:
+            rows = self._conn.execute(
+                """
+                SELECT id FROM network_submissions
+                WHERE workspace_id = ? AND network = ? AND deleted_at IS NULL
+                ORDER BY created_at DESC
+                """,
+                (str(workspace_id), network),
+            ).fetchall()
+        else:
+            rows = self._conn.execute(
+                """
+                SELECT id FROM network_submissions
+                WHERE workspace_id = ? AND deleted_at IS NULL
+                ORDER BY created_at DESC
+                """,
+                (str(workspace_id),),
+            ).fetchall()
+        out = []
+        for r in rows:
+            item = self.get_network_submission(UUID(r["id"]))
+            if item is not None:
+                out.append(item)
+        return out

@@ -1,4 +1,4 @@
-"""Export AAVSO Extended Format (simplificado  AC-093 inicio)."""
+"""Export AAVSO Extended Format (AC-093) — JD via Astropy."""
 
 from __future__ import annotations
 
@@ -6,8 +6,21 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID
 
+from astropy.time import Time
+
 from astrocitizen.shared.errors import NotFoundError
-from astrocitizen.shared.timeutil import utc_now_iso
+
+
+def _to_jd(t_utc: str | None) -> float | None:
+    if not t_utc:
+        return None
+    try:
+        return float(Time(t_utc, format="isot", scale="utc").jd)
+    except Exception:
+        try:
+            return float(Time(t_utc, format="iso", scale="utc").jd)
+        except Exception:
+            return None
 
 
 def format_aavso_extended(
@@ -18,28 +31,29 @@ def format_aavso_extended(
     band: str = "V",
     chart: str = "NA",
 ) -> str:
-    """Gera texto AAVSO Extended (uma linha por medida)."""
+    """Gera texto AAVSO Extended (uma linha por medida, DATE=JD)."""
     lines = [
         "#TYPE=EXTENDED",
         f"#OBSCODE={observer_code}",
         "#SOFTWARE=AstroCitizen/0.0.1",
         "#DELIM=,",
-        f"#DATE={utc_now_iso()}",
-        f"#NAME={star_name}",
+        "#DATE=JD",
         "#OBSTYPE=CCD",
         "#",
     ]
     for pt in points:
-        # JD approx from ISO not implemented fully  use DATE-OBS string as NOTES for MVP
-        # AAVSO wants JD; store placeholder MAG and use t_utc in NOTES
         mag = pt.get("y")
         if mag is None:
             continue
-        t = pt.get("t_utc") or ""
-        # Simplified: MAG,MERR,FILT,TRANS,MTYPE,CNAME,CMAG,KNAME,KMAG,AIRMASS,GROUP,CHART,NOTES
-        merr = pt.get("y_err") if pt.get("y_err") is not None else "na"
+        jd = _to_jd(pt.get("t_utc"))
+        if jd is None:
+            continue
+        merr = pt.get("y_err")
+        merr_s = f"{float(merr):.4f}" if merr is not None else "na"
+        notes = str(pt.get("t_utc") or "")
         lines.append(
-            f"{star_name},na,{mag:.4f},{merr},{band},NO,STD,ENSEMBLE,na,na,na,na,{chart},t={t}"
+            f"{star_name},{jd:.6f},{float(mag):.4f},{merr_s},{band},"
+            f"NO,STD,ENSEMBLE,na,na,na,na,{chart},{notes}"
         )
     return "\n".join(lines) + "\n"
 

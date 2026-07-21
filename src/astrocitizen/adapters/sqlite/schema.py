@@ -1,6 +1,6 @@
 """Schema SQLite — alinhado a MODELO_DADOS_V1 (subset S1+S2)."""
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 # Tabelas S1 (v1)
 SCHEMA_V1_SQL = """
@@ -347,7 +347,28 @@ CREATE INDEX IF NOT EXISTS idx_points_product
     ON measurement_points(product_id, sequence_index);
 """
 
-SCHEMA_SQL = SCHEMA_V1_SQL + SCHEMA_V2_SQL + SCHEMA_V3_SQL + SCHEMA_V4_SQL
+SCHEMA_V5_SQL = """
+CREATE TABLE IF NOT EXISTS network_submissions (
+    id TEXT PRIMARY KEY,
+    workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+    network TEXT NOT NULL,
+    status TEXT NOT NULL,
+    artifact_uri TEXT,
+    product_id TEXT,
+    payload_summary TEXT NOT NULL DEFAULT '{}',
+    remote_ack TEXT,
+    error TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    version INTEGER NOT NULL DEFAULT 1,
+    deleted_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_network_submissions_ws
+    ON network_submissions(workspace_id, network, created_at) WHERE deleted_at IS NULL;
+"""
+
+SCHEMA_SQL = SCHEMA_V1_SQL + SCHEMA_V2_SQL + SCHEMA_V3_SQL + SCHEMA_V4_SQL + SCHEMA_V5_SQL
 
 # Colunas extra em observations (ALTER idempotente via migrate helper)
 OBSERVATION_V3_COLUMNS = (

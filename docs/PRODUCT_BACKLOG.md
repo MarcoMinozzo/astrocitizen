@@ -182,7 +182,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | AC-090 | Detecção / centroide | P2 | M | E6 | ✅ S5 — inicio (centroid) |
 | AC-091 | Fotometria de abertura + diferencial | P2 | L | AC-090 | ✅ S5 — inicio |
 | AC-092 | Curva de luz → BD (pontos) | P2 | M | AC-091, E1 | ✅ S5 — measurement_points |
-| AC-093 | Export AAVSO | P2 | M | AC-092, E14 | ✅ S5 — Extended simplificado |
+| AC-093 | Export AAVSO | P2 | M | AC-092, E14 | ✅ Extended com JD · `contribute aavso` · WebObs manual |
 | AC-094 | Templates A02–A04, A09 | P2 | M | AC-091 | |
 
 ---
@@ -206,7 +206,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 |----|------|-----|-----|-----|-------|
 | AC-110 | Plate-solve / WCS (integração externa) | P2 | L | E6 | |
 | AC-111 | Medidas astrométricas → BD | P2 | M | AC-110 | |
-| AC-112 | Export MPC | P2 | M | E14 | |
+| AC-112 | Export MPC | P2 | M | E14 | ✅ ADES PSV + `contribute mpc` (dry-run default) |
 | AC-113 | Blink / diff imaging | P2 | M | E6 | |
 | AC-114 | Tracking não-sideral (apoio NEO/cometa) | P2 | L | E4 | |
 
@@ -238,10 +238,11 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
-| AC-140 | Modelo ContribuicaoRede + status | P2 | S | E1 | RN-080…082 |
+| AC-140 | Modelo ContribuicaoRede + status | P2 | S | E1 | ✅ `network_submissions` schema v5 |
 | AC-141 | Validação produto mínimo por PO-* | P2 | M | AC-140 | |
-| AC-142 | Segredos locais (credenciais) | P2 | S | AC-140 | |
-| AC-143 | Painel de envios pendentes | P2 | M | E7 | |
+| AC-142 | Segredos locais (credenciais) | P2 | S | AC-140 | ✅ `credentials.json` local |
+| AC-143 | Painel de envios pendentes | P2 | M | E7 | CLI `contribute list` (GUI depois) |
+| AC-144 | TNS Bulk API AT-rep | P1 | M | AC-140 | ✅ sandbox + dry-run · `contribute tns` |
 
 ---
 

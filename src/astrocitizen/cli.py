@@ -14,6 +14,10 @@ from astrocitizen.adapters.sky import AstropyEphemeris, SimbadResolver
 from astrocitizen.adapters.sqlite import SqliteArchive
 from astrocitizen.analysis import AperturePhotometry
 from astrocitizen.contribution.aavso import ExportAavso
+from astrocitizen.contribution.credentials import LocalCredentialsStore
+from astrocitizen.contribution.models import NetworkSubmission
+from astrocitizen.contribution.mpc import MpcAdesSubmitter, write_ades_psv
+from astrocitizen.contribution.tns import TnsClient, format_tns_at_report, write_tns_report
 from astrocitizen.desktop import run_gui
 from astrocitizen.inventory.models import Equipment, Site
 from astrocitizen.observatory import CaptureObservation, ExecuteSession
@@ -476,6 +480,202 @@ def _cmd_workflow_show(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_contribute_cred_set(args: argparse.Namespace) -> int:
+    store = LocalCredentialsStore(Path(args.credentials) if args.credentials else None)
+    vals = {}
+    if args.obscode:
+        vals["obscode"] = args.obscode
+    if args.mpc_code:
+        vals["observatory_code"] = args.mpc_code
+    if args.email:
+        vals["email"] = args.email
+    if args.api_key:
+        vals["api_key"] = args.api_key
+    if args.user_id:
+        vals["user_id"] = args.user_id
+    if args.groupid is not None:
+        vals["groupid"] = args.groupid
+    if not vals:
+        print("nada a gravar (passe --obscode / --mpc-code / --email / --api-key / ...)")
+        return 1
+    store.set_network(args.network, vals)
+    print(f"saved={store.path}\tnetwork={args.network}\tkeys={','.join(vals)}")
+    return 0
+
+
+def _cmd_contribute_cred_show(args: argparse.Namespace) -> int:
+    store = LocalCredentialsStore(Path(args.credentials) if args.credentials else None)
+    data = store.load()
+    if args.network:
+        print(json_dumps_safe({args.network: data.get(args.network) or {}}))
+    else:
+        # mask secrets
+        masked = {}
+        for net, vals in data.items():
+            m = dict(vals or {})
+            if "api_key" in m and m["api_key"]:
+                m["api_key"] = "***"
+            masked[net] = m
+        print(json_dumps_safe(masked))
+    return 0
+
+
+def json_dumps_safe(obj: object) -> str:
+    import json
+
+    return json.dumps(obj, indent=2, ensure_ascii=True)
+
+
+def _cmd_contribute_aavso(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    cred = LocalCredentialsStore(Path(args.credentials) if args.credentials else None)
+    obscode = args.obscode or cred.get_network("aavso").get("obscode")
+    if not obscode:
+        print("falta --obscode ou credentials aavso.obscode")
+        archive.close()
+        return 1
+    out = Path(args.out)
+    ExportAavso(archive).execute(
+        product_id=UUID(args.product),
+        star_name=args.star,
+        observer_code=str(obscode),
+        out_path=out,
+        band=args.band,
+    )
+    store = LocalArtifactStore(Path(args.artifacts))
+    uri = store.put(out, key=f"export/aavso/{out.name}")
+    sub = NetworkSubmission(
+        id=new_id(),
+        workspace_id=ws.id,
+        network="aavso",
+        status="draft",
+        artifact_uri=uri,
+        product_id=UUID(args.product),
+        payload_summary={"star": args.star, "obscode": obscode, "note": "upload via WebObs"},
+    )
+    archive.save_network_submission(sub)
+    print(f"wrote={out}\turi={uri}\tsubmission={sub.id}\twebobs=https://www.aavso.org/webobs/")
+    archive.close()
+    return 0
+
+
+def _cmd_contribute_mpc(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    cred = LocalCredentialsStore(Path(args.credentials) if args.credentials else None)
+    mpc_cred = cred.get_network("mpc")
+    code = args.obs_code or mpc_cred.get("observatory_code")
+    email = args.email or mpc_cred.get("email")
+    if not code:
+        print("falta --obs-code ou credentials mpc.observatory_code")
+        archive.close()
+        return 1
+    out = Path(args.out)
+    write_ades_psv(
+        out,
+        observatory_code=str(code),
+        designation=args.designation,
+        observations=[
+            {
+                "epoch_utc": args.epoch,
+                "ra_deg": args.ra,
+                "dec_deg": args.dec,
+                "mag": args.mag,
+                "band": args.band,
+                "ra_err_arcsec": args.ra_err,
+                "dec_err_arcsec": args.dec_err,
+            }
+        ],
+        submitter="AstroCitizen",
+    )
+    dry = not args.submit
+    if not dry and not email:
+        print("submit real requer --email ou credentials mpc.email")
+        archive.close()
+        return 1
+    meta = MpcAdesSubmitter().submit(
+        out,
+        email=str(email or "dry-run@example.com"),
+        obj_type=args.obj_type,
+        dry_run=dry,
+    )
+    store = LocalArtifactStore(Path(args.artifacts))
+    uri = store.put(out, key=f"export/mpc/{out.name}")
+    sub = NetworkSubmission(
+        id=new_id(),
+        workspace_id=ws.id,
+        network="mpc",
+        status=str(meta.get("status") or "draft"),
+        artifact_uri=uri,
+        payload_summary={"designation": args.designation, "meta": meta},
+        remote_ack=str(meta.get("response") or meta.get("ack") or "")[:500] or None,
+    )
+    archive.save_network_submission(sub)
+    print(f"wrote={out}\turi={uri}\tstatus={sub.status}\tsubmission={sub.id}")
+    archive.close()
+    return 0 if sub.status in ("dry_run", "submitted", "draft") else 2
+
+
+def _cmd_contribute_tns(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    cred = LocalCredentialsStore(Path(args.credentials) if args.credentials else None)
+    tns_cred = cred.get_network("tns")
+    api_key = args.api_key or tns_cred.get("api_key") or "dry-run-key"
+    user_id = args.user_id or tns_cred.get("user_id") or "0"
+    groupid = args.groupid if args.groupid is not None else tns_cred.get("groupid", 0)
+    report = format_tns_at_report(
+        ra_deg=args.ra,
+        dec_deg=args.dec,
+        groupid=int(groupid),
+        reporter=args.reporter,
+        discovery_mag=args.mag,
+        filter_value=args.filter,
+        internal_name=args.internal_name,
+    )
+    out = Path(args.out)
+    write_tns_report(out, report)
+    dry = not args.submit
+    if not dry and (api_key == "dry-run-key" or user_id == "0"):
+        print("submit real requer --api-key e --user-id (ou credentials tns)")
+        archive.close()
+        return 1
+    meta = TnsClient(
+        api_key=str(api_key),
+        user_id=str(user_id),
+        sandbox=not args.prod,
+    ).submit_report(report, dry_run=dry)
+    store = LocalArtifactStore(Path(args.artifacts))
+    uri = store.put(out, key=f"export/tns/{out.name}")
+    sub = NetworkSubmission(
+        id=new_id(),
+        workspace_id=ws.id,
+        network="tns",
+        status=str(meta.get("status") or "draft"),
+        artifact_uri=uri,
+        payload_summary={"ra": args.ra, "dec": args.dec, "meta": meta},
+        remote_ack=str(meta.get("response") or "")[:500] or None,
+    )
+    archive.save_network_submission(sub)
+    print(f"wrote={out}\turi={uri}\tstatus={sub.status}\tsubmission={sub.id}")
+    archive.close()
+    return 0
+
+
+def _cmd_contribute_list(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    rows = archive.list_network_submissions(ws.id, network=args.network)
+    for s in rows:
+        print(
+            f"{s.created_at}\t{s.network}\t{s.status}\t{s.id}\t"
+            f"{(s.artifact_uri or '-')[:60]}"
+        )
+    archive.close()
+    return 0
+
+
 
 def _cmd_meteo_forecast(args: argparse.Namespace) -> int:
     archive = _open_archive(Path(args.db))
@@ -789,6 +989,78 @@ def build_parser() -> argparse.ArgumentParser:
     p_mr.add_argument("--artifacts", default=str(default_artifacts_root()))
     p_mr.set_defaults(func=_cmd_meteo_radar)
 
+    p_c = sub.add_parser("contribute", help="Export / submit redes (AAVSO, MPC, TNS)")
+    c_sub = p_c.add_subparsers(dest="contribute_cmd", required=True)
+
+    p_cred = c_sub.add_parser("credentials", help="Credenciais locais de redes")
+    cred_sub = p_cred.add_subparsers(dest="cred_cmd", required=True)
+    p_cs = cred_sub.add_parser("set", help="Gravar credenciais de uma rede")
+    p_cs.add_argument("--credentials", default=None)
+    p_cs.add_argument("--network", required=True, choices=("aavso", "mpc", "tns"))
+    p_cs.add_argument("--obscode", default=None)
+    p_cs.add_argument("--mpc-code", default=None)
+    p_cs.add_argument("--email", default=None)
+    p_cs.add_argument("--api-key", default=None)
+    p_cs.add_argument("--user-id", default=None)
+    p_cs.add_argument("--groupid", type=int, default=None)
+    p_cs.set_defaults(func=_cmd_contribute_cred_set)
+    p_cg = cred_sub.add_parser("show", help="Mostrar credenciais (api_key mascarada)")
+    p_cg.add_argument("--credentials", default=None)
+    p_cg.add_argument("--network", default=None)
+    p_cg.set_defaults(func=_cmd_contribute_cred_show)
+
+    p_ca = c_sub.add_parser("aavso", help="Export AAVSO Extended (WebObs manual)")
+    _add_db_arg(p_ca)
+    p_ca.add_argument("--product", required=True)
+    p_ca.add_argument("--star", required=True)
+    p_ca.add_argument("--obscode", default=None)
+    p_ca.add_argument("--band", default="V")
+    p_ca.add_argument("--out", required=True)
+    p_ca.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_ca.add_argument("--credentials", default=None)
+    p_ca.set_defaults(func=_cmd_contribute_aavso)
+
+    p_cm = c_sub.add_parser("mpc", help="ADES PSV + submit MPC (default dry-run)")
+    _add_db_arg(p_cm)
+    p_cm.add_argument("--designation", required=True)
+    p_cm.add_argument("--obs-code", default=None)
+    p_cm.add_argument("--epoch", required=True, help="UTC ISO")
+    p_cm.add_argument("--ra", type=float, required=True, help="RA degrees")
+    p_cm.add_argument("--dec", type=float, required=True, help="Dec degrees")
+    p_cm.add_argument("--mag", type=float, default=None)
+    p_cm.add_argument("--band", default="V")
+    p_cm.add_argument("--ra-err", type=float, default=0.5)
+    p_cm.add_argument("--dec-err", type=float, default=0.5)
+    p_cm.add_argument("--obj-type", default="NEO")
+    p_cm.add_argument("--email", default=None)
+    p_cm.add_argument("--out", required=True)
+    p_cm.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_cm.add_argument("--credentials", default=None)
+    p_cm.add_argument("--submit", action="store_true", help="Envio real (sem dry-run)")
+    p_cm.set_defaults(func=_cmd_contribute_mpc)
+
+    p_ct = c_sub.add_parser("tns", help="TNS AT-rep JSON (default sandbox dry-run)")
+    _add_db_arg(p_ct)
+    p_ct.add_argument("--ra", type=float, required=True)
+    p_ct.add_argument("--dec", type=float, required=True)
+    p_ct.add_argument("--mag", type=float, required=True)
+    p_ct.add_argument("--groupid", type=int, default=None)
+    p_ct.add_argument("--reporter", default="AstroCitizen")
+    p_ct.add_argument("--filter", default="Clear")
+    p_ct.add_argument("--internal-name", default=None)
+    p_ct.add_argument("--api-key", default=None)
+    p_ct.add_argument("--user-id", default=None)
+    p_ct.add_argument("--out", required=True)
+    p_ct.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_ct.add_argument("--credentials", default=None)
+    p_ct.add_argument("--submit", action="store_true")
+    p_ct.add_argument("--prod", action="store_true", help="Usar TNS producao (nao sandbox)")
+    p_ct.set_defaults(func=_cmd_contribute_tns)
+
+    p_cl = c_sub.add_parser("list", help="Listar network_submissions")
+    _add_db_arg(p_cl)
+    p_cl.add_argument("--network", default=None, choices=("aavso", "mpc", "tns"))
+    p_cl.set_defaults(func=_cmd_contribute_list)
 
     return parser
 
