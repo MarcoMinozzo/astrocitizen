@@ -29,17 +29,20 @@ astrocitizen modules
 
 Requisitos: **Python ≥ 3.10**.
 
-## Estrutura do código (S0)
+## Estrutura do código (S0+S1)
 
 ```text
 src/astrocitizen/
-  shared/          # erros, IDs
+  shared/          # erros, IDs, paths, timeutil
   ports/           # interfaces hexagonais
-  application/     # casos de uso (vazio → S1+)
+  application/     # casos de uso (S2+)
   workspace|planning|inventory|programs|observatory|
   reduction|archive|contribution|sync/
-  adapters/        # implementações (S1+)
-  cli.py
+  adapters/
+    sqlite/        # SqliteArchive + schema v1
+    fs/            # LocalArtifactStore
+  programs/catalog/   # program_templates.json (PO-*)
+  cli.py           # init-db, site, equipment, program
 ```
 
 Schema alvo: [docs/MODELO_DADOS_V1.md](docs/MODELO_DADOS_V1.md).
@@ -53,8 +56,8 @@ Schema alvo: [docs/MODELO_DADOS_V1.md](docs/MODELO_DADOS_V1.md).
 
 ## Sprint actual
 
-**S0** — skeleton + CI (AC-001…004).  
-Seguinte: **S1** — persistência + Site/Equipamento/Programas (AC-010…024).
+**S0+S1** concluídos (AC-001…004, AC-010…024).  
+Seguinte: **S2** — efemérides + meteo + programa diário (AC-030…037).
 
 ## Contacto / produto
 

@@ -1,0 +1,556 @@
+[
+  {
+    "id": "PO-A01",
+    "class": "A",
+    "name": "Estrelas variáveis (geral)",
+    "technique": "Fotometria diferencial",
+    "default_networks": [
+      "AAVSO"
+    ],
+    "minimum_product": "Fotometria diferencial",
+    "priority": "P1",
+    "metadata": {}
+  },
+  {
+    "id": "PO-A02",
+    "class": "A",
+    "name": "Variáveis eruptivas / cataclísmicas",
+    "technique": "Fotometria (cadência alta)",
+    "default_networks": [
+      "AAVSO"
+    ],
+    "minimum_product": "Fotometria (cadência alta)",
+    "priority": "P2",
+    "metadata": {}
+  },
+  {
+    "id": "PO-A03",
+    "class": "A",
+    "name": "Cefeidas / RR Lyrae (periódicas)",
+    "technique": "Fotometria multi-noite",
+    "default_networks": [
+      "AAVSO"
+    ],
+    "minimum_product": "Fotometria multi-noite",
+    "priority": "P2",
+    "metadata": {}
+  },
+  {
+    "id": "PO-A04",
+    "class": "A",
+    "name": "Fotometria de aglomerados (cores UBVRI)",
+    "technique": "Multi-filtro",
+    "default_networks": [],
+    "minimum_product": "Multi-filtro",
+    "priority": "P2",
+    "metadata": {}
+  },
+  {
+    "id": "PO-A05",
+    "class": "A",
+    "name": "Trânsitos de exoplanetas",
+    "technique": "Fotometria de alta precisão",
+    "default_networks": [
+      "ExoClock",
+      "TESS follow-up"
+    ],
+    "minimum_product": "Fotometria de alta precisão",
+    "priority": "P1",
+    "metadata": {}
+  },
+  {
+    "id": "PO-A06",
+    "class": "A",
+    "name": "Microlensing",
+    "technique": "Fotometria densa / alertas",
+    "default_networks": [
+      "µFUN"
+    ],
+    "minimum_product": "Fotometria densa / alertas",
+    "priority": "P2",
+    "metadata": {}
+  },
+  {
+    "id": "PO-A07",
+    "class": "A",
+    "name": "Fotometria rápida / sub-segundo",
+    "technique": "Alta cadência",
+    "default_networks": [],
+    "minimum_product": "Alta cadência",
+    "priority": "P3",
+    "metadata": {}
+  },
+  {
+    "id": "PO-A08",
+    "class": "A",
+    "name": "Asterosismologia amadora",
+    "technique": "Séries temporais longas",
+    "default_networks": [],
+    "minimum_product": "Séries temporais longas",
+    "priority": "P3",
+    "metadata": {}
+  },
+  {
+    "id": "PO-A09",
+    "class": "A",
+    "name": "Curvas de luz de asteroides (rotação)",
+    "technique": "Fotometria + tracking",
+    "default_networks": [
+      "MPC aux."
+    ],
+    "minimum_product": "Fotometria + tracking",
+    "priority": "P2",
+    "metadata": {}
+  },
+  {
+    "id": "PO-A10",
+    "class": "A",
+    "name": "Fotometria de cometas",
+    "technique": "Fotometria + não-sideral",
+    "default_networks": [
+      "MPC",
+      "redes de cometas"
+    ],
+    "minimum_product": "Fotometria + não-sideral",
+    "priority": "P3",
+    "metadata": {}
+  },
+  {
+    "id": "PO-B01",
+    "class": "B",
+    "name": "Espectroscopia estelar geral (slit)",
+    "technique": "Extração 1D + λ",
+    "default_networks": [],
+    "minimum_product": "Extração 1D + λ",
+    "priority": "P1",
+    "metadata": {}
+  },
+  {
+    "id": "PO-B02",
+    "class": "B",
+    "name": "Estrelas Be / envelopes circumestelares",
+    "technique": "Monitoramento de linhas (Hα…)",
+    "default_networks": [
+      "ARAS",
+      "BeSS"
+    ],
+    "minimum_product": "Monitoramento de linhas (Hα…)",
+    "priority": "P1",
+    "metadata": {}
+  },
+  {
+    "id": "PO-B03",
+    "class": "B",
+    "name": "Estrelas eruptivas / novae (espectro)",
+    "technique": "Séries espectrais",
+    "default_networks": [
+      "ARAS"
+    ],
+    "minimum_product": "Séries espectrais",
+    "priority": "P1",
+    "metadata": {}
+  },
+  {
+    "id": "PO-B04",
+    "class": "B",
+    "name": "Classificação espectral (MK)",
+    "technique": "Comparação de templates",
+    "default_networks": [],
+    "minimum_product": "Comparação de templates",
+    "priority": "P2",
+    "metadata": {}
+  },
+  {
+    "id": "PO-B05",
+    "class": "B",
+    "name": "RV / exoplanetas (educacional)",
+    "technique": "Doppler / calibração λ",
+    "default_networks": [],
+    "minimum_product": "Doppler / calibração λ",
+    "priority": "P2",
+    "metadata": {}
+  },
+  {
+    "id": "PO-B06",
+    "class": "B",
+    "name": "Espectroscopia solar",
+    "technique": "Linhas solares / (intro) Zeeman",
+    "default_networks": [
+      "Redes solares"
+    ],
+    "minimum_product": "Linhas solares / (intro) Zeeman",
+    "priority": "P2",
+    "metadata": {}
+  },
+  {
+    "id": "PO-B07",
+    "class": "B",
+    "name": "Echelle amador (alta resolução)",
+    "technique": "Echelle",
+    "default_networks": [],
+    "minimum_product": "Echelle",
+    "priority": "P4",
+    "metadata": {}
+  },
+  {
+    "id": "PO-B08",
+    "class": "B",
+    "name": "Desenvolvimento / calibração de espectrógrafo",
+    "technique": "Flats, lâmpada, resolução",
+    "default_networks": [
+      "lab"
+    ],
+    "minimum_product": "Flats, lâmpada, resolução",
+    "priority": "P3",
+    "metadata": {}
+  },
+  {
+    "id": "PO-C01",
+    "class": "C",
+    "name": "Astrometria de asteroides / NEOs",
+    "technique": "Plate-solve + medidas",
+    "default_networks": [
+      "MPC"
+    ],
+    "minimum_product": "Plate-solve + medidas",
+    "priority": "P1",
+    "metadata": {}
+  },
+  {
+    "id": "PO-C02",
+    "class": "C",
+    "name": "Follow-up de descoberta NEO",
+    "technique": "Tracking não-sideral",
+    "default_networks": [
+      "MPC"
+    ],
+    "minimum_product": "Tracking não-sideral",
+    "priority": "P1",
+    "metadata": {}
+  },
+  {
+    "id": "PO-C03",
+    "class": "C",
+    "name": "Busca / confirmação de supernovas",
+    "technique": "Blink / diff imaging",
+    "default_networks": [
+      "Redes SN",
+      "TNS"
+    ],
+    "minimum_product": "Blink / diff imaging",
+    "priority": "P1",
+    "metadata": {}
+  },
+  {
+    "id": "PO-C04",
+    "class": "C",
+    "name": "Astrometria de cometas",
+    "technique": "Tracking não-sideral",
+    "default_networks": [
+      "MPC"
+    ],
+    "minimum_product": "Tracking não-sideral",
+    "priority": "P2",
+    "metadata": {}
+  },
+  {
+    "id": "PO-C05",
+    "class": "C",
+    "name": "Identificação / recuperação de objetos",
+    "technique": "Astrometria + efemérides Horizons",
+    "default_networks": [
+      "MPC"
+    ],
+    "minimum_product": "Astrometria + efemérides Horizons",
+    "priority": "P2",
+    "metadata": {}
+  },
+  {
+    "id": "PO-D01",
+    "class": "D",
+    "name": "Ocultações de asteroides (estrelas)",
+    "technique": "Timing de alta precisão",
+    "default_networks": [
+      "IOTA"
+    ],
+    "minimum_product": "Timing de alta precisão",
+    "priority": "P1",
+    "metadata": {}
+  },
+  {
+    "id": "PO-D02",
+    "class": "D",
+    "name": "Ocultações lunares / grazes",
+    "technique": "Timing / vídeo",
+    "default_networks": [
+      "IOTA"
+    ],
+    "minimum_product": "Timing / vídeo",
+    "priority": "P2",
+    "metadata": {}
+  },
+  {
+    "id": "PO-D03",
+    "class": "D",
+    "name": "Ocultações mutuas de satélites (ex.: Io/Europa)",
+    "technique": "Timing",
+    "default_networks": [
+      "IOTA"
+    ],
+    "minimum_product": "Timing",
+    "priority": "P3",
+    "metadata": {}
+  },
+  {
+    "id": "PO-D04",
+    "class": "D",
+    "name": "Duplas por occultation / vídeo",
+    "technique": "Timing + análise",
+    "default_networks": [
+      "IOTA"
+    ],
+    "minimum_product": "Timing + análise",
+    "priority": "P3",
+    "metadata": {}
+  },
+  {
+    "id": "PO-E01",
+    "class": "E",
+    "name": "Lua (imaging / terminador)",
+    "technique": "Webcam/DSLR + stack",
+    "default_networks": [],
+    "minimum_product": "Webcam/DSLR + stack",
+    "priority": "P2",
+    "metadata": {}
+  },
+  {
+    "id": "PO-E02",
+    "class": "E",
+    "name": "Planetas (Júpiter, Saturno, Marte…)",
+    "technique": "Lucky imaging",
+    "default_networks": [],
+    "minimum_product": "Lucky imaging",
+    "priority": "P2",
+    "metadata": {}
+  },
+  {
+    "id": "PO-E03",
+    "class": "E",
+    "name": "Sol em luz branca / manchas",
+    "technique": "Imaging seguro",
+    "default_networks": [
+      "Redes solares amadoras"
+    ],
+    "minimum_product": "Imaging seguro",
+    "priority": "P1",
+    "metadata": {}
+  },
+  {
+    "id": "PO-E04",
+    "class": "E",
+    "name": "Sol em Hα / atividade",
+    "technique": "Filtro Hα (se houver)",
+    "default_networks": [
+      "Redes solares"
+    ],
+    "minimum_product": "Filtro Hα (se houver)",
+    "priority": "P2",
+    "metadata": {}
+  },
+  {
+    "id": "PO-E05",
+    "class": "E",
+    "name": "Eclipses lunares / solares",
+    "technique": "Timing + imaging",
+    "default_networks": [],
+    "minimum_product": "Timing + imaging",
+    "priority": "P2",
+    "metadata": {}
+  },
+  {
+    "id": "PO-E06",
+    "class": "E",
+    "name": "Cometas (imaging)",
+    "technique": "Imaging + tracking",
+    "default_networks": [
+      "Redes de cometas"
+    ],
+    "minimum_product": "Imaging + tracking",
+    "priority": "P3",
+    "metadata": {}
+  },
+  {
+    "id": "PO-F01",
+    "class": "F",
+    "name": "Deep-sky imaging (galáxias, nebulosas, clusters)",
+    "technique": "CCD/DSLR LRGB",
+    "default_networks": [],
+    "minimum_product": "CCD/DSLR LRGB",
+    "priority": "P2",
+    "metadata": {}
+  },
+  {
+    "id": "PO-F02",
+    "class": "F",
+    "name": "Catálogo Messier / listas de caça",
+    "technique": "Visual ou imaging",
+    "default_networks": [],
+    "minimum_product": "Visual ou imaging",
+    "priority": "P2",
+    "metadata": {}
+  },
+  {
+    "id": "PO-F03",
+    "class": "F",
+    "name": "Observação visual (binóculo / ocular)",
+    "technique": "Log visual",
+    "default_networks": [
+      "diário"
+    ],
+    "minimum_product": "Log visual",
+    "priority": "P3",
+    "metadata": {}
+  },
+  {
+    "id": "PO-F04",
+    "class": "F",
+    "name": "Asterismos / reconhecimento de céu",
+    "technique": "Visual / planner",
+    "default_networks": [],
+    "minimum_product": "Visual / planner",
+    "priority": "P3",
+    "metadata": {}
+  },
+  {
+    "id": "PO-G01",
+    "class": "G",
+    "name": "Medição de estrelas duplas",
+    "technique": "Imaging / eyepiece micrometer",
+    "default_networks": [
+      "WDS",
+      "redes de duplas"
+    ],
+    "minimum_product": "Imaging / eyepiece micrometer",
+    "priority": "P2",
+    "metadata": {}
+  },
+  {
+    "id": "PO-G02",
+    "class": "G",
+    "name": "Speckle interferometry (avançado)",
+    "technique": "Speckle",
+    "default_networks": [],
+    "minimum_product": "Speckle",
+    "priority": "P4",
+    "metadata": {}
+  },
+  {
+    "id": "PO-H01",
+    "class": "H",
+    "name": "Polarimetria astronômica amadora/avançada",
+    "technique": "Polarímetro + CCD",
+    "default_networks": [],
+    "minimum_product": "Polarímetro + CCD",
+    "priority": "P4",
+    "metadata": {}
+  },
+  {
+    "id": "PO-I01",
+    "class": "I",
+    "name": "Sol em rádio",
+    "technique": "Potência vs tempo",
+    "default_networks": [
+      "Clubes rádio-astro"
+    ],
+    "minimum_product": "Potência vs tempo",
+    "priority": "P3",
+    "metadata": {}
+  },
+  {
+    "id": "PO-I02",
+    "class": "I",
+    "name": "Linha de 21 cm (HI)",
+    "technique": "Espectro/recepção",
+    "default_networks": [
+      "Educação",
+      "clubes"
+    ],
+    "minimum_product": "Espectro/recepção",
+    "priority": "P3",
+    "metadata": {}
+  },
+  {
+    "id": "PO-I03",
+    "class": "I",
+    "name": "Continuo / fontes brilhantes (verificação)",
+    "technique": "Drift scan / pointing",
+    "default_networks": [
+      "Educação"
+    ],
+    "minimum_product": "Drift scan / pointing",
+    "priority": "P3",
+    "metadata": {}
+  },
+  {
+    "id": "PO-I04",
+    "class": "I",
+    "name": "Radiotelescópio educacional (VHF etc.)",
+    "technique": "Autoconstrução + aquisição",
+    "default_networks": [
+      "Educação"
+    ],
+    "minimum_product": "Autoconstrução + aquisição",
+    "priority": "P3",
+    "metadata": {}
+  },
+  {
+    "id": "PO-J01",
+    "class": "J",
+    "name": "Caracterização de CCD (ganho, ruído, dark)",
+    "technique": "Determinação Experimental do Ruído…, AAVSO CCD, Gramadão bias/dark",
+    "default_networks": [],
+    "minimum_product": "Determinação Experimental do Ruído…, AAVSO CCD, Gramadão bias/dark",
+    "priority": "P3",
+    "metadata": {}
+  },
+  {
+    "id": "PO-J03",
+    "class": "J",
+    "name": "Campanha de flats/darks mestres (calibração de rotina)",
+    "technique": "PRATICAS CCD, Gramadão",
+    "default_networks": [],
+    "minimum_product": "PRATICAS CCD, Gramadão",
+    "priority": "P3",
+    "metadata": {}
+  },
+  {
+    "id": "PO-J05",
+    "class": "J",
+    "name": "Meteorologia observacional do site",
+    "technique": "Observatorio (clima Ceará), RN meteo",
+    "default_networks": [],
+    "minimum_product": "Observatorio (clima Ceará), RN meteo",
+    "priority": "P3",
+    "metadata": {}
+  },
+  {
+    "id": "PO-K01",
+    "class": "K",
+    "name": "Laboratório CCD / redução de imagens",
+    "technique": "`PRATICAS CCD/`, TAOA, IFSP",
+    "default_networks": [],
+    "minimum_product": "`PRATICAS CCD/`, TAOA, IFSP",
+    "priority": "P3",
+    "metadata": {}
+  },
+  {
+    "id": "PO-K03",
+    "class": "K",
+    "name": "Mini-curso rádio",
+    "technique": "mini curso radioastronomia",
+    "default_networks": [],
+    "minimum_product": "mini curso radioastronomia",
+    "priority": "P3",
+    "metadata": {}
+  }
+]

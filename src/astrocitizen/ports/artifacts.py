@@ -17,3 +17,7 @@ class ArtifactStorePort(Protocol):
     def exists(self, uri: str) -> bool:
         """Indica se o artefato referenciado existe."""
         ...
+
+    def resolve(self, uri: str) -> Path:
+        """Resolve URI para caminho local legivel (Desktop) ou descarrega para cache."""
+        ...

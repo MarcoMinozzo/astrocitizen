@@ -2,7 +2,7 @@
 
 **Versão:** 1.0  
 **Data:** 2026-07-21  
-**Estado:** Fase 1 — implementação · **S0 concluído** (AC-001…004) · seguinte **S1** (AC-010…024)  
+**Estado:** Fase 1 — implementação · **S0+S1 concluídos** (AC-001…004, AC-010…024) · seguinte **S2** (AC-030…037)  
 **Fontes:** escopo, RN-*, PO-*, arquitetura, persistência, stack  
 
 ---
@@ -66,11 +66,11 @@
 
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
-| AC-010 | `ArchivePort` + modelo relacional v1 | P0 | M | AC-002 | Ver [MODELO_DADOS_V1.md](MODELO_DADOS_V1.md) |
-| AC-011 | Adapter SQLite + migrações | P0 | M | AC-010 | |
-| AC-012 | `ArtifactStorePort` (FITS em disco + URI no BD) | P0 | S | AC-010 | |
-| AC-013 | Soft-delete + auditoria básica | P0 | S | AC-011 | |
-| AC-014 | Flag `simulada` e filtros de query | P0 | S | AC-011 | |
+| AC-010 | `ArchivePort` + modelo relacional v1 | P0 | M | AC-002 | ✅ S1 — Protocol expandido; ver [MODELO_DADOS_V1.md](MODELO_DADOS_V1.md) |
+| AC-011 | Adapter SQLite + migrações | P0 | M | AC-010 | ✅ S1 — `SqliteArchive` + `schema_migrations` |
+| AC-012 | `ArtifactStorePort` (FITS em disco + URI no BD) | P0 | S | AC-010 | ✅ S1 — `LocalArtifactStore` (URI file://) |
+| AC-013 | Soft-delete + auditoria básica | P0 | S | AC-011 | ✅ S1 — `deleted_at` + `audit_log` |
+| AC-014 | Flag `simulada` e filtros de query | P0 | S | AC-011 | ✅ S1 — `observations.simulated` |
 | AC-015 | Caminho PostgreSQL (mesmo port) | P3 | M | AC-011 | Evolução |
 
 ---
@@ -79,11 +79,11 @@
 
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
-| AC-020 | Entidade Site / SiteProfile (RN-001…004) | P0 | S | AC-010 | |
-| AC-021 | Inventário de Equipamento + ConfiguraçãoInstrumental | P0 | M | AC-020 | |
-| AC-022 | ProgramaObservacional + estados (RN-040…047) | P0 | M | AC-010 | ligado a PO-* |
-| AC-023 | Catálogo de templates PO-* (metadados JSON/YAML) | P0 | M | AC-022 | classes A–K |
-| AC-024 | Repositórios de domínio (via ArchivePort) | P0 | M | AC-011 | |
+| AC-020 | Entidade Site / SiteProfile (RN-001…004) | P0 | S | AC-010 | ✅ S1 |
+| AC-021 | Inventário de Equipamento + ConfiguraçãoInstrumental | P0 | M | AC-020 | ✅ S1 |
+| AC-022 | ProgramaObservacional + estados (RN-040…047) | P0 | M | AC-010 | ✅ S1 — estados draft/active/paused/archived |
+| AC-023 | Catálogo de templates PO-* (metadados JSON/YAML) | P0 | M | AC-022 | ✅ S1 — 49 templates JSON + seed |
+| AC-024 | Repositórios de domínio (via ArchivePort) | P0 | M | AC-011 | ✅ S1 — métodos no SqliteArchive |
 
 ---
 
@@ -288,7 +288,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | Sprint | Foco | Itens |
 |--------|------|-------|
 | S0 | Skeleton + CI | AC-001…004 |
-| S1 | BD + Site + Equipamento + Programas | AC-010…024 |
+| S1 | BD + Site + Equipamento + Programas | AC-010…024 ✅ |
 | S2 | Efemérides + Meteo + ProgramaDiario | AC-030…037 |
 | S3 | Camera/Mount/Focuser sim + Sessão + FITS | AC-040…053 |
 | S4 | Calibração + GUI/CLI shell | AC-060…073 |

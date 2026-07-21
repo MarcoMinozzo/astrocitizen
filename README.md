@@ -17,13 +17,16 @@ Fase **1 — implementação** iniciada.
 | Sprint | Estado |
 |--------|--------|
 | **S0** | Skeleton hexagonal, ports, CLI, CI Linux+Windows (AC-001…004) |
-| S1 | Seguinte — BD + Site + Equipamento + Programas (AC-010…024) |
+| **S1** | SQLite + Site/Equipamento/Programas PO-* + ArtifactStore (AC-010…024) |
+| S2 | Seguinte — Efemérides + Meteo + ProgramaDiario (AC-030…037) |
 
 ```bash
 pip install -e ".[dev]"
 pytest -q
-astrocitizen version
-astrocitizen modules
+astrocitizen init-db
+astrocitizen site add --name Casa --lat -29.7 --lon -51.1 --default
+astrocitizen program templates --class A
+astrocitizen program create --template PO-A01 --name "Variáveis"
 ```
 
 Ver [CONTRIBUTING.md](CONTRIBUTING.md).
