@@ -16,7 +16,7 @@ A plataforma separa claramente:
 | **Serviços web astronômicos** | NEOs, Horizons, MPC, SIMBAD, etc. | **Astroquery** |
 | **Hardware do observatório** | Montagem, câmera (via ASCOM), focuser, roda, cúpula… | **ASCOM Alpaca** via **Alpyca** |
 | **Hardware SBIG legado** | Câmeras ST USB já suportadas | **Universal Driver** (ctypes) — mantido |
-| **Meteorologia do site** | Condições/previsão no local de observação | API meteo + **ObservingConditions** (Alpaca) + entrada manual |
+| **Meteorologia do site** | Condições/previsão no local de observação | **Open-Meteo** (hourly) + **RainViewer** (radar PNG) + **ObservingConditions** (Alpaca, depois) + entrada manual |
 | **UI / app** | Interface e orquestração | **SaaS:** Next.js · **Desktop:** PySide6 + PyInstaller (`.exe` Windows) · Python ≥ 3.10 |
 | **Persistência** | Todo resultado observacional | **BDaaS:** PostgreSQL + object storage · Desktop: SQLite local |
 

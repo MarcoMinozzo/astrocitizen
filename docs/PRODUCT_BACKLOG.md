@@ -93,7 +93,7 @@
 |----|------|-----|-----|-----|-------|
 | AC-030 | `EphemerisPort` + adapter Astropy (AltAz) | P1 | M | AC-020 | ✅ S2 — `AstropyEphemeris` |
 | AC-031 | Adapter Astroquery (SIMBAD, Horizons, MPC) | P1 | M | AC-030 | ✅ S2 — SIMBAD opcional `[sky]`; Horizons/MPC depois |
-| AC-032 | `MeteoPort` + adapter API + manual (RN-020…024) | P1 | M | AC-020 | ✅ S2 — Open-Meteo + ManualMeteo |
+| AC-032 | `MeteoPort` + adapter API + manual (RN-020…024) | P1 | M | AC-020 | ✅ S2 — Open-Meteo + ManualMeteo; ✅ hourly + dew/precip_prob + `RadarPort`/RainViewer |
 | AC-033 | Snapshot meteo/efemérides no BD (RN-113) | P1 | S | AC-011, AC-032 | ✅ S2 — tabelas + persistência |
 | AC-034 | Geração ProgramaDiario (RN-050…056) | P1 | L | AC-022, AC-030, AC-032 | ✅ S2 — `GenerateDailyPlan` (RN-056 freeze → S3) |
 | AC-035 | Edição manual do diário + motivos inviável | P1 | M | AC-034 | ✅ S2 — `EditDailyPlan` + CLI |

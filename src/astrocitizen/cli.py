@@ -9,7 +9,7 @@ from uuid import UUID
 from astrocitizen import __version__
 from astrocitizen.adapters.fs import LocalArtifactStore
 from astrocitizen.adapters.hardware import create_camera
-from astrocitizen.adapters.meteo import ManualMeteo, OpenMeteo
+from astrocitizen.adapters.meteo import ManualMeteo, OpenMeteo, RainViewerRadar
 from astrocitizen.adapters.sky import AstropyEphemeris, SimbadResolver
 from astrocitizen.adapters.sqlite import SqliteArchive
 from astrocitizen.inventory.models import Equipment, Site
@@ -20,6 +20,7 @@ from astrocitizen.contribution.aavso import ExportAavso
 from astrocitizen.programs.workflows import workflow_for, P1_WORKFLOWS
 from astrocitizen.desktop import run_gui
 from astrocitizen.planning import EditDailyPlan, GenerateDailyPlan, Target
+from astrocitizen.planning.meteo_rules import evaluate_meteo_window
 from astrocitizen.programs.models import Program
 from astrocitizen.programs.seed import seed_program_templates
 from astrocitizen.shared import CONTEXT_MODULES
@@ -476,6 +477,78 @@ def _cmd_workflow_show(args: argparse.Namespace) -> int:
 
 
 
+def _cmd_meteo_forecast(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    site = _resolve_site(archive, ws, args.site)
+    eph = AstropyEphemeris()
+    night = eph.night_window(
+        latitude_deg=site.latitude_deg,
+        longitude_deg=site.longitude_deg,
+        elevation_m=site.elevation_m,
+        night_date=args.date,
+        night_start_rule=site.night_start_rule,
+    )
+    if args.provider == "manual":
+        meteo = ManualMeteo(
+            cloud_cover_pct=args.cloud,
+            wind_ms=args.wind,
+            humidity_pct=args.humidity,
+            precipitation=args.precip,
+        )
+    else:
+        meteo = OpenMeteo()
+    fc = meteo.forecast(
+        latitude_deg=site.latitude_deg,
+        longitude_deg=site.longitude_deg,
+        start_utc=night["start_utc"],
+        end_utc=night["end_utc"],
+    )
+    ok, reason = evaluate_meteo_window(fc, site.meteo_thresholds)
+    print(f"site={site.name}\tnight={args.date}\twindow={night['start_utc']}..{night['end_utc']}")
+    print(
+        f"ok={ok}\tcloud_max={fc.get('cloud_cover_pct')}\twind_max={fc.get('wind_ms')}\t"
+        f"rh_max={fc.get('humidity_pct')}\tdew_margin_min={fc.get('dew_margin_c')}\t"
+        f"precip={fc.get('precipitation')}\tprob_max={fc.get('precip_probability_pct')}"
+    )
+    if reason:
+        print(f"reason={reason}")
+    hours = fc.get("hourly") or []
+    print(f"hours={len(hours)}")
+    if args.verbose:
+        for h in hours:
+            print(
+                f"  {h.get('time_utc')}\tcloud={h.get('cloud_cover_pct')}\t"
+                f"wind={h.get('wind_ms')}\trh={h.get('humidity_pct')}\t"
+                f"dew={h.get('dewpoint_c')}\tprecip_mm={h.get('precipitation_mm')}\t"
+                f"prob={h.get('precip_probability_pct')}"
+            )
+    archive.close()
+    return 0 if ok else 2
+
+
+def _cmd_meteo_radar(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    site = _resolve_site(archive, ws, args.site)
+    store = LocalArtifactStore(Path(args.artifacts))
+    out = store.root / "radar" / f"{site.id}_{args.zoom}.png"
+    meta = RainViewerRadar().region_image(
+        latitude_deg=site.latitude_deg,
+        longitude_deg=site.longitude_deg,
+        zoom=args.zoom,
+        size=args.size,
+        out_path=out,
+    )
+    uri = store.put(Path(meta["image_path"]), key=f"radar/{site.id}/{Path(meta['image_path']).name}")
+    print(f"site={site.name}\tlat={site.latitude_deg}\tlon={site.longitude_deg}")
+    print(f"path={meta['image_path']}\turi={uri}\tbytes={meta['bytes']}")
+    print(f"radar_time={meta['radar_time']}\t{meta['attribution']}")
+    archive.close()
+    return 0
+
+
+
 def _add_db_arg(p: argparse.ArgumentParser) -> None:
     p.add_argument(
         "--db",
@@ -692,6 +765,28 @@ def build_parser() -> argparse.ArgumentParser:
     p_wfs = wf_sub.add_parser("show", help="Mostrar workflow de template")
     p_wfs.add_argument("--template", required=True)
     p_wfs.set_defaults(func=_cmd_workflow_show)
+
+
+    p_meteo = sub.add_parser("meteo", help="Previsao horaria + radar de chuva")
+    meteo_sub = p_meteo.add_subparsers(dest="meteo_cmd", required=True)
+    p_mf = meteo_sub.add_parser("forecast", help="Open-Meteo hourly na janela da noite")
+    _add_db_arg(p_mf)
+    p_mf.add_argument("--date", required=True, help="YYYY-MM-DD")
+    p_mf.add_argument("--site", default=None)
+    p_mf.add_argument("--provider", choices=("api", "manual"), default="api")
+    p_mf.add_argument("--cloud", type=float, default=10.0)
+    p_mf.add_argument("--wind", type=float, default=2.0)
+    p_mf.add_argument("--humidity", type=float, default=40.0)
+    p_mf.add_argument("--precip", action="store_true")
+    p_mf.add_argument("-v", "--verbose", action="store_true")
+    p_mf.set_defaults(func=_cmd_meteo_forecast)
+    p_mr = meteo_sub.add_parser("radar", help="Imagem RainViewer centrada no Site")
+    _add_db_arg(p_mr)
+    p_mr.add_argument("--site", default=None)
+    p_mr.add_argument("--zoom", type=int, default=6)
+    p_mr.add_argument("--size", type=int, default=512, choices=(256, 512))
+    p_mr.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_mr.set_defaults(func=_cmd_meteo_radar)
 
 
     return parser

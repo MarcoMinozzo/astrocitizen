@@ -1,7 +1,8 @@
-"""Portas de efemerides, meteorologia e resolucao de alvos."""
+"""Portas de efemerides, meteorologia, radar e resolucao de alvos."""
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
 
@@ -40,7 +41,38 @@ class MeteoPort(Protocol):
     """Condicoes / previsao meteo do Site (RN-020...024)."""
 
     def snapshot(self, *, latitude_deg: float, longitude_deg: float) -> dict[str, Any]:
-        """Snapshot meteo: cloud_cover_pct, wind_ms, humidity_pct, precipitation, source."""
+        """Snapshot actual no Site."""
+        ...
+
+    def forecast(
+        self,
+        *,
+        latitude_deg: float,
+        longitude_deg: float,
+        start_utc: str | None = None,
+        end_utc: str | None = None,
+    ) -> dict[str, Any]:
+        """Previsao horaria (opcionalmente limitada a [start,end]).
+
+        Devolve dict com current-like fields (resumo) + chave `hourly` (lista).
+        """
+        ...
+
+
+@runtime_checkable
+class RadarPort(Protocol):
+    """Imagem de radar de precipitacao na regiao do Site."""
+
+    def region_image(
+        self,
+        *,
+        latitude_deg: float,
+        longitude_deg: float,
+        zoom: int = 6,
+        size: int = 512,
+        out_path: Path | None = None,
+    ) -> dict[str, Any]:
+        """Descarrega PNG centrado no Site; devolve metadados + path/uri."""
         ...
 
 

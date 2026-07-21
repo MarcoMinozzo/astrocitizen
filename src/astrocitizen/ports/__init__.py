@@ -3,7 +3,7 @@
 from astrocitizen.ports.archive import ArchivePort
 from astrocitizen.ports.artifacts import ArtifactStorePort
 from astrocitizen.ports.hardware import CameraPort, FocuserPort, MountPort
-from astrocitizen.ports.sky import EphemerisPort, MeteoPort, TargetResolverPort
+from astrocitizen.ports.sky import EphemerisPort, MeteoPort, RadarPort, TargetResolverPort
 from astrocitizen.ports.sync import NetworkExportPort, SyncPort
 
 __all__ = [
@@ -15,6 +15,7 @@ __all__ = [
     "MeteoPort",
     "MountPort",
     "NetworkExportPort",
+    "RadarPort",
     "SyncPort",
     "TargetResolverPort",
 ]

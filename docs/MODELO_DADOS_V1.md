@@ -457,7 +457,9 @@ Só leitura na app; atualizado com o catálogo oficial.
   "max_cloud_cover_pct": 50,
   "max_wind_ms": 12,
   "max_humidity_pct": 90,
-  "no_precipitation": true
+  "no_precipitation": true,
+  "max_precip_probability_pct": 40,
+  "min_dew_margin_c": 2.0
 }
 ```
 

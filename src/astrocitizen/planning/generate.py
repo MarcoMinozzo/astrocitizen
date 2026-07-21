@@ -8,7 +8,7 @@ from uuid import UUID
 
 from astrocitizen.planning.conflicts import resolve_priority_conflicts
 from astrocitizen.planning.equipment_rules import validate_instrument_config
-from astrocitizen.planning.meteo_rules import evaluate_meteo
+from astrocitizen.planning.meteo_rules import evaluate_meteo_window
 from astrocitizen.planning.models import (
     DailyPlan,
     EphemerisSnapshot,
@@ -71,11 +71,13 @@ class GenerateDailyPlan:
         start_utc, end_utc = night["start_utc"], night["end_utc"]
         mid_utc = _midpoint_iso(start_utc, end_utc)
 
-        meteo_payload = self.meteo.snapshot(
+        meteo_payload = self.meteo.forecast(
             latitude_deg=site.latitude_deg,
             longitude_deg=site.longitude_deg,
+            start_utc=start_utc,
+            end_utc=end_utc,
         )
-        meteo_ok, meteo_reason = evaluate_meteo(meteo_payload, site.meteo_thresholds)
+        meteo_ok, meteo_reason = evaluate_meteo_window(meteo_payload, site.meteo_thresholds)
         meteo_snap = self.archive.save_meteo_snapshot(
             MeteoSnapshot(
                 id=new_id(),
