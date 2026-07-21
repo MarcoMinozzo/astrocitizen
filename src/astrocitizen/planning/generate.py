@@ -30,7 +30,15 @@ def _midpoint_iso(start_utc: str, end_utc: str) -> str:
 def _shift_window(start: str, end: str, hours: float) -> tuple[str, str]:
     a = datetime.fromisoformat(start.replace("Z", "+00:00")) + timedelta(hours=hours)
     b = datetime.fromisoformat(end.replace("Z", "+00:00")) + timedelta(hours=hours)
-    fmt = lambda d: d.astimezone(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+    def fmt(d: datetime) -> str:
+        return (
+            d.astimezone(timezone.utc)
+            .replace(microsecond=0)
+            .isoformat()
+            .replace("+00:00", "Z")
+        )
+
     return fmt(a), fmt(b)
 
 

@@ -77,7 +77,15 @@ def test_night_window() -> None:
 
 
 def test_meteo_rules() -> None:
-    ok, _ = evaluate_meteo({"cloud_cover_pct": 10, "wind_ms": 2, "humidity_pct": 40, "precipitation": False}, None)
+    ok, _ = evaluate_meteo(
+        {
+            "cloud_cover_pct": 10,
+            "wind_ms": 2,
+            "humidity_pct": 40,
+            "precipitation": False,
+        },
+        None,
+    )
     assert ok
     bad, reason = evaluate_meteo(
         {"cloud_cover_pct": 80, "wind_ms": 2, "humidity_pct": 40, "precipitation": False},
@@ -87,7 +95,10 @@ def test_meteo_rules() -> None:
 
 
 def test_open_meteo_mock() -> None:
-    payload = b'{"current":{"cloud_cover":20,"wind_speed_10m":3.1,"relative_humidity_2m":55,"precipitation":0}}'
+    payload = (
+        b'{"current":{"cloud_cover":20,"wind_speed_10m":3.1,'
+        b'"relative_humidity_2m":55,"precipitation":0}}'
+    )
 
     class Resp:
         def read(self) -> bytes:

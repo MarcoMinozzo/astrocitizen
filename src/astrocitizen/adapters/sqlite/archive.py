@@ -14,6 +14,7 @@ from astrocitizen.adapters.sqlite.schema import (
     SCHEMA_VERSION,
 )
 from astrocitizen.inventory.models import Equipment, InstrumentConfig, Site
+from astrocitizen.observatory.models import ObservationRecord, Session
 from astrocitizen.planning.models import (
     DailyPlan,
     EphemerisSnapshot,
@@ -21,16 +22,16 @@ from astrocitizen.planning.models import (
     ObservationBlock,
     Target,
 )
-from astrocitizen.observatory.models import ObservationRecord, Session
-from astrocitizen.reduction.models import AnalysisProduct, CalibrationMaster
 from astrocitizen.programs.models import Program, ProgramTemplate
+from astrocitizen.reduction.models import AnalysisProduct, CalibrationMaster
 from astrocitizen.shared.errors import NotFoundError
 from astrocitizen.shared.ids import new_id
 from astrocitizen.shared.timeutil import utc_now_iso
+from astrocitizen.workspace.models import Workspace
+
 
 def new_id_local():
     return new_id()
-from astrocitizen.workspace.models import Workspace
 
 
 def _j(value: Any) -> str:

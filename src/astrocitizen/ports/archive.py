@@ -111,7 +111,9 @@ class ArchivePort(Protocol):
         night_date: str,
     ) -> DailyPlan | None: ...
 
-    def list_daily_plans(self, workspace_id: UUID, *, site_id: UUID | None = None) -> list[DailyPlan]: ...
+    def list_daily_plans(
+        self, workspace_id: UUID, *, site_id: UUID | None = None
+    ) -> list[DailyPlan]: ...
 
     def replace_observation_blocks(
         self,

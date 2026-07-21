@@ -143,7 +143,11 @@ class OpenMeteo:
             out["humidity_pct"] = max(r["humidity_pct"] for r in rows)
             out["precipitation"] = any(r["precipitation"] for r in rows)
             out["precipitation_mm"] = max(r["precipitation_mm"] for r in rows)
-            probs = [r["precip_probability_pct"] for r in rows if r["precip_probability_pct"] is not None]
+            probs = [
+                r["precip_probability_pct"]
+                for r in rows
+                if r["precip_probability_pct"] is not None
+            ]
             out["precip_probability_pct"] = max(probs) if probs else None
             # dew margin: min (temp - dewpoint)
             margins = [

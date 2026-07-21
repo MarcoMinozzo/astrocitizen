@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any
 
-
 DEFAULT_THRESHOLDS = {
     "max_cloud_cover_pct": 50.0,
     "max_wind_ms": 12.0,

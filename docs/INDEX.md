@@ -38,6 +38,7 @@
 | [ARQUITETURA_SAAS_DESKTOP.md](ARQUITETURA_SAAS_DESKTOP.md) | Dois módulos: cloud (workspace, BD, análise) e desktop (observatório) |
 | [AVALIACAO_STACK_MOTORSPORT.md](AVALIACAO_STACK_MOTORSPORT.md) | Stack motorsport → AstroCitizen; BDaaS |
 | [COMPARACAO_DESKTOP_TAURI_VS_PYSIDE.md](COMPARACAO_DESKTOP_TAURI_VS_PYSIDE.md) | Desktop: PySide6 vs Tauri+sidecar |
+| [../packaging/README.md](../packaging/README.md) | PyInstaller `.exe` Windows (AC-075/076) |
 | [API_ALVO.md](API_ALVO.md) | Contratos REST Desktop ↔ SaaS |
 | [MODELO_DE_SINCRONIZACAO.md](MODELO_DE_SINCRONIZACAO.md) | Offline-first, fila, conflitos |
 

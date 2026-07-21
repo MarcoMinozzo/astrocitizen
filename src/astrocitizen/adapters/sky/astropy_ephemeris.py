@@ -106,7 +106,12 @@ class AstropyEphemeris:
             cur_t, cur_a = alts[i]
             if night_start is None and prev_a >= sun_alt_limit and cur_a < sun_alt_limit:
                 night_start = cur_t
-            if night_start is not None and night_end is None and prev_a < sun_alt_limit and cur_a >= sun_alt_limit:
+            if (
+                night_start is not None
+                and night_end is None
+                and prev_a < sun_alt_limit
+                and cur_a >= sun_alt_limit
+            ):
                 night_end = cur_t
                 break
 

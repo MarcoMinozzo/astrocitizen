@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
 from uuid import UUID
 
@@ -11,7 +10,6 @@ from astropy.io import fits
 
 from astrocitizen.adapters.fs import LocalArtifactStore
 from astrocitizen.reduction.models import AnalysisProduct
-from astrocitizen.shared.errors import DomainError
 from astrocitizen.shared.ids import new_id
 from astrocitizen.shared.timeutil import utc_now_iso
 

@@ -38,8 +38,8 @@ class SimbadResolver:
                 break
         if ra is None or dec is None:
             # Sexagesimal fallback via SkyCoord if available
-            from astropy.coordinates import SkyCoord
             import astropy.units as u
+            from astropy.coordinates import SkyCoord
 
             ra_str = str(row["ra"] if "ra" in result.colnames else row["RA"])
             dec_str = str(row["dec"] if "dec" in result.colnames else row["DEC"])

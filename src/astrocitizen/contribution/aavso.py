@@ -22,8 +22,8 @@ def format_aavso_extended(
     lines = [
         "#TYPE=EXTENDED",
         f"#OBSCODE={observer_code}",
-        f"#SOFTWARE=AstroCitizen/0.0.1",
-        f"#DELIM=,",
+        "#SOFTWARE=AstroCitizen/0.0.1",
+        "#DELIM=,",
         f"#DATE={utc_now_iso()}",
         f"#NAME={star_name}",
         "#OBSTYPE=CCD",

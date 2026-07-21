@@ -12,17 +12,17 @@ from astrocitizen.adapters.hardware import create_camera
 from astrocitizen.adapters.meteo import ManualMeteo, OpenMeteo, RainViewerRadar
 from astrocitizen.adapters.sky import AstropyEphemeris, SimbadResolver
 from astrocitizen.adapters.sqlite import SqliteArchive
-from astrocitizen.inventory.models import Equipment, Site
-from astrocitizen.observatory import CaptureObservation, ExecuteSession
-from astrocitizen.reduction import ApplyCalibration, BuildMaster, fits_stats
 from astrocitizen.analysis import AperturePhotometry
 from astrocitizen.contribution.aavso import ExportAavso
-from astrocitizen.programs.workflows import workflow_for, P1_WORKFLOWS
 from astrocitizen.desktop import run_gui
+from astrocitizen.inventory.models import Equipment, Site
+from astrocitizen.observatory import CaptureObservation, ExecuteSession
 from astrocitizen.planning import EditDailyPlan, GenerateDailyPlan, Target
 from astrocitizen.planning.meteo_rules import evaluate_meteo_window
 from astrocitizen.programs.models import Program
 from astrocitizen.programs.seed import seed_program_templates
+from astrocitizen.programs.workflows import P1_WORKFLOWS, workflow_for
+from astrocitizen.reduction import ApplyCalibration, BuildMaster, fits_stats
 from astrocitizen.shared import CONTEXT_MODULES
 from astrocitizen.shared.ids import new_id
 from astrocitizen.shared.paths import default_artifacts_root, default_db_path
@@ -540,7 +540,8 @@ def _cmd_meteo_radar(args: argparse.Namespace) -> int:
         size=args.size,
         out_path=out,
     )
-    uri = store.put(Path(meta["image_path"]), key=f"radar/{site.id}/{Path(meta['image_path']).name}")
+    img = Path(meta["image_path"])
+    uri = store.put(img, key=f"radar/{site.id}/{img.name}")
     print(f"site={site.name}\tlat={site.latitude_deg}\tlon={site.longitude_deg}")
     print(f"path={meta['image_path']}\turi={uri}\tbytes={meta['bytes']}")
     print(f"radar_time={meta['radar_time']}\t{meta['attribution']}")

@@ -76,7 +76,7 @@ def plan_status_text(plan: Any | None, blocks: list[Any]) -> str:
 
 def build_night_dashboard(parent: Any | None = None) -> Any:
     """Devolve a classe NightDashboard (requer PySide6)."""
-    from PySide6.QtCore import Qt, QDate
+    from PySide6.QtCore import QDate, Qt
     from PySide6.QtGui import QPixmap
     from PySide6.QtWidgets import (
         QComboBox,
@@ -258,7 +258,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                     f"{meta.get('attribution', '')}<br>"
                     f"<small>{meta.get('image_path')}</small>"
                 )
-            except Exception as exc:  # noqa: BLE001 — UI boundary
+            except Exception as exc:  # noqa: BLE001 - UI boundary
                 self.summary.setPlainText(f"erro: {exc}")
                 QMessageBox.critical(self, "Noite", str(exc))
             finally:

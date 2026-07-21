@@ -6,7 +6,6 @@ from uuid import UUID
 
 from astrocitizen.inventory.models import Equipment, InstrumentConfig
 
-
 REQUIRED_ROLES = ("camera", "mount")
 
 
