@@ -306,3 +306,4 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | Arquitetura | ARQUITETURA.md |
 | BD | PERSISTENCIA_E_BANCOS.md |
 | Stack | STACK_TECNOLOGICA.md |
+| Atlas de reporte | atlas/ATLAS_REPORTE_OBSERVACOES.md |

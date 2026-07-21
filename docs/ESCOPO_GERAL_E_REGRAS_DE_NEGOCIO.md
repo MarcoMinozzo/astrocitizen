@@ -208,6 +208,7 @@ Convenção: **RN-XXX** — obrigatórias salvo indicação “desejável”.
 | RN-080 | Exportação para rede só é permitida se o ProdutoAnalise atender o **produto mínimo** do programa (RN-043). |
 | RN-081 | Cada ContribuicaoRede registra status `rascunho` \| `validado` \| `exportado` \| `enviado` \| `rejeitado`. |
 | RN-082 | Credenciais de redes não ficam em texto claro no repositório de dados do projeto; uso de segredo local do usuário. |
+| RN-083 | Formatos, formulários e campos de reporte seguem o **atlas interno** `docs/atlas/ATLAS_REPORTE_OBSERVACOES.md` (fontes oficiais). |
 
 ### 6.10 Hardware e execução
 

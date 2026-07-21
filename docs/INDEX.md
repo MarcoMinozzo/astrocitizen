@@ -16,6 +16,13 @@
 | [REVISAO_ASTRONOMIA_OBSERVACIONAL.md](REVISAO_ASTRONOMIA_OBSERVACIONAL.md) | Revisão da literatura |
 | [LITERATURA_INDICE.md](LITERATURA_INDICE.md) | Literatura → módulos |
 
+## Reporte às redes (atlas)
+
+| Doc | Descrição |
+|-----|-----------|
+| [atlas/ATLAS_REPORTE_OBSERVACOES.md](atlas/ATLAS_REPORTE_OBSERVACOES.md) | Formulários, formatos e dados oficiais por rede |
+| [atlas/README.md](atlas/README.md) | Índice do atlas |
+
 ## Tecnologia e dados
 
 | Doc | Descrição |

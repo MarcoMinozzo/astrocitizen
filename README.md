@@ -24,6 +24,7 @@ Fase **0 — especificação**: documentação de domínio, escopo, regras de ne
 |-----------|----------|
 | [docs/INDEX.md](docs/INDEX.md) | Índice da documentação |
 | [docs/PRODUCT_BACKLOG.md](docs/PRODUCT_BACKLOG.md) | **Backlog do produto** |
+| [docs/atlas/ATLAS_REPORTE_OBSERVACOES.md](docs/atlas/ATLAS_REPORTE_OBSERVACOES.md) | **Atlas de reporte** (formatos oficiais por rede) |
 | [docs/ARQUITETURA.md](docs/ARQUITETURA.md) | Arquitetura (hexagonal + monólito modular + DDD) |
 | [docs/PLATAFORMA_OBSERVACIONAL.md](docs/PLATAFORMA_OBSERVACIONAL.md) | Visão e roadmap |
 | [docs/ESCOPO_GERAL_E_REGRAS_DE_NEGOCIO.md](docs/ESCOPO_GERAL_E_REGRAS_DE_NEGOCIO.md) | Escopo geral + regras RN-* |
