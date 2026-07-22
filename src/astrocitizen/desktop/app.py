@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import Any
 
 
 def run_gui(db_path: str | None = None) -> int:
@@ -181,6 +182,24 @@ def run_gui(db_path: str | None = None) -> int:
             arquivo_page = self._table_page()
             self.pages["Arquivo"] = arquivo_page
 
+            ser_hint = self._placeholder_page(
+                "Video / SER",
+                "Video de ocultacao: Observatorio → Timing (anexar SER/AVI + LC). "
+                "Cubos speckle: tab Especialidades neste hub Importar. "
+                "CLI: observe occultation --video · import speckle.",
+            )
+
+            # U2: Import hub = todos os canais IN-* de ficheiro
+            self.import_hub = TabHub(
+                title="",
+                tabs=[
+                    ("FITS", self.import_panel),
+                    ("Radio", self.radio_panel),
+                    ("Especialidades", self.specialty_panel),
+                    ("Video / SER", ser_hint),
+                ],
+            )
+
             # Noite = meteo + planos embutidos
             self.noite_hub = TabHub(
                 title="",
@@ -192,28 +211,35 @@ def run_gui(db_path: str | None = None) -> int:
 
             self.observatorio = TabHub(
                 title="Observatorio",
-                hint="Sessao, importacao e canais de entrada da noite.",
+                hint="Sessao, importacao unificada e canais da noite.",
                 tabs=[
                     ("Sessao", self.session_panel),
-                    ("Importar", self.import_panel),
+                    ("Importar", self.import_hub),
                     ("Observar", self.observe_panel),
                     ("Timing", self.timing_panel),
                 ],
             )
 
-            analyze_placeholder = self._placeholder_page(
-                "Analise (CLI bridge)",
-                "Fotometria, espectro e astrometria ainda via CLI "
-                "(analyze photometry|spectrum|plate-solve|blink). "
-                "GUI completa = fase U3/U4.",
+            photo_ph = self._placeholder_page(
+                "Fotometria",
+                "CLI: astrocitizen analyze photometry. GUI = U3/U4.",
+            )
+            spec_ph = self._placeholder_page(
+                "Espectro",
+                "CLI: astrocitizen analyze spectrum | spectrum-report. GUI = U3/U4.",
+            )
+            astrom_ph = self._placeholder_page(
+                "Astrometria / Blink",
+                "CLI: astrocitizen analyze plate-solve | blink. GUI = U3/U4.",
             )
             self.analisar = TabHub(
                 title="Analisar",
-                hint="Produtos e series; bridges CLI ate U4.",
+                hint="Reducao e produtos; bridges CLI ate U4. "
+                "Entrada de dados em Observatorio/Importar.",
                 tabs=[
-                    ("Fotometria / Astrom", analyze_placeholder),
-                    ("Radio", self.radio_panel),
-                    ("Especialidades", self.specialty_panel),
+                    ("Fotometria", photo_ph),
+                    ("Espectro", spec_ph),
+                    ("Astrometria", astrom_ph),
                 ],
             )
 
@@ -238,6 +264,8 @@ def run_gui(db_path: str | None = None) -> int:
 
             self.nav.currentRowChanged.connect(self._on_nav)
             self.nav.setCurrentRow(0)
+            self.context.site_changed.connect(self._on_shell_site)
+            self.context.program_changed.connect(self._on_shell_program)
             # Preferencia visao noturna (apos widgets criados)
             if load_night_vision_pref():
                 self.nv_btn.blockSignals(True)
@@ -256,6 +284,36 @@ def run_gui(db_path: str | None = None) -> int:
             if self._app is not None:
                 apply_theme(self._app, night_vision=enabled)
 
+        def _context_panels(self) -> list[Any]:
+            return [
+                self.import_panel,
+                self.radio_panel,
+                self.specialty_panel,
+                self.timing_panel,
+                self.session_panel,
+                self.observe_panel,
+            ]
+
+        def _sync_shell_context(self) -> None:
+            sid = self.context.site.currentData()
+            pid = self.context.program.currentData()
+            for panel in self._context_panels():
+                fn = getattr(panel, "set_shell_context", None)
+                if callable(fn):
+                    fn(site_id=sid, program_id=pid)
+
+        def _on_shell_site(self, site_id: object) -> None:
+            for panel in self._context_panels():
+                fn = getattr(panel, "set_shell_context", None)
+                if callable(fn):
+                    fn(site_id=site_id, program_id=self.context.program.currentData())
+
+        def _on_shell_program(self, program_id: object) -> None:
+            for panel in self._context_panels():
+                fn = getattr(panel, "set_shell_context", None)
+                if callable(fn):
+                    fn(site_id=self.context.site.currentData(), program_id=program_id)
+
         def _on_entities_changed(self) -> None:
             self.night.load_sites()
             self.import_panel.load_workspace()
@@ -271,6 +329,7 @@ def run_gui(db_path: str | None = None) -> int:
             self.specialty_panel.reload()
             self._reload_context()
             self._fill_arquivo_and_planos()
+            self._sync_shell_context()
 
         def _on_nav(self, index: int) -> None:
             self.stack.setCurrentIndex(index)
@@ -399,6 +458,7 @@ def run_gui(db_path: str | None = None) -> int:
             self.specialty_panel.reload()
             self._reload_context()
             self._fill_arquivo_and_planos()
+            self._sync_shell_context()
 
     db = Path(db_path) if db_path else default_db_path()
     archive = SqliteArchive(db)

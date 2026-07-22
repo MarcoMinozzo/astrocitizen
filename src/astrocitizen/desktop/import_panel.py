@@ -129,6 +129,14 @@ def build_import_dashboard(parent: Any | None = None) -> Any:
             for p in self._programs:
                 self.program_combo.addItem(f"{p.template_id} | {p.name}", p.id)
 
+        def set_shell_context(
+            self, *, site_id: object = None, program_id: object = None
+        ) -> None:
+            from astrocitizen.desktop.widgets import select_combo_data
+
+            select_combo_data(self.site_combo, site_id)
+            select_combo_data(self.program_combo, program_id)
+
         def _browse_file(self) -> None:
             path, _ = QFileDialog.getOpenFileName(
                 self,

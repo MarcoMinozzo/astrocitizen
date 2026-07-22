@@ -45,6 +45,19 @@ def refill_program_combo(
             combo.setCurrentIndex(i)
 
 
+def select_combo_data(combo: Any, data: object) -> bool:
+    """Selecciona item por userData; True se encontrado."""
+    if combo is None:
+        return False
+    i = combo.findData(data)
+    if i < 0:
+        return False
+    combo.blockSignals(True)
+    combo.setCurrentIndex(i)
+    combo.blockSignals(False)
+    return True
+
+
 def build_shared_widgets() -> dict[str, type]:
     """Factories Qt: PathBrowseRow, ContextBar, TabHub (requer PySide6)."""
     from PySide6.QtCore import Signal

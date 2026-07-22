@@ -104,6 +104,16 @@ def build_observe_dashboard() -> type:
             refill(self.v_prog, progs, lambda p: f"{p.template_id} · {p.name}")
             refill(self.v_target, targets, lambda t: t.designation)
 
+        def set_shell_context(
+            self, *, site_id: object = None, program_id: object = None
+        ) -> None:
+            from astrocitizen.desktop.widgets import select_combo_data
+
+            for combo in (self.s_site, self.v_site):
+                select_combo_data(combo, site_id)
+            for combo in (self.s_prog, self.v_prog):
+                select_combo_data(combo, program_id)
+
         def _tab_solar(self) -> QWidget:
             w = QWidget()
             form = QFormLayout(w)

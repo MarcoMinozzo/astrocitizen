@@ -1,6 +1,6 @@
 # Desktop UI — informacao architecture e design
 
-**Status:** U0+U1 implementados (nav 6 areas) · U2–U4 abertos  
+**Status:** U0–U2 implementados · U3–U4 abertos  
 **Data:** 2026-07-22  
 **Codigo actual:** `src/astrocitizen/desktop/` · tema `theme.py` · widgets `widgets.py`  
 **Fontes:** [WORKFLOWS.md](WORKFLOWS.md) §3–4, [ENTRADA_OBSERVACOES_POR_PO.md](ENTRADA_OBSERVACOES_POR_PO.md) §5–7, [SPRINT_UX_SHELL.md](SPRINT_UX_SHELL.md), [SPRINT_DESKTOP_UI_U0_U1.md](SPRINT_DESKTOP_UI_U0_U1.md)
@@ -26,13 +26,13 @@ O tema ops (navy + amber, IBM Plex, brand bar) e **bom suficiente** como base vi
 | Nav (6 areas) | Conteudo | Nota |
 |---------------|----------|------|
 | Noite | Meteo/radar + tab Planos | Hub |
-| Observatorio | Sessao \| Importar \| Observar \| Timing | Hub tabs |
-| Analisar | Placeholder CLI + Radio + Especialidades | U3/U4 |
+| Observatorio | Sessao \| **Importar** (FITS/Radio/Espec./SER) \| Observar \| Timing | Hub |
+| Analisar | Fotometria \| Espectro \| Astrometria (CLI bridges) | U3/U4 |
 | Contribuir | `contribute.py` | Como antes |
 | Arquivo | stub tabela obs | U3 |
 | Configurar | Sites \| Equip \| Programas \| Alvos | Hub tabs |
 
-Tokens: `COLORS` + `brandBar` / `contextBar` no stylesheet. Context bar global no shell.
+Tokens: `COLORS` + `brandBar` / `contextBar` + visao noturna. ContextBar sincroniza Site/Programa nos paineis.
 
 ---
 
@@ -99,8 +99,8 @@ Botao **Visao noturna** na brand bar (checkable). Aplica `NIGHT_VISION_COLORS` v
 |------|---------|---------------|
 | **U0** | Doc + extrair widgets partilhados | ✅ `desktop/widgets.py` |
 | **U1** | Nav 6 areas + Observatorio/Configurar/Analisar hubs | ✅ shell `app.py` |
-| **U2** | Import hub (FITS/Radio/SER/Echelle/Speckle/Polar) | Nao |
-| **U3** | Arquivo rico + shell Analisar (CLI bridge) | Minimo (placeholder ja em Analisar) |
+| **U2** | Import hub (FITS/Radio/SER/Echelle/Speckle/Polar) | ✅ Observatorio→Importar + ContextBar sync |
+| **U3** | Arquivo rico + shell Analisar (CLI bridge) | Minimo (tabs Analisar prontas) |
 | **U4** | Viewer FITS / plots nas tabs Analisar | Sim (AC-062 GUI) |
 
 ## Aceite U1
@@ -112,9 +112,16 @@ Botao **Visao noturna** na brand bar (checkable). Aplica `NIGHT_VISION_COLORS` v
 - [x] Theme tokens brandBar + contextBar no stylesheet  
 - [x] Testes `test_desktop_ui_u0_u1.py`  
 
+## Aceite U2
+
+- [x] Import hub com FITS / Radio / Especialidades / Video-SER  
+- [x] Analisar so reducao (sem Radio/Espec. como entrada)  
+- [x] ContextBar → `set_shell_context` nos paineis de observatorio  
+
 ## Historico
 
 | Ver. | Data | Nota |
 |------|------|------|
 | 1.0 | 2026-07-22 | Estudo pos-ENTRADA; proposta 6 areas + roadmap U0–U4 |
 | 1.1 | 2026-07-22 | U0+U1 implementados (widgets + nav 6 areas) |
+| 1.2 | 2026-07-22 | U2 Import hub + ContextBar sync |

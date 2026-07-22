@@ -180,6 +180,14 @@ def build_timing_dashboard() -> type:
                 if i >= 0:
                     self.program.setCurrentIndex(i)
 
+        def set_shell_context(
+            self, *, site_id: object = None, program_id: object = None
+        ) -> None:
+            from astrocitizen.desktop.widgets import select_combo_data
+
+            select_combo_data(self.site, site_id)
+            select_combo_data(self.program, program_id)
+
         def _browse_pred(self) -> None:
             path, _ = QFileDialog.getOpenFileName(
                 self,

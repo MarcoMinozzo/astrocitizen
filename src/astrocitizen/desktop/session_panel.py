@@ -173,6 +173,14 @@ def build_session_dashboard() -> type:
             elif not sessions:
                 self.status.setText("Sem sessao. Escolha site/programa/alvo e Iniciar.")
 
+        def set_shell_context(
+            self, *, site_id: object = None, program_id: object = None
+        ) -> None:
+            from astrocitizen.desktop.widgets import select_combo_data
+
+            select_combo_data(self.site_combo, site_id)
+            select_combo_data(self.program_combo, program_id)
+
         def _start(self) -> None:
             ws = self.archive.list_workspaces()
             if not ws:

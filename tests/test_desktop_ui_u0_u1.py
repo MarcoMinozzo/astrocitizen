@@ -67,6 +67,32 @@ def test_refill_program_combo() -> None:
     assert combo._index == 1
 
 
+def test_select_combo_data() -> None:
+    from astrocitizen.desktop.widgets import select_combo_data
+
+    class _C:
+        def __init__(self) -> None:
+            self.items = [("a", 1), ("b", 2)]
+            self._i = 0
+
+        def findData(self, data: object) -> int:
+            for i, (_, d) in enumerate(self.items):
+                if d == data:
+                    return i
+            return -1
+
+        def blockSignals(self, *_a: object) -> None:
+            return None
+
+        def setCurrentIndex(self, i: int) -> None:
+            self._i = i
+
+    c = _C()
+    assert select_combo_data(c, 2) is True
+    assert c._i == 1
+    assert select_combo_data(c, 99) is False
+
+
 def test_build_shared_widgets_callable() -> None:
     from astrocitizen.desktop.widgets import build_shared_widgets
 
