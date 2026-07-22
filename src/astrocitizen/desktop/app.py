@@ -196,7 +196,14 @@ def run_gui(db_path: str | None = None) -> int:
             self.specialty_panel = SpecialtyDashboard(
                 archive, artifacts_root=arts, on_changed=on_ch
             )
-            self.archive_panel = ArchiveDashboard(archive, on_changed=on_ch)
+            self.archive_panel = ArchiveDashboard(
+                archive,
+                artifacts_root=arts,
+                on_changed=on_ch,
+                on_contribute=lambda network=None, product_id=None: self._navigate_to(
+                    "Contribuir", network=network, product_id=product_id
+                ),
+            )
             self.analyze_panel = AnalyzeDashboard(
                 archive, artifacts_root=arts, on_changed=on_ch
             )
@@ -373,6 +380,7 @@ def run_gui(db_path: str | None = None) -> int:
             hub_tab: str | None = None,
             analyze_tab: str | None = None,
             network: str | None = None,
+            product_id: str | None = None,
         ) -> None:
             if not area:
                 return
@@ -396,7 +404,7 @@ def run_gui(db_path: str | None = None) -> int:
             elif area == "Contribuir":
                 fn = getattr(self.contribute, "focus_network", None)
                 if callable(fn):
-                    fn(network)
+                    fn(network, product_id=product_id)
 
         def _sync_shell_context(self) -> None:
             sid = self.context.site.currentData()

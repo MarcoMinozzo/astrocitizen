@@ -21,7 +21,7 @@ A shell cresceu por sprint de entrada; U0–U4 reorganizaram IA, hubs e Analisar
 | Observatorio | Programa activo \| Sessao \| Importar \| Observar \| Timing | Guia PO-* |
 | Analisar | Fotometria \| Espectro \| Blink/Astrom (+ plate-solve + medida) \| Viewer \| Curvas | Bridges AC-110/111 GUI |
 | Contribuir | Redes | |
-| Arquivo | Observacoes + Produtos + detalhe/plot | U3+U5 |
+| Arquivo | Observacoes + Produtos + detalhe/plot + abrir/export | U3+U5+abrir |
 | Configurar | Sites \| Equip \| Programas \| Alvos \| Preferencias \| Ajuda | + idioma RN-120 |
 
 Extras: ContextBar sync Site/Programa; Visao noturna (vermelho).
@@ -48,7 +48,6 @@ Mantidos: 4 modos WORKFLOWS, 7 superficies ENTRADA, ops first, CLI=espelho, tema
 ## Melhorias futuras (fora deste epic UX)
 
 - Ocultar combos locais quando ContextBar activo  
-- Arquivo: abrir artefacto no OS / export directo (sem so hint CLI)  
 - Enrollment multi-observador / membership de programas partilhados  
 
 ## Historico
@@ -64,3 +63,4 @@ Mantidos: 4 modos WORKFLOWS, 7 superficies ENTRADA, ops first, CLI=espelho, tema
 | 1.6 | 2026-07-22 | Painel Programa activo (guia + Contribuir) |
 | 1.7 | 2026-07-22 | RN-120/121 i18n pt/es/en + Ajuda in-app |
 | 1.8 | 2026-07-22 | Medida astrometria GUI (x,y → RA/Dec) |
+| 1.9 | 2026-07-22 | Arquivo: abrir artefacto + export directo |

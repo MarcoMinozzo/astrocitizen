@@ -1,8 +1,9 @@
-"""Painel Arquivo: observacoes + produtos + detalhe/plot (U3/U5)."""
+"""Painel Arquivo: observacoes + produtos + detalhe/plot + abrir/export (U3/U5+)."""
 
 from __future__ import annotations
 
-from typing import Any
+from pathlib import Path
+from typing import Any, Callable
 from uuid import UUID
 
 
@@ -46,14 +47,17 @@ def product_full_ids(products: list[Any], *, limit: int = 200) -> list[str]:
 
 
 def build_archive_dashboard() -> type:
-    from PySide6.QtCore import Qt
-    from PySide6.QtGui import QGuiApplication
+    from PySide6.QtCore import Qt, QUrl
+    from PySide6.QtGui import QDesktopServices, QGuiApplication
     from PySide6.QtWidgets import (
         QCheckBox,
         QComboBox,
+        QFileDialog,
         QHBoxLayout,
+        QInputDialog,
         QLabel,
         QLineEdit,
+        QMenu,
         QMessageBox,
         QPushButton,
         QSplitter,
@@ -61,24 +65,48 @@ def build_archive_dashboard() -> type:
         QTableWidgetItem,
         QTabWidget,
         QTextEdit,
+        QToolButton,
         QVBoxLayout,
         QWidget,
     )
 
+    from astrocitizen.adapters.fs import LocalArtifactStore
+    from astrocitizen.contribution.aavso import ExportAavso
+    from astrocitizen.contribution.bess import annotate_existing_fits
+    from astrocitizen.contribution.credentials import LocalCredentialsStore
+    from astrocitizen.contribution.exoclock import ExportExoclock
+    from astrocitizen.contribution.models import NetworkSubmission
+    from astrocitizen.contribution.solar import ExportSolarReport
     from astrocitizen.desktop.plot_widget import build_series_plot
     from astrocitizen.desktop.series import (
+        cli_export_hint,
+        export_networks_for_type,
         format_product_detail,
+        primary_artifact_refs,
+        resolve_openable_path,
         series_from_measurement_points,
     )
+    from astrocitizen.shared.ids import new_id
+    from astrocitizen.shared.paths import default_artifacts_root
 
     SeriesPlot = build_series_plot()
 
     class ArchiveDashboard(QWidget):
-        def __init__(self, archive: Any, *, on_changed: Any | None = None) -> None:
+        def __init__(
+            self,
+            archive: Any,
+            *,
+            artifacts_root: Path | None = None,
+            on_changed: Any | None = None,
+            on_contribute: Callable[..., Any] | None = None,
+        ) -> None:
             super().__init__()
             self.archive = archive
+            self.artifacts_root = Path(artifacts_root or default_artifacts_root())
             self.on_changed = on_changed
+            self.on_contribute = on_contribute
             self._product_ids: list[str] = []
+            self.creds = LocalCredentialsStore()
 
             root = QVBoxLayout(self)
             root.setContentsMargins(16, 12, 16, 12)
@@ -153,11 +181,19 @@ def build_archive_dashboard() -> type:
             self.btn_copy = QPushButton("Copiar UUID")
             self.btn_copy.setObjectName("secondaryBtn")
             self.btn_copy.clicked.connect(self._copy_product_id)
-            self.btn_export = QPushButton("Hint export")
+            self.btn_open = QPushButton("Abrir artefacto")
+            self.btn_open.clicked.connect(self._open_artifact)
+            self.btn_export = QToolButton()
+            self.btn_export.setText("Exportar")
+            self.btn_export.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
             self.btn_export.setObjectName("secondaryBtn")
-            self.btn_export.clicked.connect(self._export_hint)
+            self.btn_cli = QPushButton("Ver CLI")
+            self.btn_cli.setObjectName("secondaryBtn")
+            self.btn_cli.clicked.connect(self._export_hint)
             actions.addWidget(self.btn_copy)
+            actions.addWidget(self.btn_open)
             actions.addWidget(self.btn_export)
+            actions.addWidget(self.btn_cli)
             actions.addStretch(1)
             dv.addLayout(actions)
             self.detail = QTextEdit()
@@ -178,6 +214,7 @@ def build_archive_dashboard() -> type:
             self.status = QLabel("")
             self.status.setObjectName("emptyState")
             root.addWidget(self.status)
+            self._rebuild_export_menu(None)
 
         def _workspace(self):
             ws = self.archive.list_workspaces()
@@ -220,11 +257,54 @@ def build_archive_dashboard() -> type:
             pid = item.data(Qt.ItemDataRole.UserRole)
             return str(pid) if pid else None
 
+        def _selected_product(self) -> Any | None:
+            pid = self._selected_product_id()
+            if not pid:
+                return None
+            try:
+                return self.archive.get_analysis_product(UUID(pid))
+            except (ValueError, TypeError):
+                return None
+
+        def _rebuild_export_menu(self, product: Any | None) -> None:
+            menu = QMenu(self)
+            ptype = getattr(product, "product_type", None) if product else None
+            nets = export_networks_for_type(str(ptype or ""))
+            labels = {
+                "aavso": "AAVSO Extended",
+                "exoclock": "ExoClock CSV",
+                "bess": "BeSS FITS",
+                "solar": "Relatorio solar",
+                "mpc": "Abrir Contribuir (MPC)",
+                "tns": "Abrir Contribuir (TNS)",
+            }
+            direct = {"aavso", "exoclock", "bess", "solar"}
+            for net in nets:
+                label = labels.get(net, net)
+                if net in direct:
+                    menu.addAction(
+                        label,
+                        lambda n=net: self._export_network(n),
+                    )
+                else:
+                    menu.addAction(
+                        label,
+                        lambda n=net: self._goto_contribute(n),
+                    )
+            if nets:
+                menu.addSeparator()
+            menu.addAction(
+                "Abrir em Contribuir...",
+                lambda: self._goto_contribute(nets[0] if nets else None),
+            )
+            self.btn_export.setMenu(menu)
+
         def _on_product_selected(self) -> None:
             pid = self._selected_product_id()
             if not pid:
                 self.detail.clear()
                 self.plot.clear()
+                self._rebuild_export_menu(None)
                 return
             try:
                 product = self.archive.get_analysis_product(UUID(pid))
@@ -233,7 +313,9 @@ def build_archive_dashboard() -> type:
             if product is None:
                 self.detail.setPlainText(f"Produto nao encontrado: {pid}")
                 self.plot.clear()
+                self._rebuild_export_menu(None)
                 return
+            self._rebuild_export_menu(product)
             points = self.archive.list_measurement_points(UUID(pid))
             self.detail.setPlainText(
                 format_product_detail(product, n_points=len(points))
@@ -258,20 +340,217 @@ def build_archive_dashboard() -> type:
             QGuiApplication.clipboard().setText(pid)
             self.status.setText(f"UUID copiado: {pid}")
 
+        def _open_artifact(self) -> None:
+            product = self._selected_product()
+            if product is None:
+                QMessageBox.information(self, "Arquivo", "Selecione um produto.")
+                return
+            refs = primary_artifact_refs(product)
+            if not refs:
+                QMessageBox.information(
+                    self, "Arquivo", "Produto sem URI/path de artefacto."
+                )
+                return
+            opened = False
+            last_err = ""
+            for label, ref in refs:
+                path = resolve_openable_path(ref, store_root=self.artifacts_root)
+                if path is None:
+                    last_err = f"{label}: nao resolvido ({ref})"
+                    continue
+                ok = QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
+                if ok:
+                    self.status.setText(f"Aberto: {label} → {path.name}")
+                    opened = True
+                    break
+                last_err = f"{label}: SO recusou abrir {path}"
+            if not opened:
+                QMessageBox.warning(
+                    self,
+                    "Abrir artefacto",
+                    last_err or "Nenhum artefacto abrivel.",
+                )
+
+        def _goto_contribute(self, network: str | None) -> None:
+            pid = self._selected_product_id()
+            if not pid:
+                QMessageBox.information(self, "Arquivo", "Selecione um produto.")
+                return
+            if callable(self.on_contribute):
+                self.on_contribute(network=network, product_id=pid)
+                self.status.setText(f"Contribuir ← {pid[:8]}…")
+            else:
+                QMessageBox.information(
+                    self,
+                    "Contribuir",
+                    f"Product UUID: {pid}\nRede: {network or '(escolher)'}",
+                )
+
         def _export_hint(self) -> None:
             pid = self._selected_product_id()
             if not pid:
                 QMessageBox.information(self, "Arquivo", "Selecione um produto.")
                 return
-            tip = (
-                "Export / contribuicao via CLI (espelho da GUI):\n\n"
-                f"  astrocitizen contribute aavso --product {pid} "
-                "--star NAME --out ./aavso.txt\n"
-                f"  astrocitizen contribute exoclock --product {pid} --out ./exo.csv\n"
-                f"  astrocitizen contribute solar --product {pid} --out ./solar/\n\n"
-                "Ajuste a rede e flags (--star, --out, ...) conforme o tipo."
+            product = self._selected_product()
+            ptype = getattr(product, "product_type", None) if product else None
+            QMessageBox.information(
+                self, "Ver CLI", cli_export_hint(pid, str(ptype) if ptype else None)
             )
-            QMessageBox.information(self, "Hint export", tip)
+
+        def _save_submission(
+            self,
+            *,
+            network: str,
+            out: Path,
+            product_id: UUID,
+            summary: dict[str, Any],
+        ) -> None:
+            ws = self._workspace()
+            if ws is None:
+                return
+            store = LocalArtifactStore(self.artifacts_root)
+            uri = store.put(out, key=f"export/{network}/{out.name}")
+            sub = NetworkSubmission(
+                id=new_id(),
+                workspace_id=ws.id,
+                network=network,
+                status="draft",
+                artifact_uri=uri,
+                product_id=product_id,
+                payload_summary=summary,
+            )
+            self.archive.save_network_submission(sub)
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(out)))
+            self.status.setText(f"Export {network}: {out}")
+            if self.on_changed:
+                self.on_changed()
+
+        def _export_network(self, network: str) -> None:
+            product = self._selected_product()
+            if product is None:
+                QMessageBox.information(self, "Arquivo", "Selecione um produto.")
+                return
+            pid = UUID(str(product.id))
+            try:
+                if network == "aavso":
+                    self._export_aavso(pid)
+                elif network == "exoclock":
+                    self._export_exoclock(pid)
+                elif network == "bess":
+                    self._export_bess(product, pid)
+                elif network == "solar":
+                    self._export_solar(pid)
+                else:
+                    self._goto_contribute(network)
+            except Exception as exc:  # noqa: BLE001 - UI boundary
+                QMessageBox.critical(self, "Exportar", str(exc))
+
+        def _export_aavso(self, pid: UUID) -> None:
+            obscode = self.creds.get_network("aavso").get("obscode") or ""
+            star, ok = QInputDialog.getText(self, "AAVSO", "Star name:", text="UNKNOWN")
+            if not ok or not star.strip():
+                return
+            if not obscode:
+                obscode, ok = QInputDialog.getText(self, "AAVSO", "OBSCODE:")
+                if not ok or not obscode.strip():
+                    return
+            default = self.artifacts_root / "export" / "aavso" / f"{pid}.txt"
+            path, _ = QFileDialog.getSaveFileName(
+                self, "Guardar AAVSO", str(default), "Text (*.txt)"
+            )
+            if not path:
+                return
+            out = Path(path)
+            ExportAavso(self.archive).execute(
+                product_id=pid,
+                star_name=star.strip(),
+                observer_code=str(obscode).strip(),
+                out_path=out,
+            )
+            self._save_submission(
+                network="aavso",
+                out=out,
+                product_id=pid,
+                summary={"star": star.strip(), "note": "Arquivo GUI"},
+            )
+
+        def _export_exoclock(self, pid: UUID) -> None:
+            target, ok = QInputDialog.getText(
+                self, "ExoClock", "Target:", text="TARGET"
+            )
+            if not ok or not target.strip():
+                return
+            observer = self.creds.get_network("exoclock").get("observer") or "AstroCitizen"
+            default = self.artifacts_root / "export" / "exoclock" / f"{pid}.txt"
+            path, _ = QFileDialog.getSaveFileName(
+                self, "Guardar ExoClock", str(default), "Text (*.txt *.csv)"
+            )
+            if not path:
+                return
+            out = Path(path)
+            ExportExoclock(self.archive).execute(
+                product_id=pid,
+                target=target.strip(),
+                out_path=out,
+                observer=str(observer),
+            )
+            self._save_submission(
+                network="exoclock",
+                out=out,
+                product_id=pid,
+                summary={"target": target.strip()},
+            )
+
+        def _export_bess(self, product: Any, pid: UUID) -> None:
+            refs = primary_artifact_refs(product)
+            spectrum = None
+            for label, ref in refs:
+                if label in ("spectrum_uri", "fits_uri"):
+                    spectrum = resolve_openable_path(
+                        ref, store_root=self.artifacts_root
+                    )
+                    if spectrum is not None and spectrum.is_file():
+                        break
+            if spectrum is None:
+                QMessageBox.warning(
+                    self, "BeSS", "Produto sem spectrum_uri/fits resolvivel."
+                )
+                return
+            observer = (
+                self.creds.get_network("bess").get("observer") or "AstroCitizen"
+            )
+            default = self.artifacts_root / "export" / "bess" / f"{pid}.fits"
+            path, _ = QFileDialog.getSaveFileName(
+                self, "Guardar BeSS FITS", str(default), "FITS (*.fits)"
+            )
+            if not path:
+                return
+            out = Path(path)
+            annotate_existing_fits(
+                spectrum, out, observer=str(observer)
+            )
+            self._save_submission(
+                network="bess",
+                out=out,
+                product_id=pid,
+                summary={"note": "annotate from Arquivo"},
+            )
+
+        def _export_solar(self, pid: UUID) -> None:
+            default = self.artifacts_root / "export" / "solar" / f"{pid}.txt"
+            path, _ = QFileDialog.getSaveFileName(
+                self, "Guardar relatorio solar", str(default), "Text (*.txt)"
+            )
+            if not path:
+                return
+            out = Path(path)
+            ExportSolarReport(self.archive).execute(product_id=pid, out_path=out)
+            self._save_submission(
+                network="solar",
+                out=out,
+                product_id=pid,
+                summary={"note": "Arquivo GUI"},
+            )
 
         def reload(self) -> None:
             ws = self._workspace()
@@ -336,5 +615,6 @@ def build_archive_dashboard() -> type:
             if self.prod_table.rowCount() == 0:
                 self.detail.clear()
                 self.plot.clear()
+                self._rebuild_export_menu(None)
 
     return ArchiveDashboard

@@ -286,7 +286,9 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                     self.table.setItem(r, c, QTableWidgetItem(val))
             self.table.resizeColumnsToContents()
 
-        def focus_network(self, network: str | None) -> None:
+        def focus_network(
+            self, network: str | None = None, *, product_id: str | None = None
+        ) -> None:
             """Filtra lista e abre tab de export da rede (ex.: aavso)."""
             if network:
                 key = str(network).lower()
@@ -307,6 +309,12 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                         if self.export_tabs.tabText(ti) == title:
                             self.export_tabs.setCurrentIndex(ti)
                             break
+            if product_id:
+                pid = str(product_id).strip()
+                for edit_name in ("a_product", "e_product", "b_product"):
+                    edit = getattr(self, edit_name, None)
+                    if edit is not None and hasattr(edit, "setText"):
+                        edit.setText(pid)
             self.refresh()
 
         def _log(self, msg: str) -> None:
