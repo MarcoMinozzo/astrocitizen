@@ -248,3 +248,4 @@ Ambos são necessários por PO-*.
 | Ver. | Data | Nota |
 |------|------|------|
 | 1.0 | 2026-07-21 | Mapa inicial 9 canais + tabela de todos os PO-* do catálogo / programas |
+| 1.1 | 2026-07-22 | Epic §7 canais 1-7 fechado (incl. especialidades P4) |
