@@ -795,6 +795,9 @@ class SqliteArchive:
         ).fetchall()
         return [self._row_to_target(r) for r in rows]
 
+    def soft_delete_target(self, target_id: UUID) -> None:
+        self._soft_delete("targets", target_id)
+
     def link_program_target(
         self,
         program_id: UUID,

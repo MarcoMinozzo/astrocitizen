@@ -147,7 +147,7 @@
 |----|------|-----|-----|-----|-------|
 | AC-070 | CLI: site, programas, plan, session (esqueleto) | P1 | M | AC-001 | ✅ S4 — + reduce/analyze/gui |
 | AC-071 | GUI shell PySide6 (navegação por módulos) | P1 | L | AC-001 | ✅ S4 — `astrocitizen gui` · tema ops + brand bar |
-| AC-072 | Telas: Sites, Equipamento, Programas | P1 | M | AC-071, E2 | ✅ S4 · empty states |
+| AC-072 | Telas: Sites, Equipamento, Programas | P1 | M | AC-071, E2 | ✅ S4 · **CRUD Sites/Programas/Alvos** (GUI) |
 | AC-073 | Telas: Programa diário, Sessão, Arquivo | P1 | L | AC-071, E3, E5 | ✅ S4 · empty states |
 | AC-073a | Painel **Noite**: forecast hourly + radar + estado do plano | P1 | M | AC-071, AC-032 | ✅ + **Gerar plano** · badge VIABLE · fetch async |
 | AC-074 | Painel gestão multi-programa | P2 | M | AC-071, AC-022 | |

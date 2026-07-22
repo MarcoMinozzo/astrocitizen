@@ -1,4 +1,4 @@
-"""Shell GUI PySide6 - navegacao + tema + Noite + Contribute + Import."""
+"""Shell GUI PySide6 - navegacao + tema + Noite + Contribute + Import + CRUD."""
 
 from __future__ import annotations
 
@@ -33,6 +33,11 @@ def run_gui(db_path: str | None = None) -> int:
 
     from astrocitizen.adapters.sqlite import SqliteArchive
     from astrocitizen.desktop.contribute import build_contribute_dashboard
+    from astrocitizen.desktop.entities import (
+        build_programs_page,
+        build_sites_page,
+        build_targets_page,
+    )
     from astrocitizen.desktop.import_panel import build_import_dashboard
     from astrocitizen.desktop.night import build_night_dashboard
     from astrocitizen.desktop.theme import apply_theme, empty_state_text
@@ -41,6 +46,9 @@ def run_gui(db_path: str | None = None) -> int:
     NightDashboard = build_night_dashboard()
     ContributeDashboard = build_contribute_dashboard()
     ImportDashboard = build_import_dashboard()
+    SitesPage = build_sites_page()
+    ProgramsPage = build_programs_page()
+    TargetsPage = build_targets_page()
 
     NAV_ITEMS: list[tuple[str, str]] = [
         ("Noite", "Noite"),
@@ -49,6 +57,7 @@ def run_gui(db_path: str | None = None) -> int:
         ("Sites", "Sites"),
         ("Equipamento", "Equipamento"),
         ("Programas", "Programas"),
+        ("Alvos", "Alvos"),
         ("Plano diario", "Plano diario"),
         ("Sessao", "Sessao"),
         ("Arquivo", "Arquivo"),
@@ -109,12 +118,24 @@ def run_gui(db_path: str | None = None) -> int:
             self.night = NightDashboard(archive, artifacts_root=arts)
             self.contribute = ContributeDashboard(archive, artifacts_root=arts)
             self.import_panel = ImportDashboard(archive, artifacts_root=arts)
+            self.sites_page = SitesPage(archive, on_changed=self._on_entities_changed)
+            self.programs_page = ProgramsPage(archive, on_changed=self._on_entities_changed)
+            self.targets_page = TargetsPage(archive, on_changed=self._on_entities_changed)
             self.stack.addWidget(self.night)
             self.stack.addWidget(self.contribute)
             self.stack.addWidget(self.import_panel)
+            self.stack.addWidget(self.sites_page)
 
             self.pages: dict[str, QWidget] = {}
-            for name in self.nav_names[3:]:
+            # Equipamento (index 4) is still a simple table page
+            eq_page = self._table_page()
+            self.pages["Equipamento"] = eq_page
+            self.stack.addWidget(eq_page)
+
+            self.stack.addWidget(self.programs_page)
+            self.stack.addWidget(self.targets_page)
+
+            for name in ("Plano diario", "Sessao", "Arquivo"):
                 page = self._table_page()
                 self.pages[name] = page
                 self.stack.addWidget(page)
@@ -122,6 +143,11 @@ def run_gui(db_path: str | None = None) -> int:
             self.nav.currentRowChanged.connect(self._on_nav)
             self.nav.setCurrentRow(0)
             self.refresh()
+
+        def _on_entities_changed(self) -> None:
+            self.night.load_sites()
+            self.import_panel.load_workspace()
+            self.contribute.load_workspace()
 
         def _on_nav(self, index: int) -> None:
             self.stack.setCurrentIndex(index)
@@ -155,6 +181,9 @@ def run_gui(db_path: str | None = None) -> int:
             self.night.load_sites()
             self.contribute.load_workspace()
             self.import_panel.load_workspace()
+            self.sites_page.reload()
+            self.programs_page.reload()
+            self.targets_page.reload()
             workspaces = self.archive.list_workspaces()
             if not workspaces:
                 return
@@ -185,17 +214,6 @@ def run_gui(db_path: str | None = None) -> int:
                     empty.show()
                     t.hide()
 
-            sites = self.archive.list_sites(ws.id)
-            fill(
-                self.pages["Sites"],
-                ["Nome", "Lat", "Lon", "TZ"],
-                [
-                    [s.name, f"{s.latitude_deg:.4f}", f"{s.longitude_deg:.4f}", s.timezone]
-                    for s in sites
-                ],
-                f"Sites ({len(sites)})",
-                "Sites",
-            )
             eqs = self.archive.list_equipment(ws.id)
             fill(
                 self.pages["Equipamento"],
@@ -206,14 +224,6 @@ def run_gui(db_path: str | None = None) -> int:
                 ],
                 f"Equipamento ({len(eqs)})",
                 "Equipamento",
-            )
-            progs = self.archive.list_programs(ws.id)
-            fill(
-                self.pages["Programas"],
-                ["Template", "Estado", "Pri", "Nome"],
-                [[p.template_id, p.state, str(p.priority), p.name] for p in progs],
-                f"Programas ({len(progs)})",
-                "Programas",
             )
             plans = self.archive.list_daily_plans(ws.id)
             fill(

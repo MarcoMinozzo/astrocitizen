@@ -88,6 +88,8 @@ class ArchivePort(Protocol):
 
     def list_targets(self, workspace_id: UUID) -> list[Target]: ...
 
+    def soft_delete_target(self, target_id: UUID) -> None: ...
+
     def link_program_target(
         self,
         program_id: UUID,
