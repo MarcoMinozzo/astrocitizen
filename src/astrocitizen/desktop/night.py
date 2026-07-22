@@ -20,23 +20,47 @@ def forecast_summary_lines(
     reason: str | None,
     night_start: str,
     night_end: str,
+    site_name: str | None = None,
+    latitude_deg: float | None = None,
+    longitude_deg: float | None = None,
+    elevation_m: float | None = None,
 ) -> list[str]:
     status = "VIABLE" if ok else "INVIABLE"
+    req_lat = fc.get("request_latitude_deg", latitude_deg)
+    req_lon = fc.get("request_longitude_deg", longitude_deg)
+    api_lat = fc.get("api_latitude_deg")
+    api_lon = fc.get("api_longitude_deg")
     lines = [
         f"status={status}",
-        f"window={night_start} .. {night_end}",
-        (
-            f"cloud_max={fc.get('cloud_cover_pct')}%  "
-            f"wind_max={fc.get('wind_ms')} m/s  "
-            f"rh_max={fc.get('humidity_pct')}%"
-        ),
-        (
-            f"dew_margin_min={fc.get('dew_margin_c')} C  "
-            f"precip={fc.get('precipitation')}  "
-            f"prob_max={fc.get('precip_probability_pct')}%"
-        ),
-        f"hours={len(fc.get('hourly') or [])}",
     ]
+    if site_name:
+        lines.append(f"site={site_name}")
+    if req_lat is not None and req_lon is not None:
+        elev = f"  elev={elevation_m:.0f}m" if elevation_m is not None else ""
+        lines.append(f"coords={float(req_lat):.5f},{float(req_lon):.5f}{elev}")
+    if api_lat is not None and api_lon is not None:
+        lines.append(f"open_meteo_grid={float(api_lat):.5f},{float(api_lon):.5f}")
+    lines.extend(
+        [
+            f"window={night_start} .. {night_end}",
+            (
+                f"cloud_max={fc.get('cloud_cover_pct')}%  "
+                f"wind_max={fc.get('wind_ms')} m/s  "
+                f"rh_max={fc.get('humidity_pct')}%"
+            ),
+            (
+                f"dew_margin_min={fc.get('dew_margin_c')} C  "
+                f"precip={fc.get('precipitation')}  "
+                f"prob_max={fc.get('precip_probability_pct')}%"
+            ),
+            f"hours={len(fc.get('hourly') or [])}"
+            + (
+                f"  forecast_days={fc.get('forecast_days')}"
+                if fc.get("forecast_days") is not None
+                else ""
+            ),
+        ]
+    )
     if reason:
         lines.append(f"reason={reason}")
     return lines
@@ -107,6 +131,7 @@ def build_night_payload(
         longitude_deg=site.longitude_deg,
         start_utc=night["start_utc"],
         end_utc=night["end_utc"],
+        elevation_m=getattr(site, "elevation_m", None),
     )
     ok, reason = evaluate_meteo_window(fc, site.meteo_thresholds)
     out = Path(artifacts_root) / "radar" / f"{site.id}_gui.png"
@@ -125,12 +150,20 @@ def build_night_payload(
         "radar_meta": meta,
         "night_date": night_date,
         "site_id": site.id,
+        "site_name": getattr(site, "name", ""),
+        "latitude_deg": site.latitude_deg,
+        "longitude_deg": site.longitude_deg,
+        "elevation_m": getattr(site, "elevation_m", None),
         "summary_lines": forecast_summary_lines(
             fc,
             ok=ok,
             reason=reason,
             night_start=night["start_utc"],
             night_end=night["end_utc"],
+            site_name=getattr(site, "name", None),
+            latitude_deg=site.latitude_deg,
+            longitude_deg=site.longitude_deg,
+            elevation_m=getattr(site, "elevation_m", None),
         ),
         "hourly_rows": hourly_table_rows(fc),
     }
@@ -227,9 +260,13 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             top.addWidget(self.refresh_btn)
             top.addWidget(self.plan_btn)
 
+            self.coords_label = QLabel("")
+            self.coords_label.setObjectName("emptyState")
+            self.coords_label.setWordWrap(True)
+
             self.summary = QTextEdit()
             self.summary.setReadOnly(True)
-            self.summary.setMaximumHeight(120)
+            self.summary.setMaximumHeight(140)
 
             self.hours = QTableWidget(0, 7)
             self.hours.setAlternatingRowColors(True)
@@ -251,6 +288,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             left = QWidget()
             left_l = QVBoxLayout(left)
             left_l.addWidget(QLabel("Viabilidade / forecast"))
+            left_l.addWidget(self.coords_label)
             left_l.addWidget(self.summary)
             left_l.addWidget(QLabel("Horario (janela da noite)"))
             left_l.addWidget(self.hours, 1)
@@ -273,6 +311,9 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             root.addLayout(top)
             root.addWidget(split, 1)
 
+            self.site_combo.currentIndexChanged.connect(self._on_site_combo_changed)
+            self._syncing_shell = False
+
         def _set_badge(self, ok: bool | None) -> None:
             label, name = viability_badge(ok)
             self.badge.setText(label)
@@ -282,27 +323,93 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             self.badge.style().polish(self.badge)
 
         def load_sites(self) -> None:
+            self._syncing_shell = True
+            cur = self.site_combo.currentData()
             self.site_combo.clear()
             self._sites = []
             workspaces = self.archive.list_workspaces()
             if not workspaces:
                 self.summary.setPlainText("Sem workspace. Rode: astrocitizen init-db")
+                self.coords_label.setText("")
                 self._set_badge(None)
+                self._syncing_shell = False
                 return
             self._workspace_id = workspaces[0].id
             self._sites = self.archive.list_sites(self._workspace_id)
             for s in self._sites:
                 mark = "*" if s.is_default else " "
-                self.site_combo.addItem(f"{mark} {s.name}", s.id)
+                self.site_combo.addItem(
+                    f"{mark} {s.name}  ({s.latitude_deg:.4f}, {s.longitude_deg:.4f})",
+                    s.id,
+                )
+            if cur is not None:
+                i = self.site_combo.findData(cur)
+                if i >= 0:
+                    self.site_combo.setCurrentIndex(i)
             if not self._sites:
                 self.summary.setPlainText("Sem sites. Rode: astrocitizen site add ...")
+                self.coords_label.setText("")
                 self._set_badge(None)
+            else:
+                self._update_coords_label()
+            self._syncing_shell = False
+
+        def set_shell_context(
+            self, *, site_id: object = None, program_id: object = None
+        ) -> None:
+            """Sync ContextBar site (RN-024: meteo do local de observacao)."""
+            _ = program_id
+            if site_id is None:
+                return
+            self._syncing_shell = True
+            changed = False
+            i = self.site_combo.findData(site_id)
+            if i >= 0 and i != self.site_combo.currentIndex():
+                self.site_combo.setCurrentIndex(i)
+                changed = True
+            self._syncing_shell = False
+            self._update_coords_label()
+            if changed and self._current_site() is not None:
+                self.refresh_night()
+
+        def set_shell_night_date(self, night_date: str) -> None:
+            if not night_date:
+                return
+            qd = QDate.fromString(night_date, "yyyy-MM-dd")
+            if qd.isValid():
+                self.date_edit.setDate(qd)
+
+        def _on_site_combo_changed(self, *_args: object) -> None:
+            self._update_coords_label()
+            if self._syncing_shell:
+                return
+            # Recarregar meteo ao mudar observatorio
+            if self._current_site() is not None:
+                self.refresh_night()
+
+        def _update_coords_label(self) -> None:
+            site = self._current_site()
+            if site is None:
+                self.coords_label.setText("Sem site — meteo requer lat/lon do observatorio.")
+                return
+            self.coords_label.setText(
+                f"Observatorio: {site.name}  ·  "
+                f"lat={site.latitude_deg:.5f}  lon={site.longitude_deg:.5f}  "
+                f"elev={site.elevation_m:.0f} m  ·  tz={site.timezone}"
+            )
 
         def _current_site(self) -> Any | None:
-            idx = self.site_combo.currentIndex()
-            if idx < 0 or idx >= len(self._sites):
+            sid = self.site_combo.currentData()
+            if sid is None:
                 return None
-            return self._sites[idx]
+            # Sempre rele do arquivo (coords actualizadas apos editar Site)
+            fresh = self.archive.get_site(sid)
+            if fresh is not None:
+                return fresh
+            for s in self._sites:
+                if s.id == sid:
+                    return s
+            return None
 
         def _meteo(self) -> Any:
             if self.meteo_combo.currentData() == "manual":
@@ -336,7 +443,11 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                 return
             night_date = self.date_edit.date().toString("yyyy-MM-dd")
             self._set_busy(True)
-            self.summary.setPlainText("A carregar Open-Meteo + radar...")
+            self._update_coords_label()
+            self.summary.setPlainText(
+                f"A carregar meteo para {site.name} "
+                f"({site.latitude_deg:.4f}, {site.longitude_deg:.4f})..."
+            )
             self._set_badge(None)
 
             thread = QThread(self)
@@ -393,7 +504,8 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                 self.radar_label.setPixmap(scaled)
             self.radar_attr.setText(
                 f"{meta.get('attribution', '')}<br>"
-                f"<small>{meta.get('image_path')}</small>"
+                f"<small>radar lat={meta.get('latitude_deg')} "
+                f"lon={meta.get('longitude_deg')} · {meta.get('image_path')}</small>"
             )
 
         def _on_night_fail(self, message: str) -> None:

@@ -33,10 +33,19 @@ class ManualMeteo:
             "provider": "manual",
         }
 
-    def snapshot(self, *, latitude_deg: float, longitude_deg: float) -> dict[str, Any]:
+    def snapshot(
+        self,
+        *,
+        latitude_deg: float,
+        longitude_deg: float,
+        elevation_m: float | None = None,
+    ) -> dict[str, Any]:
+        _ = elevation_m
         out = dict(self._base)
         out["latitude_deg"] = latitude_deg
         out["longitude_deg"] = longitude_deg
+        out["request_latitude_deg"] = latitude_deg
+        out["request_longitude_deg"] = longitude_deg
         return out
 
     def forecast(
@@ -46,8 +55,13 @@ class ManualMeteo:
         longitude_deg: float,
         start_utc: str | None = None,
         end_utc: str | None = None,
+        elevation_m: float | None = None,
     ) -> dict[str, Any]:
-        out = self.snapshot(latitude_deg=latitude_deg, longitude_deg=longitude_deg)
+        out = self.snapshot(
+            latitude_deg=latitude_deg,
+            longitude_deg=longitude_deg,
+            elevation_m=elevation_m,
+        )
         hour = {
             "time_utc": start_utc or "manual",
             "cloud_cover_pct": self._base["cloud_cover_pct"],

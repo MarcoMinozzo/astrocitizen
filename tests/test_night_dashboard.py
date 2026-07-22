@@ -27,6 +27,11 @@ def test_forecast_summary_and_hours() -> None:
         "dew_margin_c": 1.5,
         "precipitation": True,
         "precip_probability_pct": 60,
+        "request_latitude_deg": -29.7,
+        "request_longitude_deg": -51.1,
+        "api_latitude_deg": -29.75,
+        "api_longitude_deg": -51.12,
+        "forecast_days": 3,
         "hourly": [
             {
                 "time_utc": "2026-07-21T23:00",
@@ -45,8 +50,15 @@ def test_forecast_summary_and_hours() -> None:
         reason="nuvens",
         night_start="2026-07-21T22:00:00Z",
         night_end="2026-07-22T09:00:00Z",
+        site_name="Casa",
+        latitude_deg=-29.7,
+        longitude_deg=-51.1,
+        elevation_m=100,
     )
     assert "INVIABLE" in lines[0]
+    assert any("site=Casa" in x for x in lines)
+    assert any("coords=-29.70000,-51.10000" in x for x in lines)
+    assert any("open_meteo_grid=" in x for x in lines)
     assert any("reason=nuvens" in x for x in lines)
     rows = hourly_table_rows(fc)
     assert rows[0][0] == "2026-07-21T23:00"

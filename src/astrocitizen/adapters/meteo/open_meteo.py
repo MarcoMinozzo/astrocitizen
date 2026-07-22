@@ -30,6 +30,21 @@ def _parse_utc(iso: str) -> datetime:
     return datetime.fromisoformat(iso.replace("Z", "+00:00")).astimezone(timezone.utc)
 
 
+def forecast_days_for_window(
+    start_utc: str | None,
+    end_utc: str | None,
+    *,
+    now: datetime | None = None,
+) -> int:
+    """Dias de forecast Open-Meteo (1..16) para cobrir a janela da noite."""
+    now = now or datetime.now(timezone.utc)
+    end = _parse_utc(end_utc) if end_utc else now
+    start = _parse_utc(start_utc) if start_utc else now
+    last = max(end, start, now)
+    days = (last.date() - now.date()).days + 1
+    return max(1, min(16, int(days)))
+
+
 def _row_from_current(current: dict[str, Any], *, lat: float, lon: float) -> dict[str, Any]:
     precip = float(current.get("precipitation") or 0.0)
     return {
@@ -75,8 +90,9 @@ def _hour_row(hourly: dict[str, Any], idx: int) -> dict[str, Any]:
 class OpenMeteo:
     """Forecast Open-Meteo no lat/lon do Site (RN-024)."""
 
-    def __init__(self, *, timeout_s: float = 20.0, forecast_days: int = 2) -> None:
+    def __init__(self, *, timeout_s: float = 20.0, forecast_days: int | None = None) -> None:
         self.timeout_s = timeout_s
+        # None = calcular a partir da janela; senao fixo (testes / override)
         self.forecast_days = forecast_days
 
     def _get(self, params: dict[str, Any]) -> dict[str, Any]:
@@ -88,17 +104,31 @@ class OpenMeteo:
         except (URLError, TimeoutError, json.JSONDecodeError, OSError) as exc:
             raise DomainError(f"meteo API indisponivel: {exc}", rule_id="RN-023") from exc
 
-    def snapshot(self, *, latitude_deg: float, longitude_deg: float) -> dict[str, Any]:
-        data = self._get(
-            {
-                "latitude": latitude_deg,
-                "longitude": longitude_deg,
-                "current": CURRENT_VARS,
-                "wind_speed_unit": "ms",
-                "timezone": "UTC",
-            }
+    def snapshot(
+        self,
+        *,
+        latitude_deg: float,
+        longitude_deg: float,
+        elevation_m: float | None = None,
+    ) -> dict[str, Any]:
+        params: dict[str, Any] = {
+            "latitude": latitude_deg,
+            "longitude": longitude_deg,
+            "current": CURRENT_VARS,
+            "wind_speed_unit": "ms",
+            "timezone": "UTC",
+        }
+        if elevation_m is not None:
+            params["elevation"] = elevation_m
+        data = self._get(params)
+        out = _row_from_current(
+            data.get("current") or {}, lat=latitude_deg, lon=longitude_deg
         )
-        return _row_from_current(data.get("current") or {}, lat=latitude_deg, lon=longitude_deg)
+        if "latitude" in data:
+            out["api_latitude_deg"] = float(data["latitude"])
+        if "longitude" in data:
+            out["api_longitude_deg"] = float(data["longitude"])
+        return out
 
     def forecast(
         self,
@@ -107,19 +137,35 @@ class OpenMeteo:
         longitude_deg: float,
         start_utc: str | None = None,
         end_utc: str | None = None,
+        elevation_m: float | None = None,
     ) -> dict[str, Any]:
-        data = self._get(
-            {
-                "latitude": latitude_deg,
-                "longitude": longitude_deg,
-                "current": CURRENT_VARS,
-                "hourly": HOURLY_VARS,
-                "forecast_days": self.forecast_days,
-                "wind_speed_unit": "ms",
-                "timezone": "UTC",
-            }
+        days = (
+            int(self.forecast_days)
+            if self.forecast_days is not None
+            else forecast_days_for_window(start_utc, end_utc)
         )
-        out = _row_from_current(data.get("current") or {}, lat=latitude_deg, lon=longitude_deg)
+        params: dict[str, Any] = {
+            "latitude": latitude_deg,
+            "longitude": longitude_deg,
+            "current": CURRENT_VARS,
+            "hourly": HOURLY_VARS,
+            "forecast_days": days,
+            "wind_speed_unit": "ms",
+            "timezone": "UTC",
+        }
+        if elevation_m is not None:
+            params["elevation"] = elevation_m
+        data = self._get(params)
+        out = _row_from_current(
+            data.get("current") or {}, lat=latitude_deg, lon=longitude_deg
+        )
+        out["request_latitude_deg"] = float(latitude_deg)
+        out["request_longitude_deg"] = float(longitude_deg)
+        if "latitude" in data:
+            out["api_latitude_deg"] = float(data["latitude"])
+        if "longitude" in data:
+            out["api_longitude_deg"] = float(data["longitude"])
+        out["forecast_days"] = days
         hourly = data.get("hourly") or {}
         times = hourly.get("time") or []
         rows: list[dict[str, Any]] = []

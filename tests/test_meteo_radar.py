@@ -86,6 +86,8 @@ def test_evaluate_meteo_window_picks_worst_hour() -> None:
 
 def test_open_meteo_forecast_mock() -> None:
     payload = {
+        "latitude": -29.7,
+        "longitude": -51.1,
         "current": {
             "temperature_2m": 18.0,
             "relative_humidity_2m": 55,
@@ -112,16 +114,45 @@ def test_open_meteo_forecast_mock() -> None:
         "astrocitizen.adapters.meteo.open_meteo.urlopen",
         return_value=_Resp(json.dumps(payload).encode()),
     ):
-        fc = OpenMeteo().forecast(
+        fc = OpenMeteo(forecast_days=2).forecast(
             latitude_deg=-29.7,
             longitude_deg=-51.1,
             start_utc="2026-07-21T21:00:00Z",
             end_utc="2026-07-22T05:00:00Z",
+            elevation_m=80.0,
         )
     assert fc["provider"] == "open-meteo"
+    assert fc["request_latitude_deg"] == -29.7
+    assert fc["request_longitude_deg"] == -51.1
+    assert fc["api_latitude_deg"] == -29.7
     assert len(fc["hourly"]) == 2  # 10:00 filtered out
     assert fc["cloud_cover_pct"] == 35.0
     assert fc["dew_margin_c"] is not None
+
+
+def test_forecast_days_for_window() -> None:
+    from datetime import datetime, timezone
+
+    from astrocitizen.adapters.meteo.open_meteo import forecast_days_for_window
+
+    now = datetime(2026, 7, 21, 12, 0, tzinfo=timezone.utc)
+    assert (
+        forecast_days_for_window(
+            "2026-07-21T22:00:00Z",
+            "2026-07-22T09:00:00Z",
+            now=now,
+        )
+        == 2
+    )
+    assert (
+        forecast_days_for_window(
+            "2026-07-25T22:00:00Z",
+            "2026-07-26T09:00:00Z",
+            now=now,
+        )
+        == 6
+    )
+    assert forecast_days_for_window(None, None, now=now) == 1
 
 
 def test_manual_forecast() -> None:

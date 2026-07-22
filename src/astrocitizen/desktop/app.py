@@ -276,6 +276,7 @@ def run_gui(db_path: str | None = None) -> int:
             self.nav.setCurrentRow(0)
             self.context.site_changed.connect(self._on_shell_site)
             self.context.program_changed.connect(self._on_shell_program)
+            self.context.night_date_changed.connect(self._on_shell_night_date)
             QShortcut(QKeySequence("F1"), self, activated=self._open_help)
             # Preferencia visao noturna (apos widgets criados)
             if load_night_vision_pref():
@@ -343,8 +344,10 @@ def run_gui(db_path: str | None = None) -> int:
             )
             if self._app is not None:
                 apply_theme(self._app, night_vision=enabled)
+
         def _context_panels(self) -> list[Any]:
             return [
+                self.night,
                 self.program_active,
                 self.import_panel,
                 self.radio_panel,
@@ -402,6 +405,7 @@ def run_gui(db_path: str | None = None) -> int:
                 fn = getattr(panel, "set_shell_context", None)
                 if callable(fn):
                     fn(site_id=sid, program_id=pid)
+            self._sync_shell_night_date()
 
         def _on_shell_site(self, site_id: object) -> None:
             for panel in self._context_panels():
@@ -414,6 +418,16 @@ def run_gui(db_path: str | None = None) -> int:
                 fn = getattr(panel, "set_shell_context", None)
                 if callable(fn):
                     fn(site_id=self.context.site.currentData(), program_id=program_id)
+
+        def _on_shell_night_date(self, night_date: object) -> None:
+            fn = getattr(self.night, "set_shell_night_date", None)
+            if callable(fn):
+                fn(str(night_date))
+
+        def _sync_shell_night_date(self) -> None:
+            fn = getattr(self.night, "set_shell_night_date", None)
+            if callable(fn):
+                fn(self.context.night_date_iso())
 
         def _on_entities_changed(self) -> None:
             self.night.load_sites()
