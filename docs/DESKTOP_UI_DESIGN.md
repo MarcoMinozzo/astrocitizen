@@ -22,7 +22,7 @@ A shell cresceu por sprint de entrada; U0–U4 reorganizaram IA, hubs e Analisar
 | Analisar | Fotometria \| Espectro \| Blink/Astrom (+ plate-solve) \| Viewer \| Curvas | Bridges + AC-110 GUI |
 | Contribuir | Redes | |
 | Arquivo | Observacoes + Produtos + detalhe/plot | U3+U5 |
-| Configurar | Sites \| Equip \| Programas \| Alvos | Hub |
+| Configurar | Sites \| Equip \| Programas \| Alvos \| Preferencias \| Ajuda | + idioma RN-120 |
 
 Extras: ContextBar sync Site/Programa; Visao noturna (vermelho).
 
@@ -63,3 +63,4 @@ Mantidos: 4 modos WORKFLOWS, 7 superficies ENTRADA, ops first, CLI=espelho, tema
 | 1.4 | 2026-07-22 | U5 plots + Arquivo detalhe |
 | 1.5 | 2026-07-22 | Plate-solve GUI (AC-110 bridge) |
 | 1.6 | 2026-07-22 | Painel Programa activo (guia + Contribuir) |
+| 1.7 | 2026-07-22 | RN-120/121 i18n pt/es/en + Ajuda in-app |

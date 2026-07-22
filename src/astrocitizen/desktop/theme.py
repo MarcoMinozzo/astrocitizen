@@ -299,3 +299,29 @@ def save_night_vision_pref(enabled: bool) -> None:
         return
     settings = QSettings("AstroCitizen", "desktop")
     settings.setValue("night_vision", bool(enabled))
+
+
+def load_ui_lang_pref() -> str:
+    """Preferencia de idioma: auto | pt | es | en (RN-120)."""
+    try:
+        from PySide6.QtCore import QSettings
+    except ImportError:
+        return "auto"
+    settings = QSettings("AstroCitizen", "desktop")
+    raw = settings.value("ui_lang_pref", "auto")
+    pref = str(raw or "auto").strip().lower()
+    if pref in ("auto", "pt", "es", "en"):
+        return pref
+    return "auto"
+
+
+def save_ui_lang_pref(preference: str) -> None:
+    try:
+        from PySide6.QtCore import QSettings
+    except ImportError:
+        return
+    pref = (preference or "auto").strip().lower()
+    if pref not in ("auto", "pt", "es", "en"):
+        pref = "auto"
+    settings = QSettings("AstroCitizen", "desktop")
+    settings.setValue("ui_lang_pref", pref)

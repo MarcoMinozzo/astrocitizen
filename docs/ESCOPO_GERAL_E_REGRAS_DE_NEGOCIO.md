@@ -225,8 +225,14 @@ Convenção: **RN-XXX** — obrigatórias salvo indicação “desejável”.
 | RN-100 | Ações que alteram ProgramaDiario, Programas, Inventário ou exclusões geram entrada de log auditável. |
 | RN-101 | Preferências e limiares (altitude mínima, meteo) são por Site e/ou Programa, com defaults da plataforma. |
 
----
+### 6.11b UX / plataforma (idioma e ajuda)
 
+| ID | Regra |
+|----|--------|
+| RN-120 | UI da app e da plataforma oferece tres linguas: portugues (`pt`), espanhol (`es`) e ingles (`en`). Lingua do SO (desktop) ou browser (SaaS) e detectada automaticamente. O utilizador pode fixar preferencia e ignorar a deteccao. Se a lingua detectada/preferida nao for suportada, usa-se **`en`**. Preferencia canonica: `auto` \| `pt` \| `es` \| `en`. |
+| RN-121 | Existe **Ajuda** acessivel na UI (desktop e, no futuro, web) que orienta o uso por area (Noite, Observatorio, Programa, Analisar, Contribuir, Arquivo, Configurar). O conteudo da ajuda segue a lingua efectiva (RN-120). |
+
+---
 
 ### 6.12 Persistência e bancos de dados
 

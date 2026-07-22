@@ -117,17 +117,20 @@ def build_shared_widgets() -> dict[str, type]:
             lay.setContentsMargins(16, 6, 16, 6)
             lay.setSpacing(10)
 
-            lay.addWidget(QLabel("Site"))
+            self._lbl_site = QLabel("Site")
+            lay.addWidget(self._lbl_site)
             self.site = QComboBox()
             self.site.setMinimumWidth(140)
             lay.addWidget(self.site)
 
-            lay.addWidget(QLabel("Programa"))
+            self._lbl_program = QLabel("Programa")
+            lay.addWidget(self._lbl_program)
             self.program = QComboBox()
             self.program.setMinimumWidth(160)
             lay.addWidget(self.program)
 
-            lay.addWidget(QLabel("Noite"))
+            self._lbl_night = QLabel("Noite")
+            lay.addWidget(self._lbl_night)
             self.night_date = QDateEdit()
             self.night_date.setCalendarPopup(True)
             self.night_date.setDisplayFormat("yyyy-MM-dd")
@@ -144,6 +147,13 @@ def build_shared_widgets() -> dict[str, type]:
             self.site.currentIndexChanged.connect(self._emit_site)
             self.program.currentIndexChanged.connect(self._emit_program)
             self.night_date.dateChanged.connect(self._emit_date)
+
+        def retranslate(self) -> None:
+            from astrocitizen.shared.i18n import t
+
+            self._lbl_site.setText(t("context.site"))
+            self._lbl_program.setText(t("context.program"))
+            self._lbl_night.setText(t("context.night"))
 
         def _emit_site(self, *_args: object) -> None:
             self.site_changed.emit(self.site.currentData())

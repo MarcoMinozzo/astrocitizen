@@ -80,7 +80,7 @@ users ??< workspaces >?? workspace_members
 | email | CITEXT UNIQUE | |
 | password_hash | TEXT | ou auth externo |
 | display_name | TEXT | |
-| locale | TEXT | default `pt-BR` |
+| locale | TEXT | preferencia UI: `auto` \| `pt` \| `es` \| `en` (RN-120); default efectivo via deteccao SO/browser, fallback `en` |
 | created_at / updated_at / deleted_at | | |
 
 ### 4.2 `workspaces`

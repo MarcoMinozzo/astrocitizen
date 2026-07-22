@@ -10,6 +10,7 @@ from typing import Any
 def run_gui(db_path: str | None = None) -> int:
     try:
         from PySide6.QtCore import Qt
+        from PySide6.QtGui import QKeySequence, QShortcut
         from PySide6.QtWidgets import (
             QApplication,
             QFrame,
@@ -43,9 +44,11 @@ def run_gui(db_path: str | None = None) -> int:
         build_targets_page,
     )
     from astrocitizen.desktop.equipment import build_equipment_page
+    from astrocitizen.desktop.help_panel import area_to_help_topic, build_help_panel
     from astrocitizen.desktop.import_panel import build_import_dashboard
     from astrocitizen.desktop.night import build_night_dashboard
     from astrocitizen.desktop.observe_panel import build_observe_dashboard
+    from astrocitizen.desktop.prefs_panel import build_prefs_panel
     from astrocitizen.desktop.program_active_panel import build_program_active_dashboard
     from astrocitizen.desktop.radio_panel import build_radio_dashboard
     from astrocitizen.desktop.session_panel import build_session_dashboard
@@ -54,10 +57,17 @@ def run_gui(db_path: str | None = None) -> int:
         apply_theme,
         empty_state_text,
         load_night_vision_pref,
+        load_ui_lang_pref,
         save_night_vision_pref,
     )
     from astrocitizen.desktop.timing_panel import build_timing_dashboard
     from astrocitizen.desktop.widgets import build_shared_widgets
+    from astrocitizen.shared.i18n import (
+        detect_system_lang,
+        resolve_ui_lang,
+        set_current_lang,
+        t,
+    )
     from astrocitizen.shared.paths import default_artifacts_root, default_db_path
 
     NightDashboard = build_night_dashboard()
@@ -75,20 +85,21 @@ def run_gui(db_path: str | None = None) -> int:
     RadioDashboard = build_radio_dashboard()
     SpecialtyDashboard = build_specialty_dashboard()
     ProgramActiveDashboard = build_program_active_dashboard()
+    HelpPanel = build_help_panel()
+    PrefsPanel = build_prefs_panel()
     Shared = build_shared_widgets()
     ContextBar = Shared["ContextBar"]
     TabHub = Shared["TabHub"]
 
-    # U1: 6 areas (DESKTOP_UI_DESIGN.md)
-    NAV_ITEMS: list[tuple[str, str]] = [
-        ("Noite", "Noite"),
-        ("Observatorio", "Observatorio"),
-        ("Analisar", "Analisar"),
-        ("Contribuir", "Contribuir"),
-        ("Arquivo", "Arquivo"),
-        ("Configurar", "Configurar"),
+    # Stable nav keys (labels via t("nav.<key>"))
+    NAV_KEYS: list[str] = [
+        "Noite",
+        "Observatorio",
+        "Analisar",
+        "Contribuir",
+        "Arquivo",
+        "Configurar",
     ]
-
     class MainWindow(QMainWindow):
         def __init__(self, archive: SqliteArchive, db: Path) -> None:
             super().__init__()
@@ -112,12 +123,16 @@ def run_gui(db_path: str | None = None) -> int:
             brand_text.setSpacing(2)
             title = QLabel("AstroCitizen")
             title.setObjectName("brandTitle")
-            sub = QLabel("observatorio cidadao · desktop")
-            sub.setObjectName("brandSubtitle")
+            self.brand_sub = QLabel()
+            self.brand_sub.setObjectName("brandSubtitle")
             brand_text.addWidget(title)
-            brand_text.addWidget(sub)
+            brand_text.addWidget(self.brand_sub)
             brand_row.addLayout(brand_text, 1)
-            self.nv_btn = QPushButton("Visao noturna")
+            self.help_btn = QPushButton()
+            self.help_btn.setObjectName("secondaryBtn")
+            self.help_btn.clicked.connect(self._open_help)
+            brand_row.addWidget(self.help_btn, 0, Qt.AlignmentFlag.AlignRight)
+            self.nv_btn = QPushButton()
             self.nv_btn.setObjectName("nightVisionBtn")
             self.nv_btn.setCheckable(True)
             self.nv_btn.setToolTip(
@@ -141,9 +156,9 @@ def run_gui(db_path: str | None = None) -> int:
             self.nav = QListWidget()
             self.nav.setObjectName("navList")
             self.nav.setFixedWidth(188)
-            self.nav_names = [key for key, _ in NAV_ITEMS]
-            for _, label in NAV_ITEMS:
-                QListWidgetItem(label, self.nav)
+            self.nav_names = list(NAV_KEYS)
+            for _key in NAV_KEYS:
+                QListWidgetItem("", self.nav)
 
             self.stack = QStackedWidget()
             layout.addWidget(self.nav)
@@ -190,6 +205,8 @@ def run_gui(db_path: str | None = None) -> int:
                 on_navigate=self._navigate_to,
                 on_changed=on_ch,
             )
+            self.help_panel = HelpPanel()
+            self.prefs_panel = PrefsPanel(on_language_changed=self._on_language_changed)
 
             self.pages: dict[str, QWidget] = {}
             plan_page = self._table_page()
@@ -242,6 +259,8 @@ def run_gui(db_path: str | None = None) -> int:
                     ("Equipamento", self.equipment_page),
                     ("Programas", self.programs_page),
                     ("Alvos", self.targets_page),
+                    ("Preferencias", self.prefs_panel),
+                    ("Ajuda", self.help_panel),
                 ],
             )
 
@@ -257,13 +276,61 @@ def run_gui(db_path: str | None = None) -> int:
             self.nav.setCurrentRow(0)
             self.context.site_changed.connect(self._on_shell_site)
             self.context.program_changed.connect(self._on_shell_program)
+            QShortcut(QKeySequence("F1"), self, activated=self._open_help)
             # Preferencia visao noturna (apos widgets criados)
             if load_night_vision_pref():
                 self.nv_btn.blockSignals(True)
                 self.nv_btn.setChecked(True)
                 self.nv_btn.blockSignals(False)
                 self._apply_night_vision(True)
+            self._retranslate_shell()
             self.refresh()
+
+        def _on_language_changed(self, _lang: str) -> None:
+            self._retranslate_shell()
+
+        def _retranslate_shell(self) -> None:
+            self.brand_sub.setText(t("brand.subtitle"))
+            self.help_btn.setText(t("btn.help"))
+            self.nv_btn.setText(
+                t("btn.night_vision_on")
+                if self._night_vision
+                else t("btn.night_vision")
+            )
+            for i, key in enumerate(self.nav_names):
+                item = self.nav.item(i)
+                if item is not None:
+                    item.setText(t(f"nav.{key}"))
+            if hasattr(self.context, "retranslate"):
+                self.context.retranslate()
+            if hasattr(self.help_panel, "retranslate"):
+                self.help_panel.retranslate()
+            if hasattr(self.prefs_panel, "retranslate"):
+                self.prefs_panel.retranslate()
+            for i in range(self.configurar.tabs.count()):
+                w = self.configurar.tabs.widget(i)
+                if w is self.prefs_panel:
+                    self.configurar.tabs.setTabText(i, t("prefs.title"))
+                elif w is self.help_panel:
+                    self.configurar.tabs.setTabText(i, t("help.panel_title"))
+
+        def _open_help(self) -> None:
+            area = (
+                self.nav_names[self.nav.currentRow()]
+                if 0 <= self.nav.currentRow() < len(self.nav_names)
+                else "Noite"
+            )
+            topic = area_to_help_topic(area)
+            try:
+                cfg_idx = self.nav_names.index("Configurar")
+            except ValueError:
+                return
+            self.nav.setCurrentRow(cfg_idx)
+            for i in range(self.configurar.tabs.count()):
+                if self.configurar.tabs.widget(i) is self.help_panel:
+                    self.configurar.tabs.setCurrentIndex(i)
+                    break
+            self.help_panel.select_topic(topic)
 
         def _on_night_vision(self, enabled: bool) -> None:
             self._apply_night_vision(bool(enabled))
@@ -271,10 +338,11 @@ def run_gui(db_path: str | None = None) -> int:
 
         def _apply_night_vision(self, enabled: bool) -> None:
             self._night_vision = enabled
-            self.nv_btn.setText("Visao noturna ON" if enabled else "Visao noturna")
+            self.nv_btn.setText(
+                t("btn.night_vision_on") if enabled else t("btn.night_vision")
+            )
             if self._app is not None:
                 apply_theme(self._app, night_vision=enabled)
-
         def _context_panels(self) -> list[Any]:
             return [
                 self.program_active,
@@ -485,6 +553,8 @@ def run_gui(db_path: str | None = None) -> int:
     archive = SqliteArchive(db)
     archive.migrate()
     app = QApplication(sys.argv)
+    lang = resolve_ui_lang(load_ui_lang_pref(), detected=detect_system_lang())
+    set_current_lang(lang)
     nv_pref = load_night_vision_pref()
     apply_theme(app, night_vision=nv_pref)
     win = MainWindow(archive, db)

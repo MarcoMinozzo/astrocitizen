@@ -40,7 +40,7 @@ astrocitizen = "astrocitizen.cli:main"
 where = ["src"]
 
 [tool.setuptools.package-data]
-astrocitizen = ["programs/catalog/*.json"]
+astrocitizen = ["programs/catalog/*.json", "shared/locales/*.json"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
