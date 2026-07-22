@@ -104,7 +104,7 @@ Legenda **Estado**: `feito` / `parcial` / `desenho` (ainda não na UI).
 
 | PO | Como o utilizador fornece | Canais | Payload mínimo | Produto | Estado |
 |----|---------------------------|--------|----------------|---------|--------|
-| **D01** Occ. asteróide | Import previsão IOTA + vídeo/série + GPS time | IN-PRED, IN-VID, IN-TAB | pred + LC timing | timing pack → IOTA | parcial (export pack) |
+| **D01** Occ. asteróide | Import previsão IOTA + vídeo/série + GPS time | IN-PRED, IN-VID, IN-TAB | pred + LC timing | timing pack → IOTA | parcial (pred+timing; vídeo adiado) |
 | **D02** Lunar/graze | Vídeo + station + contact times | IN-VID, IN-LOG | vídeo + contacts | timing | desenho |
 | **D03** Mutuas | Timing + efemérides satélites | IN-TAB, IN-LOG | contact times | timing | desenho |
 | **D04** Duplas occ. | Vídeo + análise de eventos | IN-VID | vídeo + measures | timing + dupla | desenho |
@@ -213,7 +213,7 @@ Em vez de 50 apps, **7 superfícies**:
 | 3 | **Wizard Sessão** | ✅ IN-CAP usável no desktop |
 | 3b | **CRUD Equipamento + Setup** | ✅ fecha AC-072 / liga programa |
 | 4 | **Editor visual log + solar form** | ✅ Observar GUI + `observe log-visual` |
-| 5 | **Timing/IOTA import previsão + vídeo** | D01 |
+| 5 | **Timing/IOTA import previsão + vídeo** | ✅ pred+timing GUI/CLI · vídeo adiado |
 | 6 | **Rádio CSV/HDF5** | I* |
 | 7 | Restantes especializações (speckle, polar, echelle) | P4 |
 

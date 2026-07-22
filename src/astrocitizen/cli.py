@@ -37,7 +37,9 @@ from astrocitizen.observatory import (
     CaptureObservation,
     ExecuteSession,
     ImportFits,
+    ImportIotaPrediction,
     LogVisualObservation,
+    RegisterOccultationTiming,
 )
 from astrocitizen.observatory.import_fits import discover_fits_paths
 from astrocitizen.planning import EditDailyPlan, GenerateDailyPlan, Target
@@ -681,6 +683,50 @@ def _cmd_observe_log_visual(args: argparse.Namespace) -> int:
     print(
         f"product={product.id}\tobject={product.summary.get('object')}\t"
         f"at={product.summary.get('observed_at_utc')}"
+    )
+    archive.close()
+    return 0
+
+
+def _cmd_import_prediction(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    store = LocalArtifactStore(Path(args.artifacts))
+    product = ImportIotaPrediction(archive, store).execute(
+        workspace_id=ws.id,
+        path=Path(args.path),
+        program_id=UUID(args.program) if args.program else None,
+        site_id=UUID(args.site) if args.site else None,
+    )
+    print(
+        f"product={product.id}\tevent={product.summary.get('event_id')}\t"
+        f"star={product.summary.get('star')}\tasteroid={product.summary.get('asteroid')}"
+    )
+    archive.close()
+    return 0
+
+
+def _cmd_observe_occultation(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    product = RegisterOccultationTiming(archive).execute(
+        workspace_id=ws.id,
+        event_id=args.event,
+        star=args.star,
+        asteroid=args.asteroid,
+        result=args.result,
+        d_time_utc=args.d_time,
+        r_time_utc=args.r_time,
+        timesource=args.timesource,
+        site_id=UUID(args.site) if args.site else None,
+        program_id=UUID(args.program) if args.program else None,
+        prediction_product_id=UUID(args.prediction) if args.prediction else None,
+        observer=args.observer,
+        notes=args.notes or "",
+    )
+    print(
+        f"product={product.id}\tresult={product.summary.get('result')}\t"
+        f"event={product.summary.get('event_id')}"
     )
     archive.close()
     return 0
@@ -1381,7 +1427,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_sl.add_argument("--state", default=None)
     p_sl.set_defaults(func=_cmd_session_list)
 
-    p_obs = sub.add_parser("observe", help="Entrada observacional (IN-LOG / visual)")
+    p_obs = sub.add_parser("observe", help="Entrada observacional (visual / ocultacao)")
     obs_sub = p_obs.add_subparsers(dest="observe_cmd", required=True)
     p_ov = obs_sub.add_parser("log-visual", help="Log visual PO-F03")
     _add_db_arg(p_ov)
@@ -1396,8 +1442,27 @@ def build_parser() -> argparse.ArgumentParser:
     p_ov.add_argument("--program", default=None, help="UUID programa")
     p_ov.add_argument("--target", default=None, help="UUID alvo")
     p_ov.set_defaults(func=_cmd_observe_log_visual)
+    p_oo = obs_sub.add_parser("occultation", help="Contactos D/R IOTA (PO-D01)")
+    _add_db_arg(p_oo)
+    p_oo.add_argument("--event", required=True, help="EventID")
+    p_oo.add_argument("--star", required=True)
+    p_oo.add_argument("--asteroid", required=True)
+    p_oo.add_argument(
+        "--result",
+        default="positive",
+        choices=("positive", "negative", "missed"),
+    )
+    p_oo.add_argument("--d-time", default=None, help="UTC ISO D")
+    p_oo.add_argument("--r-time", default=None, help="UTC ISO R")
+    p_oo.add_argument("--timesource", default="NTP")
+    p_oo.add_argument("--observer", default="AstroCitizen")
+    p_oo.add_argument("--notes", default="")
+    p_oo.add_argument("--site", default=None)
+    p_oo.add_argument("--program", default=None)
+    p_oo.add_argument("--prediction", default=None, help="UUID produto previsao")
+    p_oo.set_defaults(func=_cmd_observe_occultation)
 
-    p_imp = sub.add_parser("import", help="Importar dados externos (IN-IMP)")
+    p_imp = sub.add_parser("import", help="Importar dados externos (IN-IMP / IN-PRED)")
     imp_sub = p_imp.add_subparsers(dest="import_cmd", required=True)
     p_if = imp_sub.add_parser("fits", help="Importar FITS -> Observation + Artifact")
     _add_db_arg(p_if)
@@ -1412,6 +1477,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_if.add_argument("--notes", default=None)
     p_if.add_argument("--artifacts", default=str(default_artifacts_root()))
     p_if.set_defaults(func=_cmd_import_fits)
+    p_ip = imp_sub.add_parser(
+        "prediction",
+        help="Importar previsao IOTA (IN-PRED / AC-120)",
+    )
+    _add_db_arg(p_ip)
+    p_ip.add_argument("--path", required=True, help="TXT KEY:value ou CSV")
+    p_ip.add_argument("--site", default=None)
+    p_ip.add_argument("--program", default=None)
+    p_ip.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_ip.set_defaults(func=_cmd_import_prediction)
 
     p_gui = sub.add_parser("gui", help="Abrir shell PySide6 (requer [gui])")
     _add_db_arg(p_gui)

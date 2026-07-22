@@ -221,7 +221,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
-| AC-120 | Import previsão IOTA / arquivo | P2 | M | E3 | |
+| AC-120 | Import previsão IOTA / arquivo | P2 | M | E3 | ✅ `import prediction` · produto occultation_prediction |
 | AC-121 | Export pacote IOTA-ES / Hub | P2 | M | E14 | ✅ `contribute iota` |
 | AC-121 | Aquisição timed + timestamps | P2 | L | E5 | |
 | AC-122 | Redução de contato + relatório | P2 | L | AC-121 | |
