@@ -2,6 +2,9 @@
 
 Assistencia estilo ARAS/citizen: catalogo de linhas, telurico, pista de classe grosseira, e comparacao multi-epoca (ex.: SN2026sqf).
 
+**Documentacao completa:** [ANALISE_ESPECTRAL_ASSISTIDA.md](ANALISE_ESPECTRAL_ASSISTIDA.md)  
+**LLM / RAG (planejado):** AC-107…109 · epico [E19](EPICO_E19_BASE_CONHECIMENTO_RAG.md)
+
 ## Entregas
 
 | Item | Detalhe |

@@ -48,6 +48,7 @@
 | E16 | Rádio cidadão | P3 |
 | E17 | Observatório avançado (cúpula, remoto) | P3–P4 |
 | E18 | Educação / labs | P3 |
+| E19 | Base de conhecimento interna + RAG | P2–P3 |
 
 ---
 
@@ -197,7 +198,10 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | AC-103 | Persistência espectro + produto no BD | P2 | M | AC-101 | |
 | AC-104 | Export ARAS/BeSS | P2 | M | E14 | ✅ BeSS FITS 1D · `contribute bess` |
 | AC-105 | Templates B04–B06 | P2–P3 | M | AC-102 | |
-| AC-106 | Interpretacao espectral assistida (linhas / multi-epoca / pista classe) | P1 | M | AC-100 | ✅ `analyze spectrum-report` · PO-B01/B02/B03 |
+| AC-106 | Interpretacao espectral assistida (linhas / multi-epoca / pista classe) | P1 | M | AC-100 | ✅ deterministico · [ANALISE_ESPECTRAL_ASSISTIDA.md](ANALISE_ESPECTRAL_ASSISTIDA.md) · CLI `spectrum-report` |
+| AC-107 | Narrativa LLM sobre `spectrum_report` (opt-in) | P2 | M | AC-106 | Pos-medidas; citar FEATURES; sem inventar linhas |
+| AC-108 | Provider LLM pluggable + modo offline (desligado = AC-106 sozinho) | P2 | M | AC-107 | Local e/ou API; credenciais fora do BD |
+| AC-109 | Guardrails + testes de grounding (spectrum + passagens RAG) | P2 | M | AC-107, AC-194 | Rejeitar claims fora do relatorio/corpus |
 
 ---
 
@@ -285,6 +289,23 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 |----|------|-----|-----|-----|-------|
 | AC-180 | Modo lab / roteiros guiados | P3 | M | E7 | PO-K* |
 | AC-181 | Datasets de exemplo + simulador completo | P2 | M | E4, E1 | |
+
+---
+
+## E19 — Base de conhecimento interna + RAG
+
+Epico aberto: corpus interno versionado → retrieval → (opcional) geracao ancorada.  
+Doc: [EPICO_E19_BASE_CONHECIMENTO_RAG.md](EPICO_E19_BASE_CONHECIMENTO_RAG.md).
+
+| ID | Item | Pri | Est | Dep | Notas |
+|----|------|-----|-----|-----|-------|
+| AC-190 | Modelo `knowledge_documents` / `knowledge_chunks` (+ licenca, source path, hash) | P2 | M | E1 | Schema dedicado (nao misturar com FITS) |
+| AC-191 | Pipeline de ingestao do corpus `docs/` + atlas | P2 | L | AC-190 | Chunking + metadados PO-*/rede |
+| AC-192 | Retriever lexical (FTS) + CLI `knowledge search` | P2 | M | AC-191 | Util sem embeddings |
+| AC-193 | Embeddings locais + indice vetorial (hibrido lexical/vector) | P2 | L | AC-192 | Preferir on-device; D-010 |
+| AC-194 | `RetrieverPort` + filtros (PO, rede, idioma) | P2 | M | AC-192 | Porta hexagonal |
+| AC-195 | Assistente Ajuda grounded (CLI/GUI) so com citacoes | P2 | L | AC-194 | LLM opcional; retrieval obrigatorio |
+| AC-196 | Ligacao spectrum: RAG + AC-107 (explicar relatorio com corpus ARAS/BeSS) | P2 | M | AC-107, AC-194 | Caso de uso piloto |
 
 ---
 

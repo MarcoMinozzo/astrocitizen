@@ -31,6 +31,8 @@
 |-----|-----------|
 | [WORKFLOWS.md](WORKFLOWS.md) | Jornada do usuário, modos, fluxos passo a passo, PO-A01 referência |
 | [ENTRADA_OBSERVACOES_POR_PO.md](ENTRADA_OBSERVACOES_POR_PO.md) | Como o utilizador fornece dados por cada PO-* (canais IN-*) |
+| [ANALISE_ESPECTRAL_ASSISTIDA.md](ANALISE_ESPECTRAL_ASSISTIDA.md) | AC-106: como funciona a interpretacao espectral (sem LLM) |
+| [EPICO_E19_BASE_CONHECIMENTO_RAG.md](EPICO_E19_BASE_CONHECIMENTO_RAG.md) | Epico E19: base interna de conhecimento para RAG |
 | [AAVSO_WEBOBS_CHECKLIST.md](AAVSO_WEBOBS_CHECKLIST.md) | Validar export Extended no WebObs |
 
 ## Arquitetura SaaS + Desktop
