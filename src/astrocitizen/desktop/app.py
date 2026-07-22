@@ -46,6 +46,7 @@ def run_gui(db_path: str | None = None) -> int:
     from astrocitizen.desktop.import_panel import build_import_dashboard
     from astrocitizen.desktop.night import build_night_dashboard
     from astrocitizen.desktop.observe_panel import build_observe_dashboard
+    from astrocitizen.desktop.program_active_panel import build_program_active_dashboard
     from astrocitizen.desktop.radio_panel import build_radio_dashboard
     from astrocitizen.desktop.session_panel import build_session_dashboard
     from astrocitizen.desktop.specialty_panel import build_specialty_dashboard
@@ -73,6 +74,7 @@ def run_gui(db_path: str | None = None) -> int:
     TimingDashboard = build_timing_dashboard()
     RadioDashboard = build_radio_dashboard()
     SpecialtyDashboard = build_specialty_dashboard()
+    ProgramActiveDashboard = build_program_active_dashboard()
     Shared = build_shared_widgets()
     ContextBar = Shared["ContextBar"]
     TabHub = Shared["TabHub"]
@@ -183,6 +185,11 @@ def run_gui(db_path: str | None = None) -> int:
             self.analyze_panel = AnalyzeDashboard(
                 archive, artifacts_root=arts, on_changed=on_ch
             )
+            self.program_active = ProgramActiveDashboard(
+                archive,
+                on_navigate=self._navigate_to,
+                on_changed=on_ch,
+            )
 
             self.pages: dict[str, QWidget] = {}
             plan_page = self._table_page()
@@ -217,8 +224,9 @@ def run_gui(db_path: str | None = None) -> int:
 
             self.observatorio = TabHub(
                 title="Observatorio",
-                hint="Sessao, importacao unificada e canais da noite.",
+                hint="Programa activo, sessao, importacao e canais da noite.",
                 tabs=[
+                    ("Programa", self.program_active),
                     ("Sessao", self.session_panel),
                     ("Importar", self.import_hub),
                     ("Observar", self.observe_panel),
@@ -269,6 +277,7 @@ def run_gui(db_path: str | None = None) -> int:
 
         def _context_panels(self) -> list[Any]:
             return [
+                self.program_active,
                 self.import_panel,
                 self.radio_panel,
                 self.specialty_panel,
@@ -277,6 +286,46 @@ def run_gui(db_path: str | None = None) -> int:
                 self.observe_panel,
                 self.analyze_panel,
             ]
+
+        def _select_tab_by_name(self, tabs_widget: Any, name: str | None) -> None:
+            if not name or tabs_widget is None:
+                return
+            for i in range(tabs_widget.count()):
+                if tabs_widget.tabText(i) == name:
+                    tabs_widget.setCurrentIndex(i)
+                    return
+
+        def _navigate_to(
+            self,
+            area: str | None,
+            *,
+            hub_tab: str | None = None,
+            analyze_tab: str | None = None,
+            network: str | None = None,
+        ) -> None:
+            if not area:
+                return
+            try:
+                idx = self.nav_names.index(area)
+            except ValueError:
+                return
+            self.nav.setCurrentRow(idx)
+            if area == "Observatorio":
+                self._select_tab_by_name(self.observatorio.tabs, hub_tab)
+                if hub_tab == "Importar" and "radio" in (analyze_tab or "").lower():
+                    self._select_tab_by_name(self.import_hub.tabs, "Radio")
+            elif area == "Noite":
+                self._select_tab_by_name(self.noite_hub.tabs, hub_tab)
+            elif area == "Configurar":
+                self._select_tab_by_name(self.configurar.tabs, hub_tab)
+            elif area == "Analisar" and analyze_tab:
+                fn = getattr(self.analyze_panel, "focus_tab", None)
+                if callable(fn):
+                    fn(analyze_tab)
+            elif area == "Contribuir":
+                fn = getattr(self.contribute, "focus_network", None)
+                if callable(fn):
+                    fn(network)
 
         def _sync_shell_context(self) -> None:
             sid = self.context.site.currentData()
@@ -311,6 +360,7 @@ def run_gui(db_path: str | None = None) -> int:
             self.timing_panel.reload()
             self.radio_panel.reload()
             self.specialty_panel.reload()
+            self.program_active.reload()
             self._reload_context()
             self._fill_planos()
             self.archive_panel.reload()
@@ -426,6 +476,7 @@ def run_gui(db_path: str | None = None) -> int:
             self.radio_panel.reload()
             self.specialty_panel.reload()
             self.archive_panel.reload()
+            self.program_active.reload()
             self._reload_context()
             self._fill_planos()
             self._sync_shell_context()

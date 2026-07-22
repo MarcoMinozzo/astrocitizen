@@ -36,6 +36,7 @@
 | [SPRINT_DESKTOP_UI_U2.md](SPRINT_DESKTOP_UI_U2.md) | Sprint U2: Import hub + ContextBar sync |
 | [SPRINT_DESKTOP_UI_U3_U4.md](SPRINT_DESKTOP_UI_U3_U4.md) | Sprint U3/U4: Arquivo + Analisar + Viewer FITS |
 | [SPRINT_DESKTOP_UI_U5.md](SPRINT_DESKTOP_UI_U5.md) | Sprint U5: plots + Arquivo detalhe/export hint |
+| [SPRINT_PROGRAMA_ACTIVO.md](SPRINT_PROGRAMA_ACTIVO.md) | Guia Programa activo + atalho Contribuir |
 | [ANALISE_ESPECTRAL_ASSISTIDA.md](ANALISE_ESPECTRAL_ASSISTIDA.md) | AC-106: como funciona a interpretacao espectral (sem LLM) |
 | [EPICO_E19_BASE_CONHECIMENTO_RAG.md](EPICO_E19_BASE_CONHECIMENTO_RAG.md) | Epico E19: base interna de conhecimento para RAG |
 | [AAVSO_WEBOBS_CHECKLIST.md](AAVSO_WEBOBS_CHECKLIST.md) | Validar export Extended no WebObs |

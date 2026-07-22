@@ -109,6 +109,12 @@ def build_analyze_dashboard() -> type:
         def reload(self) -> None:
             return None
 
+        def focus_tab(self, name: str) -> None:
+            for i in range(self.tabs.count()):
+                if self.tabs.tabText(i) == name:
+                    self.tabs.setCurrentIndex(i)
+                    return
+
         def _path_row(self, edit: QLineEdit, slot: Any) -> QWidget:
             browse = QPushButton("Ficheiro...")
             browse.setObjectName("secondaryBtn")

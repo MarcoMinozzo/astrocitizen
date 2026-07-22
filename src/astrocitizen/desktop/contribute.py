@@ -125,6 +125,7 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             tabs.addTab(self._tab_bess(), "BeSS")
             tabs.addTab(self._tab_exoclock(), "ExoClock")
             tabs.addTab(self._tab_iota(), "IOTA")
+            self.export_tabs = tabs
             root.addWidget(tabs)
 
             self.log = QTextEdit()
@@ -284,6 +285,29 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                 for c, val in enumerate(row):
                     self.table.setItem(r, c, QTableWidgetItem(val))
             self.table.resizeColumnsToContents()
+
+        def focus_network(self, network: str | None) -> None:
+            """Filtra lista e abre tab de export da rede (ex.: aavso)."""
+            if network:
+                key = str(network).lower()
+                i = self.filter_combo.findData(key)
+                if i >= 0:
+                    self.filter_combo.setCurrentIndex(i)
+                titles = {
+                    "aavso": "AAVSO",
+                    "mpc": "MPC",
+                    "tns": "TNS",
+                    "bess": "BeSS",
+                    "exoclock": "ExoClock",
+                    "iota": "IOTA",
+                }
+                title = titles.get(key)
+                if title and hasattr(self, "export_tabs"):
+                    for ti in range(self.export_tabs.count()):
+                        if self.export_tabs.tabText(ti) == title:
+                            self.export_tabs.setCurrentIndex(ti)
+                            break
+            self.refresh()
 
         def _log(self, msg: str) -> None:
             self.log.append(msg)
