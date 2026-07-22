@@ -20,4 +20,4 @@ Fecha AC-072: inventario de equipamento e ConfiguracaoInstrumental na desktop, c
 
 ## Sequencia seguinte (ENTRADA #4)
 
-Editor visual log + formulario solar (PO-F03 / PO-E03 GUI).
+✅ Observar GUI (ver SPRINT_OBSERVAR_SOLAR_VISUAL.md). Seguinte: IOTA (ENTRADA #5).

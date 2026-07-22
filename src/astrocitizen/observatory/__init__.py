@@ -1,4 +1,4 @@
-"""Observatorio: sessao, captura, hardware, import."""
+"""Observatorio: sessao, captura, hardware, import, visual."""
 
 from astrocitizen.observatory.capture import CaptureObservation, build_fits_headers
 from astrocitizen.observatory.failure import mark_block_failed
@@ -10,11 +10,13 @@ from astrocitizen.observatory.quick_session import (
     reset_block_for_capture,
 )
 from astrocitizen.observatory.session import ExecuteSession
+from astrocitizen.observatory.visual_log import LogVisualObservation
 
 __all__ = [
     "CaptureObservation",
     "ExecuteSession",
     "ImportFits",
+    "LogVisualObservation",
     "ObservationRecord",
     "Session",
     "WizardSessionContext",

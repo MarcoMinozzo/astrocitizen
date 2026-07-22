@@ -33,7 +33,12 @@ from astrocitizen.contribution.solar import ExportSolarReport
 from astrocitizen.contribution.tns import TnsClient, format_tns_at_report, write_tns_report
 from astrocitizen.desktop import run_gui
 from astrocitizen.inventory.models import Equipment, Site
-from astrocitizen.observatory import CaptureObservation, ExecuteSession, ImportFits
+from astrocitizen.observatory import (
+    CaptureObservation,
+    ExecuteSession,
+    ImportFits,
+    LogVisualObservation,
+)
 from astrocitizen.observatory.import_fits import discover_fits_paths
 from astrocitizen.planning import EditDailyPlan, GenerateDailyPlan, Target
 from astrocitizen.planning.meteo_rules import evaluate_meteo_window
@@ -652,6 +657,30 @@ def _cmd_analyze_sunspots(args: argparse.Namespace) -> int:
         f"product={product.id}\tgroups={product.summary.get('groups')}\t"
         f"spots={product.summary.get('spots')}\twolf_r={product.summary.get('wolf_r')}\t"
         f"filter={product.summary.get('filter_name')}"
+    )
+    archive.close()
+    return 0
+
+
+def _cmd_observe_log_visual(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    product = LogVisualObservation(archive).execute(
+        workspace_id=ws.id,
+        object_name=args.object,
+        description=args.description,
+        conditions=args.conditions or "",
+        site_id=UUID(args.site) if args.site else None,
+        program_id=UUID(args.program) if args.program else None,
+        target_id=UUID(args.target) if args.target else None,
+        observer=args.observer,
+        observed_at_utc=args.when,
+        magnitude=args.magnitude,
+        seeing=args.seeing,
+    )
+    print(
+        f"product={product.id}\tobject={product.summary.get('object')}\t"
+        f"at={product.summary.get('observed_at_utc')}"
     )
     archive.close()
     return 0
@@ -1351,6 +1380,22 @@ def build_parser() -> argparse.ArgumentParser:
     _add_db_arg(p_sl)
     p_sl.add_argument("--state", default=None)
     p_sl.set_defaults(func=_cmd_session_list)
+
+    p_obs = sub.add_parser("observe", help="Entrada observacional (IN-LOG / visual)")
+    obs_sub = p_obs.add_subparsers(dest="observe_cmd", required=True)
+    p_ov = obs_sub.add_parser("log-visual", help="Log visual PO-F03")
+    _add_db_arg(p_ov)
+    p_ov.add_argument("--object", required=True, help="Designacao do objecto")
+    p_ov.add_argument("--description", required=True)
+    p_ov.add_argument("--conditions", default="")
+    p_ov.add_argument("--seeing", default=None)
+    p_ov.add_argument("--magnitude", type=float, default=None)
+    p_ov.add_argument("--observer", default="AstroCitizen")
+    p_ov.add_argument("--when", default=None, help="UTC ISO")
+    p_ov.add_argument("--site", default=None, help="UUID site")
+    p_ov.add_argument("--program", default=None, help="UUID programa")
+    p_ov.add_argument("--target", default=None, help="UUID alvo")
+    p_ov.set_defaults(func=_cmd_observe_log_visual)
 
     p_imp = sub.add_parser("import", help="Importar dados externos (IN-IMP)")
     imp_sub = p_imp.add_subparsers(dest="import_cmd", required=True)

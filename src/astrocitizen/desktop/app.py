@@ -41,6 +41,7 @@ def run_gui(db_path: str | None = None) -> int:
     from astrocitizen.desktop.equipment import build_equipment_page
     from astrocitizen.desktop.import_panel import build_import_dashboard
     from astrocitizen.desktop.night import build_night_dashboard
+    from astrocitizen.desktop.observe_panel import build_observe_dashboard
     from astrocitizen.desktop.session_panel import build_session_dashboard
     from astrocitizen.desktop.theme import apply_theme, empty_state_text
     from astrocitizen.shared.paths import default_artifacts_root, default_db_path
@@ -53,11 +54,13 @@ def run_gui(db_path: str | None = None) -> int:
     TargetsPage = build_targets_page()
     EquipmentPage = build_equipment_page()
     SessionDashboard = build_session_dashboard()
+    ObserveDashboard = build_observe_dashboard()
 
     NAV_ITEMS: list[tuple[str, str]] = [
         ("Noite", "Noite"),
         ("Contribute", "Contribute"),
         ("Import", "Import"),
+        ("Observar", "Observar"),
         ("Sites", "Sites"),
         ("Equipamento", "Equipamento"),
         ("Programas", "Programas"),
@@ -131,9 +134,13 @@ def run_gui(db_path: str | None = None) -> int:
             self.session_panel = SessionDashboard(
                 archive, artifacts_root=arts, on_changed=self._on_entities_changed
             )
+            self.observe_panel = ObserveDashboard(
+                archive, artifacts_root=arts, on_changed=self._on_entities_changed
+            )
             self.stack.addWidget(self.night)
             self.stack.addWidget(self.contribute)
             self.stack.addWidget(self.import_panel)
+            self.stack.addWidget(self.observe_panel)
             self.stack.addWidget(self.sites_page)
             self.stack.addWidget(self.equipment_page)
 
@@ -163,6 +170,7 @@ def run_gui(db_path: str | None = None) -> int:
             self.session_panel.reload()
             self.equipment_page.reload()
             self.programs_page.reload()
+            self.observe_panel.reload()
 
         def _on_nav(self, index: int) -> None:
             self.stack.setCurrentIndex(index)
@@ -201,6 +209,7 @@ def run_gui(db_path: str | None = None) -> int:
             self.targets_page.reload()
             self.equipment_page.reload()
             self.session_panel.reload()
+            self.observe_panel.reload()
             workspaces = self.archive.list_workspaces()
             if not workspaces:
                 return

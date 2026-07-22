@@ -161,6 +161,17 @@ P1_WORKFLOWS: dict[str, dict] = {
             "daytime_acknowledged",
         ],
     },
+    "PO-F03": {
+        "name": "Log visual (diario)",
+        "steps": [
+            "plan_targets",
+            "log_visual",
+            "review_notes",
+        ],
+        "networks": ["diario", "AAVSO-visual"],
+        "analysis": "visual_log",
+        "export": "visual_log",
+    },
 }
 
 
