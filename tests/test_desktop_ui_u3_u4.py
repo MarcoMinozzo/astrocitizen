@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from types import SimpleNamespace
 from uuid import uuid4
+
+import pytest
 
 from astrocitizen.adapters.sqlite import SqliteArchive
 from astrocitizen.desktop.archive_panel import observation_rows, product_rows
@@ -75,6 +78,23 @@ def test_analyze_builder() -> None:
 
     assert callable(build_analyze_dashboard)
     assert callable(build_archive_dashboard)
+
+
+def test_analyze_astrometry_widgets(tmp_path: Path) -> None:
+    pytest.importorskip("PySide6")
+    from PySide6.QtWidgets import QApplication
+
+    from astrocitizen.desktop.analyze_panel import build_analyze_dashboard
+
+    app = QApplication.instance() or QApplication([])
+    archive = SqliteArchive(tmp_path / "a.sqlite3")
+    archive.migrate()
+    Dash = build_analyze_dashboard()
+    w = Dash(archive, artifacts_root=tmp_path / "art")
+    assert hasattr(w, "as_path")
+    assert hasattr(w, "_run_astrometry")
+    assert callable(w._run_astrometry)
+    _ = app
 
 
 def test_parse_optional_float() -> None:

@@ -1,4 +1,4 @@
-# Sprint ó Plate-solve / WCS (AC-110)
+# Sprint ù Plate-solve / WCS (AC-110)
 
 **Data:** 2026-07-21  
 **Estado:** concluido
@@ -40,9 +40,13 @@ astrocitizen analyze astrometry --fits-uri <wcs_uri> --x 42 --y 32
 
 ## GUI (2026-07-22)
 
-Bridge em **Analisar ? Blink / Astrom ? Plate-solve / WCS**:
+Bridge em **Analisar > Blink / Astrom > Plate-solve / WCS**:
 mesmos backends e hints que o CLI; Nova submit via checkbox;
 credencial `astrometrynet.api_key` de `credentials.json` se existir.
+
+Bridge **Medir astrometria** (mesmo tab): FITS (preenche path apos plate-solve
+via `wcs_uri`), X/Y, hints tan-plane opcionais; chama `MeasureAstrometry`
+(espelho de `analyze astrometry`). Produto UUID vai para Curvas.
 
 ## DoD
 
@@ -50,4 +54,5 @@ credencial `astrometrynet.api_key` de `credentials.json` se existir.
 - [x] Produto no BD + artefacto FITS
 - [x] CLI + testes sem solver externo
 - [x] Backlog AC-110 marcado
-- [x] Bridge GUI (Analisar)
+- [x] Bridge GUI plate-solve (Analisar)
+- [x] Bridge GUI medida astrometria (x,y ? RA/Dec)

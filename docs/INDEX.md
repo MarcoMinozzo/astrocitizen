@@ -38,6 +38,8 @@
 | [SPRINT_DESKTOP_UI_U5.md](SPRINT_DESKTOP_UI_U5.md) | Sprint U5: plots + Arquivo detalhe/export hint |
 | [SPRINT_PROGRAMA_ACTIVO.md](SPRINT_PROGRAMA_ACTIVO.md) | Guia Programa activo + atalho Contribuir |
 | [SPRINT_I18N_HELP.md](SPRINT_I18N_HELP.md) | RN-120/121: idiomas pt/es/en + Ajuda in-app |
+| [SPRINT_PLATESOLVE_AC110.md](SPRINT_PLATESOLVE_AC110.md) | Plate-solve + bridge GUI |
+| [SPRINT_MEASURE_ASTROMETRY_GUI.md](SPRINT_MEASURE_ASTROMETRY_GUI.md) | Medida astrometria GUI (x,y → RA/Dec) |
 | [ANALISE_ESPECTRAL_ASSISTIDA.md](ANALISE_ESPECTRAL_ASSISTIDA.md) | AC-106: como funciona a interpretacao espectral (sem LLM) |
 | [EPICO_E19_BASE_CONHECIMENTO_RAG.md](EPICO_E19_BASE_CONHECIMENTO_RAG.md) | Epico E19: base interna de conhecimento para RAG |
 | [AAVSO_WEBOBS_CHECKLIST.md](AAVSO_WEBOBS_CHECKLIST.md) | Validar export Extended no WebObs |

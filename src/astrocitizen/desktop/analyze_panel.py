@@ -1,4 +1,4 @@
-"""Painel Analisar: bridges + viewer FITS + curvas + plate-solve (U3-U5 / AC-110 GUI)."""
+"""Painel Analisar: bridges + viewer + curvas + plate-solve + medida astrometria."""
 
 from __future__ import annotations
 
@@ -42,6 +42,7 @@ def build_analyze_dashboard() -> type:
         AperturePhotometry,
         BlinkDiff,
         ExtractSpectrum1D,
+        MeasureAstrometry,
         PlateSolve,
     )
     from astrocitizen.contribution.credentials import LocalCredentialsStore
@@ -237,6 +238,60 @@ def build_analyze_dashboard() -> type:
             btn_ps.clicked.connect(self._run_plate_solve)
             ps_form.addRow(btn_ps)
             lay.addWidget(ps_box)
+
+            as_box = QGroupBox("Medir astrometria (x,y → RA/Dec)")
+            as_form = QFormLayout(as_box)
+            self.as_path = QLineEdit()
+            self.as_path.setPlaceholderText("FITS com WCS (apos plate-solve) ou tan-plane")
+            as_form.addRow(
+                "FITS",
+                self._path_row(self.as_path, lambda: self._browse(self.as_path)),
+            )
+            self.as_x = QDoubleSpinBox()
+            self.as_x.setRange(0, 1e5)
+            self.as_x.setDecimals(2)
+            self.as_x.setValue(100)
+            self.as_y = QDoubleSpinBox()
+            self.as_y.setRange(0, 1e5)
+            self.as_y.setDecimals(2)
+            self.as_y.setValue(100)
+            as_form.addRow("X (pix)", self.as_x)
+            as_form.addRow("Y (pix)", self.as_y)
+            self.as_ra0 = QLineEdit()
+            self.as_ra0.setPlaceholderText("RA0 deg se sem WCS")
+            self.as_dec0 = QLineEdit()
+            self.as_dec0.setPlaceholderText("Dec0 deg se sem WCS")
+            self.as_scale = QLineEdit()
+            self.as_scale.setPlaceholderText("arcsec/pix se sem WCS")
+            self.as_pa = QLineEdit()
+            self.as_pa.setPlaceholderText("0")
+            self.as_pa.setText("0")
+            as_form.addRow("RA0", self.as_ra0)
+            as_form.addRow("Dec0", self.as_dec0)
+            as_form.addRow("Scale", self.as_scale)
+            as_form.addRow("PA deg", self.as_pa)
+            self.as_desig = QLineEdit()
+            self.as_desig.setPlaceholderText("designacao / OBJECT")
+            self.as_band = QLineEdit("R")
+            self.as_nonsidereal = QCheckBox("Tracking nao-sideral (PO-C02)")
+            as_form.addRow("Designation", self.as_desig)
+            as_form.addRow("Band", self.as_band)
+            as_form.addRow(self.as_nonsidereal)
+            as_hint = QLabel(
+                "Com WCS no header (pos plate-solve): so X/Y. "
+                "Sem WCS: RA0/Dec0/scale obrigatorios (tan-plane)."
+            )
+            as_hint.setObjectName("emptyState")
+            as_hint.setWordWrap(True)
+            as_form.addRow(as_hint)
+            btn_as = QPushButton("Medir RA/Dec")
+            btn_as.clicked.connect(self._run_astrometry)
+            as_form.addRow(btn_as)
+            self.as_result = QLabel("")
+            self.as_result.setObjectName("emptyState")
+            self.as_result.setWordWrap(True)
+            as_form.addRow(self.as_result)
+            lay.addWidget(as_box)
             lay.addStretch(1)
             return w
 
@@ -469,6 +524,65 @@ def build_analyze_dashboard() -> type:
                 f"scale={result.scale_arcsec}  "
                 f"wcs_uri={product.parameters.get('wcs_uri')}"
             )
+            wcs_uri = product.parameters.get("wcs_uri")
+            if wcs_uri and hasattr(self, "as_path"):
+                try:
+                    self.as_path.setText(str(store.resolve(str(wcs_uri))))
+                except (OSError, ValueError, KeyError):
+                    pass
+            if self.on_changed:
+                self.on_changed()
+
+        def _run_astrometry(self) -> None:
+            ws = self._workspace()
+            if ws is None:
+                return
+            path = Path(self.as_path.text().strip())
+            if not path.is_file():
+                QMessageBox.warning(self, "Astrometria", "FITS invalido.")
+                return
+            try:
+                ra0 = parse_optional_float(self.as_ra0.text())
+                dec0 = parse_optional_float(self.as_dec0.text())
+                scale = parse_optional_float(self.as_scale.text())
+                pa = parse_optional_float(self.as_pa.text())
+            except ValueError:
+                QMessageBox.warning(
+                    self, "Astrometria", "Parametros numericos invalidos."
+                )
+                return
+            store = LocalArtifactStore(self.artifacts_root)
+            try:
+                uri = self._put_fits(path)
+                product = MeasureAstrometry(self.archive, store).execute(
+                    workspace_id=ws.id,
+                    fits_uri=uri,
+                    x=float(self.as_x.value()),
+                    y=float(self.as_y.value()),
+                    ra0_deg=ra0,
+                    dec0_deg=dec0,
+                    scale_arcsec=scale,
+                    pa_deg=pa if pa is not None else 0.0,
+                    designation=self.as_desig.text().strip() or None,
+                    band=self.as_band.text().strip() or "R",
+                    nonsidereal=self.as_nonsidereal.isChecked(),
+                    program_id=self._shell_program_id,
+                )
+            except (DomainError, ValueError, OSError) as exc:
+                QMessageBox.critical(self, "Astrometria", str(exc))
+                return
+            ra = product.summary.get("ra_deg")
+            dec = product.summary.get("dec_deg")
+            mag = product.summary.get("mag")
+            method = product.parameters.get("method")
+            msg = (
+                f"product={product.id}  method={method}  "
+                f"ra={ra}  dec={dec}  mag={mag}  "
+                f"epoch={product.summary.get('epoch_utc')}"
+            )
+            self.as_result.setText(msg)
+            self._append(f"astrometry={product.id}  ra={ra}  dec={dec}  mag={mag}")
+            self.cu_product.setText(str(product.id))
             if self.on_changed:
                 self.on_changed()
 
