@@ -38,6 +38,7 @@ def run_gui(db_path: str | None = None) -> int:
         build_sites_page,
         build_targets_page,
     )
+    from astrocitizen.desktop.equipment import build_equipment_page
     from astrocitizen.desktop.import_panel import build_import_dashboard
     from astrocitizen.desktop.night import build_night_dashboard
     from astrocitizen.desktop.session_panel import build_session_dashboard
@@ -50,6 +51,7 @@ def run_gui(db_path: str | None = None) -> int:
     SitesPage = build_sites_page()
     ProgramsPage = build_programs_page()
     TargetsPage = build_targets_page()
+    EquipmentPage = build_equipment_page()
     SessionDashboard = build_session_dashboard()
 
     NAV_ITEMS: list[tuple[str, str]] = [
@@ -123,6 +125,9 @@ def run_gui(db_path: str | None = None) -> int:
             self.sites_page = SitesPage(archive, on_changed=self._on_entities_changed)
             self.programs_page = ProgramsPage(archive, on_changed=self._on_entities_changed)
             self.targets_page = TargetsPage(archive, on_changed=self._on_entities_changed)
+            self.equipment_page = EquipmentPage(
+                archive, on_changed=self._on_entities_changed
+            )
             self.session_panel = SessionDashboard(
                 archive, artifacts_root=arts, on_changed=self._on_entities_changed
             )
@@ -130,12 +135,9 @@ def run_gui(db_path: str | None = None) -> int:
             self.stack.addWidget(self.contribute)
             self.stack.addWidget(self.import_panel)
             self.stack.addWidget(self.sites_page)
+            self.stack.addWidget(self.equipment_page)
 
             self.pages: dict[str, QWidget] = {}
-            # Equipamento (index 4) is still a simple table page
-            eq_page = self._table_page()
-            self.pages["Equipamento"] = eq_page
-            self.stack.addWidget(eq_page)
 
             self.stack.addWidget(self.programs_page)
             self.stack.addWidget(self.targets_page)
@@ -159,6 +161,8 @@ def run_gui(db_path: str | None = None) -> int:
             self.import_panel.load_workspace()
             self.contribute.load_workspace()
             self.session_panel.reload()
+            self.equipment_page.reload()
+            self.programs_page.reload()
 
         def _on_nav(self, index: int) -> None:
             self.stack.setCurrentIndex(index)
@@ -195,6 +199,7 @@ def run_gui(db_path: str | None = None) -> int:
             self.sites_page.reload()
             self.programs_page.reload()
             self.targets_page.reload()
+            self.equipment_page.reload()
             self.session_panel.reload()
             workspaces = self.archive.list_workspaces()
             if not workspaces:
@@ -226,17 +231,6 @@ def run_gui(db_path: str | None = None) -> int:
                     empty.show()
                     t.hide()
 
-            eqs = self.archive.list_equipment(ws.id)
-            fill(
-                self.pages["Equipamento"],
-                ["Tipo", "Nome", "Backend", "OK"],
-                [
-                    [e.type, e.name, e.backend or "-", "sim" if e.available else "nao"]
-                    for e in eqs
-                ],
-                f"Equipamento ({len(eqs)})",
-                "Equipamento",
-            )
             plans = self.archive.list_daily_plans(ws.id)
             fill(
                 self.pages["Plano diario"],

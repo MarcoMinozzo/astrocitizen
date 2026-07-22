@@ -209,8 +209,9 @@ Em vez de 50 apps, **7 superfícies**:
 | Ordem | Canal / superfície | Desbloqueia |
 |-------|--------------------|-------------|
 | 1 | **Import FITS** (GUI + CLI) | ✅ `import fits` + painel Import |
-| 2 | **CRUD Site/Programa/Alvo na GUI** | metadados comuns |
-| 3 | **Wizard Sessão** | IN-CAP usável no desktop |
+| 2 | **CRUD Site/Programa/Alvo na GUI** | ✅ metadados comuns |
+| 3 | **Wizard Sessão** | ✅ IN-CAP usável no desktop |
+| 3b | **CRUD Equipamento + Setup** | ✅ fecha AC-072 / liga programa |
 | 4 | **Editor visual log + solar form** | F03, E03 completo |
 | 5 | **Timing/IOTA import previsão + vídeo** | D01 |
 | 6 | **Rádio CSV/HDF5** | I* |

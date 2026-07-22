@@ -205,7 +205,7 @@ def viability_badge(ok: bool | None) -> tuple[str, str]:
 def empty_state_text(module: str) -> str:
     hints = {
         "Sites": "Nenhum site. Use Novo na pagina Sites, ou CLI: astrocitizen site add",
-        "Equipamento": "Nenhum equipamento. CLI: astrocitizen equipment add ...",
+        "Equipamento": "Nenhum equipamento. Use Novo na pagina Equipamento.",
         "Programas": "Nenhum programa. Use Novo na pagina Programas, ou CLI.",
         "Alvos": "Nenhum alvo. Use Novo na pagina Alvos, ou CLI: astrocitizen target add",
         "Plano diario": "Nenhum plano. Use Noite -> Gerar plano.",

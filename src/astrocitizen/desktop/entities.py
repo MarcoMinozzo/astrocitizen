@@ -285,10 +285,23 @@ def build_programs_page() -> type:
             self.priority = QSpinBox()
             self.priority.setRange(1, 99)
             self.priority.setValue(program.priority if program else 10)
+            self.instrument = QComboBox()
+            self.instrument.addItem("(nenhum setup)", None)
+            wss = archive.list_workspaces()
+            cfg_ws = program.workspace_id if program else (wss[0].id if wss else None)
+            if cfg_ws is not None:
+                for c in archive.list_instrument_configs(cfg_ws):
+                    roles = ",".join(sorted(c.items.keys())) or "-"
+                    self.instrument.addItem(f"{c.name} ({roles})", c.id)
+            if program and program.default_instrument_config_id:
+                i = self.instrument.findData(program.default_instrument_config_id)
+                if i >= 0:
+                    self.instrument.setCurrentIndex(i)
             form.addRow("Template PO-*", self.template)
             form.addRow("Nome", self.name)
             form.addRow("Estado", self.state)
             form.addRow("Prioridade", self.priority)
+            form.addRow("Setup instrumental", self.instrument)
             buttons = QDialogButtonBox(
                 QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
             )
@@ -315,9 +328,7 @@ def build_programs_page() -> type:
                 name=name,
                 state=str(self.state.currentData()),  # type: ignore[arg-type]
                 priority=int(self.priority.value()),
-                default_instrument_config_id=(
-                    base.default_instrument_config_id if base else None
-                ),
+                default_instrument_config_id=self.instrument.currentData(),
                 export_networks=networks,
                 minimum_product=(
                     base.minimum_product
