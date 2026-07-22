@@ -1,7 +1,7 @@
 # Entrada de observações por programa (PO-*)
 
-**Status:** desenho de produto (decisão de UX de dados)  
-**Data:** 2026-07-21  
+**Status:** ✅ epic de canais prioritários fechado (2026-07-22) — ver §7  
+**Data:** 2026-07-21 (desenho); 2026-07-22 (fecho engenharia 1–7)  
 **Fontes:** [PROGRAMAS_OBSERVACIONAIS.md](PROGRAMAS_OBSERVACIONAIS.md), [atlas/ATLAS_REPORTE_OBSERVACOES.md](atlas/ATLAS_REPORTE_OBSERVACOES.md), [MODELO_DADOS_V1.md](MODELO_DADOS_V1.md), [WORKFLOWS.md](WORKFLOWS.md), catálogo `program_templates.json`  
 **Mandato:** para **cada** PO-* definir *como* o utilizador fornece a informação observacional à plataforma — não só o formato de export.
 
@@ -87,7 +87,7 @@ Legenda **Estado**: `feito` / `parcial` / `desenho` (ainda não na UI).
 | **B04** Class. MK | Espectro 1D + escolha de templates | IN-SPEC, IN-LOG | 1D + tipo | classificação | desenho |
 | **B05** RV educ. | Espectro + linhas de calibração | IN-SPEC | 1D + λ ref | RV table | desenho |
 | **B06** Spec solar | Safety checklist + espectro solar | IN-LOG + IN-SPEC | safety + 1D/2D | linhas solares | desenho |
-| **B07** Echelle | Import ordem(s) echelle | IN-SPEC | multi-order FITS | spectrum | desenho (P4) |
+| **B07** Echelle | Import ordem(s) echelle | IN-SPEC | multi-order FITS | spectrum | ✅ `import echelle` |
 | **B08** Lab spectro | Flats / lâmpada / testes (sem alvo céu) | IN-CAP, IN-IMP | calib frames | métricas resolução | desenho |
 
 ### C — Astrometria / NEO / SN
@@ -126,7 +126,7 @@ Legenda **Estado**: `feito` / `parcial` / `desenho` (ainda não na UI).
 |----|---------------------------|--------|----------------|---------|--------|
 | **F01** Deep-sky | LRGB/Ha frames + calib | IN-CAP, IN-IMP | FITS set | stacked LRGB | desenho |
 | **F02** Messier | Imaging **ou** log visual do objecto | IN-IMP **ou** IN-LOG | image ou log | archive / log | desenho |
-| **F03** Visual | **Só formulário** (sem CCD): objecto, condições, descrição | IN-LOG | log JSON/texto | visual_log | desenho |
+| **F03** Visual | **Só formulário** (sem CCD): objecto, condições, descrição | IN-LOG | log JSON/texto | visual_log | ✅ Observar + `observe log-visual` |
 | **F04** Asterismos | Planner + log de reconhecimento | IN-LOG | checklist céu | log | desenho |
 
 ### G / H — Duplas / polarimetria
@@ -134,8 +134,8 @@ Legenda **Estado**: `feito` / `parcial` / `desenho` (ainda não na UI).
 | PO | Como o utilizador fornece | Canais | Payload mínimo | Produto | Estado |
 |----|---------------------------|--------|----------------|---------|--------|
 | **G01** Duplas | Imagem **ou** micrómetro (ângulo/separação manual) | IN-IMP, IN-LOG | PA, sep, epoch | double_measure | desenho |
-| **G02** Speckle | Cubo/speckle frames | IN-IMP | cube | speckle product | desenho (P4) |
-| **H01** Polarimetria | Frames em ângulos de polarizador | IN-CAP, IN-IMP | set polar | Stokes table | desenho (P4) |
+| **G02** Speckle | Cubo/speckle frames | IN-IMP | cube | speckle product | ✅ `import speckle` |
+| **H01** Polarimetria | Frames em ângulos de polarizador | IN-CAP, IN-IMP | set polar | Stokes table | ✅ `import polar` |
 
 ### I — Rádio (não é imagem óptica)
 
@@ -198,9 +198,10 @@ Em vez de 50 apps, **7 superfícies**:
 | Astrometria | `analyze plate-solve` + `astrometry` (existe) |
 | Blink | `analyze blink` (existe) |
 | Solar | `analyze sunspots` (existe) |
-| Visual log | `observe log-visual` (a criar) |
+| Visual log | `observe log-visual` |
 | Rádio | `import radio` (CSV/HDF5) |
 | Occultation | `import prediction` · `observe occultation` |
+| Especialidades P4 | `import echelle` · `import speckle` · `import polar` |
 
 ---
 
@@ -215,7 +216,9 @@ Em vez de 50 apps, **7 superfícies**:
 | 4 | **Editor visual log + solar form** | ✅ Observar GUI + `observe log-visual` |
 | 5 | **Timing/IOTA import previsão + vídeo** | ✅ pred+timing+video/LC · `SPRINT_IOTA_TIMING_ENTRADA5` |
 | 6 | **Rádio CSV/HDF5** | ✅ `import radio` + GUI Radio · `SPRINT_RADIO_ENTRADA6` |
-| 7 | Restantes especializações (speckle, polar, echelle) | P4 |
+| 7 | Restantes especializações (speckle, polar, echelle) | ✅ `import echelle|speckle|polar` · `SPRINT_ESPECIALIDADES_ENTRADA7` |
+
+**Epic ENTRADA (§7):** ✅ **fechado** (canais prioritários 1–7). Reduções científicas profundas e I02–I04 ficam em AC-* seguintes.
 
 ---
 
@@ -225,7 +228,7 @@ Em vez de 50 apps, **7 superfícies**:
 2. **PO-* escolhe canais**, não inventa formato de BD novo — reutiliza Observation / Artifact / AnalysisProduct.  
 3. **Produto mínimo** (RN-043) valida se a entrada foi suficiente antes do export.  
 4. **Safety solar** é entrada obrigatória (já no CLI sunspots); GUI deve espelhar.  
-5. Próximo passo de engenharia recomendado: implementar **IN-IMP (import FITS)** + formulários CRUD na GUI, depois wizard Sessão.
+5. Epic de canais prioritários (§7) fechado; próximo foco: reduções/exports por rede e AC-161 (rádio I02–I04).
 
 ---
 

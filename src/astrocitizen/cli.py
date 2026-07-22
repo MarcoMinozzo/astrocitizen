@@ -36,9 +36,12 @@ from astrocitizen.inventory.models import Equipment, Site
 from astrocitizen.observatory import (
     CaptureObservation,
     ExecuteSession,
+    ImportEchelleOrders,
     ImportFits,
     ImportIotaPrediction,
+    ImportPolarimetrySet,
     ImportRadioTimeseries,
+    ImportSpeckleCube,
     LogVisualObservation,
     RegisterOccultationTiming,
 )
@@ -757,6 +760,67 @@ def _cmd_import_radio(args: argparse.Namespace) -> int:
         f"fmt={product.summary.get('format')}\t"
         f"pmin={product.summary.get('power_min')}\t"
         f"pmax={product.summary.get('power_max')}"
+    )
+    archive.close()
+    return 0
+
+
+def _cmd_import_echelle(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    store = LocalArtifactStore(Path(args.artifacts))
+    product = ImportEchelleOrders(archive, store).execute(
+        workspace_id=ws.id,
+        path=Path(args.path),
+        site_id=UUID(args.site) if args.site else None,
+        program_id=UUID(args.program) if args.program else None,
+        observer=args.observer,
+        notes=args.notes or "",
+    )
+    print(
+        f"product={product.id}\tn_orders={product.summary.get('n_orders')}\t"
+        f"n_files={product.summary.get('n_files')}"
+    )
+    archive.close()
+    return 0
+
+
+def _cmd_import_speckle(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    store = LocalArtifactStore(Path(args.artifacts))
+    product = ImportSpeckleCube(archive, store).execute(
+        workspace_id=ws.id,
+        path=Path(args.path),
+        site_id=UUID(args.site) if args.site else None,
+        program_id=UUID(args.program) if args.program else None,
+        observer=args.observer,
+        notes=args.notes or "",
+    )
+    print(
+        f"product={product.id}\tn_frames={product.summary.get('n_frames')}\t"
+        f"fmt={product.summary.get('format')}"
+    )
+    archive.close()
+    return 0
+
+
+def _cmd_import_polar(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    store = LocalArtifactStore(Path(args.artifacts))
+    product = ImportPolarimetrySet(archive, store).execute(
+        workspace_id=ws.id,
+        path=Path(args.path),
+        angles_csv=Path(args.angles) if args.angles else None,
+        site_id=UUID(args.site) if args.site else None,
+        program_id=UUID(args.program) if args.program else None,
+        observer=args.observer,
+        notes=args.notes or "",
+    )
+    print(
+        f"product={product.id}\tn_frames={product.summary.get('n_frames')}\t"
+        f"P={product.summary.get('P')}\ttheta={product.summary.get('theta_deg')}"
     )
     archive.close()
     return 0
@@ -1504,7 +1568,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_oo.add_argument("--artifacts", default=str(default_artifacts_root()))
     p_oo.set_defaults(func=_cmd_observe_occultation)
 
-    p_imp = sub.add_parser("import", help="Importar dados externos (IN-IMP / IN-PRED / IN-RAD)")
+    p_imp = sub.add_parser(
+        "import",
+        help="Importar dados (IN-IMP / IN-PRED / IN-RAD / P4)",
+    )
     imp_sub = p_imp.add_subparsers(dest="import_cmd", required=True)
     p_if = imp_sub.add_parser("fits", help="Importar FITS -> Observation + Artifact")
     _add_db_arg(p_if)
@@ -1539,6 +1606,34 @@ def build_parser() -> argparse.ArgumentParser:
     p_ir.add_argument("--notes", default="")
     p_ir.add_argument("--artifacts", default=str(default_artifacts_root()))
     p_ir.set_defaults(func=_cmd_import_radio)
+    p_ie = imp_sub.add_parser("echelle", help="Importar ordens echelle FITS (PO-B07)")
+    _add_db_arg(p_ie)
+    p_ie.add_argument("--path", required=True, help="FITS multi-ext ou pasta")
+    p_ie.add_argument("--site", default=None)
+    p_ie.add_argument("--program", default=None)
+    p_ie.add_argument("--observer", default="AstroCitizen")
+    p_ie.add_argument("--notes", default="")
+    p_ie.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_ie.set_defaults(func=_cmd_import_echelle)
+    p_is = imp_sub.add_parser("speckle", help="Importar cubo/stack/video (PO-G02)")
+    _add_db_arg(p_is)
+    p_is.add_argument("--path", required=True, help="FITS cubo, pasta ou SER")
+    p_is.add_argument("--site", default=None)
+    p_is.add_argument("--program", default=None)
+    p_is.add_argument("--observer", default="AstroCitizen")
+    p_is.add_argument("--notes", default="")
+    p_is.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_is.set_defaults(func=_cmd_import_speckle)
+    p_ipo = imp_sub.add_parser("polar", help="Importar set polarimetro (PO-H01)")
+    _add_db_arg(p_ipo)
+    p_ipo.add_argument("--path", required=True, help="FITS ou pasta de frames")
+    p_ipo.add_argument("--angles", default=None, help="CSV filename,angle_deg")
+    p_ipo.add_argument("--site", default=None)
+    p_ipo.add_argument("--program", default=None)
+    p_ipo.add_argument("--observer", default="AstroCitizen")
+    p_ipo.add_argument("--notes", default="")
+    p_ipo.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_ipo.set_defaults(func=_cmd_import_polar)
 
     p_gui = sub.add_parser("gui", help="Abrir shell PySide6 (requer [gui])")
     _add_db_arg(p_gui)

@@ -1,4 +1,4 @@
-"""Observatorio: sessao, captura, hardware, import, visual, occultacao, radio."""
+"""Observatorio: sessao, captura, hardware, import, visual, occultacao, radio, P4."""
 
 from astrocitizen.observatory.capture import CaptureObservation, build_fits_headers
 from astrocitizen.observatory.failure import mark_block_failed
@@ -19,14 +19,22 @@ from astrocitizen.observatory.quick_session import (
 )
 from astrocitizen.observatory.radio import ImportRadioTimeseries
 from astrocitizen.observatory.session import ExecuteSession
+from astrocitizen.observatory.specialties import (
+    ImportEchelleOrders,
+    ImportPolarimetrySet,
+    ImportSpeckleCube,
+)
 from astrocitizen.observatory.visual_log import LogVisualObservation
 
 __all__ = [
     "CaptureObservation",
     "ExecuteSession",
+    "ImportEchelleOrders",
     "ImportFits",
     "ImportIotaPrediction",
+    "ImportPolarimetrySet",
     "ImportRadioTimeseries",
+    "ImportSpeckleCube",
     "LogVisualObservation",
     "ObservationRecord",
     "RegisterOccultationTiming",

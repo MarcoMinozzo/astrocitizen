@@ -183,6 +183,39 @@ P1_WORKFLOWS: dict[str, dict] = {
         "analysis": "radio",
         "export": "radio_timeseries",
     },
+    "PO-B07": {
+        "name": "Echelle amador (ordens)",
+        "steps": [
+            "import_echelle_orders",
+            "review_orders",
+            "extract_spectrum_1d",
+        ],
+        "networks": [],
+        "analysis": "echelle",
+        "export": "echelle_orders",
+    },
+    "PO-G02": {
+        "name": "Speckle interferometry",
+        "steps": [
+            "import_speckle_cube",
+            "review_frames",
+            "reduce_speckle",
+        ],
+        "networks": [],
+        "analysis": "speckle",
+        "export": "speckle_cube",
+    },
+    "PO-H01": {
+        "name": "Polarimetria (Stokes)",
+        "steps": [
+            "import_polar_set",
+            "estimate_stokes",
+            "review_pol",
+        ],
+        "networks": [],
+        "analysis": "polarimetry",
+        "export": "polarimetry_stokes",
+    },
 }
 
 
