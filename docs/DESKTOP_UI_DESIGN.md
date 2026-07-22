@@ -1,9 +1,9 @@
 # Desktop UI — informacao architecture e design
 
-**Status:** ✅ U0–U4 fechados (2026-07-22)  
+**Status:** ✅ U0–U5 (2026-07-22)  
 **Data:** 2026-07-22  
 **Codigo actual:** `src/astrocitizen/desktop/` · tema `theme.py` · widgets `widgets.py`  
-**Fontes:** [WORKFLOWS.md](WORKFLOWS.md) §3–4, [ENTRADA_OBSERVACOES_POR_PO.md](ENTRADA_OBSERVACOES_POR_PO.md) §5–7, [SPRINT_UX_SHELL.md](SPRINT_UX_SHELL.md), [SPRINT_DESKTOP_UI_U0_U1.md](SPRINT_DESKTOP_UI_U0_U1.md), [SPRINT_DESKTOP_UI_U2.md](SPRINT_DESKTOP_UI_U2.md), [SPRINT_DESKTOP_UI_U3_U4.md](SPRINT_DESKTOP_UI_U3_U4.md)
+**Fontes:** [WORKFLOWS.md](WORKFLOWS.md) §3–4, [ENTRADA_OBSERVACOES_POR_PO.md](ENTRADA_OBSERVACOES_POR_PO.md) §5–7, [SPRINT_UX_SHELL.md](SPRINT_UX_SHELL.md), [SPRINT_DESKTOP_UI_U0_U1.md](SPRINT_DESKTOP_UI_U0_U1.md), [SPRINT_DESKTOP_UI_U2.md](SPRINT_DESKTOP_UI_U2.md), [SPRINT_DESKTOP_UI_U3_U4.md](SPRINT_DESKTOP_UI_U3_U4.md), [SPRINT_DESKTOP_UI_U5.md](SPRINT_DESKTOP_UI_U5.md)
 
 ---
 
@@ -13,15 +13,15 @@ A shell cresceu por sprint de entrada; U0–U4 reorganizaram IA, hubs e Analisar
 
 ---
 
-## 2. Inventario actual (pos-U4)
+## 2. Inventario actual (pos-U5)
 
 | Nav (6 areas) | Conteudo | Nota |
 |---------------|----------|------|
 | Noite | Meteo/radar + tab Planos | Hub |
 | Observatorio | Sessao \| Importar (FITS/Radio/Espec./SER) \| Observar \| Timing | Hub |
-| Analisar | Fotometria \| Espectro \| Blink \| Viewer FITS | Bridges + AC-062 |
+| Analisar | Fotometria \| Espectro \| Blink \| Viewer FITS \| Curvas | Bridges + plot |
 | Contribuir | Redes | |
-| Arquivo | Observacoes + Produtos + filtros | U3 |
+| Arquivo | Observacoes + Produtos + detalhe/plot | U3+U5 |
 | Configurar | Sites \| Equip \| Programas \| Alvos | Hub |
 
 Extras: ContextBar sync Site/Programa; Visao noturna (vermelho).
@@ -43,13 +43,13 @@ Mantidos: 4 modos WORKFLOWS, 7 superficies ENTRADA, ops first, CLI=espelho, tema
 | **U2** | Import hub + ContextBar sync | ✅ |
 | **U3** | Arquivo rico + Analisar bridges | ✅ |
 | **U4** | Viewer FITS | ✅ |
+| **U5** | Plots + Arquivo detalhe/export hint | ✅ |
 
 ## Melhorias futuras (fora deste epic UX)
 
 - Ocultar combos locais quando ContextBar activo  
-- Plots de curvas / espectro na GUI  
 - Plate-solve externo na tab Astrom  
-- Arquivo: abrir artefacto / export directo  
+- Arquivo: abrir artefacto no OS / export directo (sem so hint CLI)  
 
 ## Historico
 
@@ -59,3 +59,4 @@ Mantidos: 4 modos WORKFLOWS, 7 superficies ENTRADA, ops first, CLI=espelho, tema
 | 1.1 | 2026-07-22 | U0+U1 |
 | 1.2 | 2026-07-22 | U2 |
 | 1.3 | 2026-07-22 | U3+U4 — roadmap UX fechado |
+| 1.4 | 2026-07-22 | U5 plots + Arquivo detalhe |

@@ -1,9 +1,10 @@
-"""Painel Analisar: bridges fotometria/espectro/blink + viewer FITS (U3/U4)."""
+"""Painel Analisar: bridges + viewer FITS + curvas (U3/U4/U5)."""
 
 from __future__ import annotations
 
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
 
 def build_analyze_dashboard() -> type:
@@ -30,9 +31,13 @@ def build_analyze_dashboard() -> type:
         BlinkDiff,
         ExtractSpectrum1D,
     )
+    from astrocitizen.desktop.plot_widget import build_series_plot
+    from astrocitizen.desktop.series import series_from_measurement_points
     from astrocitizen.reduction import fits_stats, stretch_display
     from astrocitizen.shared.errors import DomainError
     from astrocitizen.shared.paths import default_artifacts_root
+
+    SeriesPlot = build_series_plot()
 
     class AnalyzeDashboard(QWidget):
         def __init__(
@@ -67,6 +72,7 @@ def build_analyze_dashboard() -> type:
             self.tabs.addTab(self._tab_spectrum(), "Espectro")
             self.tabs.addTab(self._tab_blink(), "Blink / Astrom")
             self.tabs.addTab(self._tab_viewer(), "Viewer FITS")
+            self.tabs.addTab(self._tab_curves(), "Curvas")
             root.addWidget(self.tabs, 1)
 
             self.log = QTextEdit()
@@ -194,6 +200,60 @@ def build_analyze_dashboard() -> type:
             lay.addWidget(scroll, 1)
             return w
 
+        def _tab_curves(self) -> QWidget:
+            w = QWidget()
+            lay = QVBoxLayout(w)
+            form = QFormLayout()
+            self.cu_product = QLineEdit()
+            self.cu_product.setPlaceholderText("UUID do analysis_product")
+            form.addRow("Product ID", self.cu_product)
+            btn = QPushButton("Carregar curva")
+            btn.clicked.connect(self._run_curves)
+            form.addRow(btn)
+            lay.addLayout(form)
+            self.cu_info = QLabel("Cole o UUID apos fotometria/espectro, ou escolha em Arquivo.")
+            self.cu_info.setObjectName("emptyState")
+            self.cu_info.setWordWrap(True)
+            lay.addWidget(self.cu_info)
+            self.cu_plot = SeriesPlot()
+            lay.addWidget(self.cu_plot, 1)
+            return w
+
+        def _run_curves(self) -> None:
+            raw = self.cu_product.text().strip()
+            if not raw:
+                QMessageBox.warning(self, "Curvas", "Indique o product UUID.")
+                return
+            try:
+                pid = UUID(raw)
+            except ValueError:
+                QMessageBox.warning(self, "Curvas", "UUID invalido.")
+                return
+            product = self.archive.get_analysis_product(pid)
+            if product is None:
+                QMessageBox.warning(self, "Curvas", "Produto nao encontrado.")
+                return
+            points = self.archive.list_measurement_points(pid)
+            xs, ys, band = series_from_measurement_points(points)
+            if len(xs) < 2:
+                self.cu_plot.clear()
+                self.cu_info.setText(
+                    f"{product.product_type}: {len(points)} pontos brutos, "
+                    f"{len(xs)} validos (precisa >=2)."
+                )
+                return
+            self.cu_plot.set_series(
+                xs,
+                ys,
+                title=f"{product.product_type}  ({len(xs)} pts)",
+                xlabel="x",
+                ylabel=band,
+            )
+            self.cu_info.setText(
+                f"OK  type={product.product_type}  state={product.state}  n={len(xs)}"
+            )
+            self._append(f"curve plot  product={pid}  n={len(xs)}")
+
         def _browse(self, edit: QLineEdit) -> None:
             path, _ = QFileDialog.getOpenFileName(
                 self,
@@ -230,6 +290,7 @@ def build_analyze_dashboard() -> type:
                 f"photometry={product.id}  mag={product.summary.get('mag')}  "
                 f"flux={product.summary.get('flux')}"
             )
+            self.cu_product.setText(str(product.id))
             if self.on_changed:
                 self.on_changed()
 
@@ -258,6 +319,7 @@ def build_analyze_dashboard() -> type:
                 f"spectrum={product.id}  "
                 f"wave={product.summary.get('wave0_nm')}-{product.summary.get('wave1_nm')}nm"
             )
+            self.cu_product.setText(str(product.id))
             if self.on_changed:
                 self.on_changed()
 
