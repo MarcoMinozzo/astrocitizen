@@ -172,6 +172,17 @@ P1_WORKFLOWS: dict[str, dict] = {
         "analysis": "visual_log",
         "export": "visual_log",
     },
+    "PO-I01": {
+        "name": "Sol radio (potencia vs tempo)",
+        "steps": [
+            "import_radio_series",
+            "review_timeseries",
+            "export_radio_csv",
+        ],
+        "networks": ["clubes-radio"],
+        "analysis": "radio",
+        "export": "radio_timeseries",
+    },
 }
 
 

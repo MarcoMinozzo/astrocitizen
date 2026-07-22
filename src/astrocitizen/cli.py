@@ -38,6 +38,7 @@ from astrocitizen.observatory import (
     ExecuteSession,
     ImportFits,
     ImportIotaPrediction,
+    ImportRadioTimeseries,
     LogVisualObservation,
     RegisterOccultationTiming,
 )
@@ -709,7 +710,8 @@ def _cmd_import_prediction(args: argparse.Namespace) -> int:
 def _cmd_observe_occultation(args: argparse.Namespace) -> int:
     archive = _open_archive(Path(args.db))
     ws = _ensure_default_workspace(archive)
-    product = RegisterOccultationTiming(archive).execute(
+    store = LocalArtifactStore(Path(args.artifacts))
+    product = RegisterOccultationTiming(archive, store).execute(
         workspace_id=ws.id,
         event_id=args.event,
         star=args.star,
@@ -723,10 +725,38 @@ def _cmd_observe_occultation(args: argparse.Namespace) -> int:
         prediction_product_id=UUID(args.prediction) if args.prediction else None,
         observer=args.observer,
         notes=args.notes or "",
+        video_path=Path(args.video) if args.video else None,
+        lc_csv_path=Path(args.lc) if args.lc else None,
+        suggest_contacts=bool(args.suggest_contacts),
     )
     print(
         f"product={product.id}\tresult={product.summary.get('result')}\t"
-        f"event={product.summary.get('event_id')}"
+        f"event={product.summary.get('event_id')}\t"
+        f"video={product.summary.get('has_video')}\t"
+        f"lc_n={product.summary.get('n_lc_points')}"
+    )
+    archive.close()
+    return 0
+
+
+def _cmd_import_radio(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    store = LocalArtifactStore(Path(args.artifacts))
+    product = ImportRadioTimeseries(archive, store).execute(
+        workspace_id=ws.id,
+        path=Path(args.path),
+        site_id=UUID(args.site) if args.site else None,
+        program_id=UUID(args.program) if args.program else None,
+        observer=args.observer,
+        frequency_mhz=args.freq,
+        notes=args.notes or "",
+    )
+    print(
+        f"product={product.id}\tn={product.summary.get('n_points')}\t"
+        f"fmt={product.summary.get('format')}\t"
+        f"pmin={product.summary.get('power_min')}\t"
+        f"pmax={product.summary.get('power_max')}"
     )
     archive.close()
     return 0
@@ -1454,15 +1484,27 @@ def build_parser() -> argparse.ArgumentParser:
     )
     p_oo.add_argument("--d-time", default=None, help="UTC ISO D")
     p_oo.add_argument("--r-time", default=None, help="UTC ISO R")
-    p_oo.add_argument("--timesource", default="NTP")
+    p_oo.add_argument(
+        "--timesource",
+        default="NTP",
+        choices=("NTP", "GPS", "VTI", "manual", "PC"),
+    )
     p_oo.add_argument("--observer", default="AstroCitizen")
     p_oo.add_argument("--notes", default="")
     p_oo.add_argument("--site", default=None)
     p_oo.add_argument("--program", default=None)
     p_oo.add_argument("--prediction", default=None, help="UUID produto previsao")
+    p_oo.add_argument("--video", default=None, help="SER/AVI/MP4 (IN-VID)")
+    p_oo.add_argument("--lc", default=None, help="CSV curva de luz")
+    p_oo.add_argument(
+        "--suggest-contacts",
+        action="store_true",
+        help="Estimar D/R a partir do LC (heuristica)",
+    )
+    p_oo.add_argument("--artifacts", default=str(default_artifacts_root()))
     p_oo.set_defaults(func=_cmd_observe_occultation)
 
-    p_imp = sub.add_parser("import", help="Importar dados externos (IN-IMP / IN-PRED)")
+    p_imp = sub.add_parser("import", help="Importar dados externos (IN-IMP / IN-PRED / IN-RAD)")
     imp_sub = p_imp.add_subparsers(dest="import_cmd", required=True)
     p_if = imp_sub.add_parser("fits", help="Importar FITS -> Observation + Artifact")
     _add_db_arg(p_if)
@@ -1487,6 +1529,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_ip.add_argument("--program", default=None)
     p_ip.add_argument("--artifacts", default=str(default_artifacts_root()))
     p_ip.set_defaults(func=_cmd_import_prediction)
+    p_ir = imp_sub.add_parser("radio", help="Importar serie radio CSV/HDF5 (IN-RAD)")
+    _add_db_arg(p_ir)
+    p_ir.add_argument("--path", required=True, help=".csv/.txt ou .h5/.hdf5")
+    p_ir.add_argument("--site", default=None)
+    p_ir.add_argument("--program", default=None)
+    p_ir.add_argument("--observer", default="AstroCitizen")
+    p_ir.add_argument("--freq", type=float, default=None, help="MHz")
+    p_ir.add_argument("--notes", default="")
+    p_ir.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_ir.set_defaults(func=_cmd_import_radio)
 
     p_gui = sub.add_parser("gui", help="Abrir shell PySide6 (requer [gui])")
     _add_db_arg(p_gui)

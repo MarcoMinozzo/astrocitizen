@@ -1,4 +1,4 @@
-"""IOTA IN-PRED + occultation timing (ENTRADA #5)."""
+"""IOTA IN-PRED + timing + video/LC (ENTRADA #5 close)."""
 
 from __future__ import annotations
 
@@ -11,6 +11,8 @@ from astrocitizen.observatory import (
     ImportIotaPrediction,
     RegisterOccultationTiming,
     parse_iota_prediction_text,
+    parse_occultation_lc_csv,
+    suggest_contacts_from_lc,
 )
 from astrocitizen.shared.errors import DomainError
 from astrocitizen.shared.ids import new_id
@@ -38,6 +40,21 @@ def test_parse_csv_prediction() -> None:
     assert p["event_id"] == "E1"
     assert p["star"] == "StarA"
     assert p["source_format"] == "csv"
+
+
+def test_parse_lc_and_suggest(tmp_path: Path) -> None:
+    lc = tmp_path / "lc.csv"
+    rows = ["t_utc,signal"]
+    for i in range(10):
+        t = f"2026-07-22T04:00:{i:02d}Z"
+        y = 100.0 if i < 3 or i > 6 else 20.0
+        rows.append(f"{t},{y}")
+    lc.write_text("\n".join(rows) + "\n", encoding="utf-8")
+    pts = parse_occultation_lc_csv(lc)
+    assert len(pts) == 10
+    sug = suggest_contacts_from_lc(pts)
+    assert sug["d_time_utc"] is not None
+    assert sug["r_time_utc"] is not None
 
 
 def test_import_and_register(tmp_path: Path) -> None:
@@ -90,6 +107,45 @@ def test_import_and_register(tmp_path: Path) -> None:
         raise AssertionError("expected DomainError")
     except DomainError:
         pass
+    archive.close()
+
+
+def test_register_with_video_and_lc(tmp_path: Path) -> None:
+    archive = SqliteArchive(tmp_path / "v.sqlite3")
+    archive.migrate()
+    ws = archive.upsert_workspace(Workspace(id=new_id(), name="ws"))
+    store = LocalArtifactStore(tmp_path / "art")
+
+    video = tmp_path / "event.ser"
+    video.write_bytes(b"SERFAKE")
+    lc = tmp_path / "lc.csv"
+    lc.write_text(
+        "t_utc,signal\n"
+        "2026-07-22T04:00:00Z,100\n"
+        "2026-07-22T04:00:01Z,100\n"
+        "2026-07-22T04:00:02Z,20\n"
+        "2026-07-22T04:00:03Z,20\n"
+        "2026-07-22T04:00:04Z,100\n"
+        "2026-07-22T04:00:05Z,100\n",
+        encoding="utf-8",
+    )
+
+    timing = RegisterOccultationTiming(archive, store).execute(
+        workspace_id=ws.id,
+        event_id="EVVID",
+        star="Star",
+        asteroid="Ast",
+        result="positive",
+        timesource="GPS",
+        video_path=video,
+        lc_csv_path=lc,
+        suggest_contacts=True,
+    )
+    assert timing.summary["has_video"] is True
+    assert timing.summary["n_lc_points"] == 6
+    assert timing.summary["timesource"] == "GPS"
+    assert timing.summary["d_time_utc"]
+    assert timing.summary["r_time_utc"]
     archive.close()
 
 

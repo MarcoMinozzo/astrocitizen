@@ -104,7 +104,7 @@ Legenda **Estado**: `feito` / `parcial` / `desenho` (ainda não na UI).
 
 | PO | Como o utilizador fornece | Canais | Payload mínimo | Produto | Estado |
 |----|---------------------------|--------|----------------|---------|--------|
-| **D01** Occ. asteróide | Import previsão IOTA + vídeo/série + GPS time | IN-PRED, IN-VID, IN-TAB | pred + LC timing | timing pack → IOTA | parcial (pred+timing; vídeo adiado) |
+| **D01** Occ. asteróide | Import previsão IOTA + vídeo/série + GPS time | IN-PRED, IN-VID, IN-TAB | pred + LC timing | timing pack → IOTA | ✅ pred+timing+video/LC |
 | **D02** Lunar/graze | Vídeo + station + contact times | IN-VID, IN-LOG | vídeo + contacts | timing | desenho |
 | **D03** Mutuas | Timing + efemérides satélites | IN-TAB, IN-LOG | contact times | timing | desenho |
 | **D04** Duplas occ. | Vídeo + análise de eventos | IN-VID | vídeo + measures | timing + dupla | desenho |
@@ -141,7 +141,7 @@ Legenda **Estado**: `feito` / `parcial` / `desenho` (ainda não na UI).
 
 | PO | Como o utilizador fornece | Canais | Payload mínimo | Produto | Estado |
 |----|---------------------------|--------|----------------|---------|--------|
-| **I01** Sol rádio | Série potência vs tempo (SDR/CSV) | IN-RAD | CSV/HDF5 | radio_timeseries | desenho |
+| **I01** Sol rádio | Série potência vs tempo (SDR/CSV) | IN-RAD | CSV/HDF5 | radio_timeseries | ✅ `import radio` |
 | **I02** 21 cm | Espectro RF / waterfall | IN-RAD | espectro | radio_spectrum | desenho |
 | **I03** Contínuo | Drift scan / pointing logs | IN-RAD, IN-LOG | scan | radio_scan | desenho |
 | **I04** Lab VHF | Igual I01–I03 + notas de construção | IN-RAD, IN-LOG | série + lab notes | radio + report | desenho |
@@ -199,8 +199,8 @@ Em vez de 50 apps, **7 superfícies**:
 | Blink | `analyze blink` (existe) |
 | Solar | `analyze sunspots` (existe) |
 | Visual log | `observe log-visual` (a criar) |
-| Rádio | `analyze radio` (a criar) |
-| Occultation | `analyze occultation` (a criar) |
+| Rádio | `import radio` (CSV/HDF5) |
+| Occultation | `import prediction` · `observe occultation` |
 
 ---
 
@@ -213,8 +213,8 @@ Em vez de 50 apps, **7 superfícies**:
 | 3 | **Wizard Sessão** | ✅ IN-CAP usável no desktop |
 | 3b | **CRUD Equipamento + Setup** | ✅ fecha AC-072 / liga programa |
 | 4 | **Editor visual log + solar form** | ✅ Observar GUI + `observe log-visual` |
-| 5 | **Timing/IOTA import previsão + vídeo** | ✅ pred+timing GUI/CLI · vídeo adiado |
-| 6 | **Rádio CSV/HDF5** | I* |
+| 5 | **Timing/IOTA import previsão + vídeo** | ✅ pred+timing+video/LC · `SPRINT_IOTA_TIMING_ENTRADA5` |
+| 6 | **Rádio CSV/HDF5** | ✅ `import radio` + GUI Radio · `SPRINT_RADIO_ENTRADA6` |
 | 7 | Restantes especializações (speckle, polar, echelle) | P4 |
 
 ---

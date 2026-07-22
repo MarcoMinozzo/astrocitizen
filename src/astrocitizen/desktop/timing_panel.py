@@ -1,4 +1,4 @@
-"""Painel Timing: IOTA previsao + contactos (PO-D01 / ENTRADA #5)."""
+"""Painel Timing: IOTA previsao + contactos + video/LC (PO-D01 / ENTRADA #5)."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from uuid import UUID
 
 def build_timing_dashboard() -> type:
     from PySide6.QtWidgets import (
+        QCheckBox,
         QComboBox,
         QFileDialog,
         QFormLayout,
@@ -53,8 +54,8 @@ def build_timing_dashboard() -> type:
             root.addWidget(title)
 
             hint = QLabel(
-                "1) Importar previsao (TXT/CSV)  2) Registar contactos D/R  "
-                "3) Exportar pacote IOTA-ES. Video/SER fica para onda seguinte."
+                "1) Importar previsao  2) Anexar video/SER e/ou LC CSV  "
+                "3) Registar contactos D/R (GPS/NTP/VTI)  4) Exportar pacote IOTA-ES."
             )
             hint.setObjectName("emptyState")
             hint.setWordWrap(True)
@@ -92,7 +93,9 @@ def build_timing_dashboard() -> type:
             self.d_time.setPlaceholderText("UTC ISO D (desaparecimento)")
             self.r_time = QLineEdit()
             self.r_time.setPlaceholderText("UTC ISO R (reaparecimento)")
-            self.timesource = QLineEdit("NTP")
+            self.timesource = QComboBox()
+            for ts in ("NTP", "GPS", "VTI", "manual", "PC"):
+                self.timesource.addItem(ts, ts)
             self.observer = QLineEdit("AstroCitizen")
             self.notes = QLineEdit()
             form.addRow("EventID", self.event_id)
@@ -104,6 +107,31 @@ def build_timing_dashboard() -> type:
             form.addRow("TimeSource", self.timesource)
             form.addRow("Observer", self.observer)
             form.addRow("Notes", self.notes)
+
+            self.video_path = QLineEdit()
+            vbrowse = QPushButton("Video...")
+            vbrowse.setObjectName("secondaryBtn")
+            vbrowse.clicked.connect(self._browse_video)
+            vrow = QHBoxLayout()
+            vrow.addWidget(self.video_path, 1)
+            vrow.addWidget(vbrowse)
+            vwrap = QWidget()
+            vwrap.setLayout(vrow)
+            form.addRow("Video/SER", vwrap)
+
+            self.lc_path = QLineEdit()
+            lbrowse = QPushButton("LC CSV...")
+            lbrowse.setObjectName("secondaryBtn")
+            lbrowse.clicked.connect(self._browse_lc)
+            lrow = QHBoxLayout()
+            lrow.addWidget(self.lc_path, 1)
+            lrow.addWidget(lbrowse)
+            lwrap = QWidget()
+            lwrap.setLayout(lrow)
+            form.addRow("Curva luz", lwrap)
+
+            self.suggest = QCheckBox("Sugerir D/R a partir do LC")
+            form.addRow(self.suggest)
 
             bar = QHBoxLayout()
             btn_reg = QPushButton("Registar timing")
@@ -162,6 +190,26 @@ def build_timing_dashboard() -> type:
             if path:
                 self.pred_path.setText(path)
 
+        def _browse_video(self) -> None:
+            path, _ = QFileDialog.getOpenFileName(
+                self,
+                "Video ocultacao",
+                "",
+                "Video (*.ser *.avi *.mp4 *.mov *.mkv);;All (*)",
+            )
+            if path:
+                self.video_path.setText(path)
+
+        def _browse_lc(self) -> None:
+            path, _ = QFileDialog.getOpenFileName(
+                self,
+                "Curva de luz",
+                "",
+                "CSV (*.csv *.txt);;All (*)",
+            )
+            if path:
+                self.lc_path.setText(path)
+
         def _import_pred(self) -> None:
             ws = self._workspace()
             if ws is None:
@@ -199,8 +247,11 @@ def build_timing_dashboard() -> type:
             ws = self._workspace()
             if ws is None:
                 return
+            store = LocalArtifactStore(self.artifacts_root)
+            vtxt = self.video_path.text().strip()
+            ltxt = self.lc_path.text().strip()
             try:
-                product = RegisterOccultationTiming(self.archive).execute(
+                product = RegisterOccultationTiming(self.archive, store).execute(
                     workspace_id=ws.id,
                     event_id=self.event_id.text(),
                     star=self.star.text(),
@@ -208,20 +259,30 @@ def build_timing_dashboard() -> type:
                     result=str(self.result.currentData()),
                     d_time_utc=self.d_time.text().strip() or None,
                     r_time_utc=self.r_time.text().strip() or None,
-                    timesource=self.timesource.text().strip() or "NTP",
+                    timesource=str(self.timesource.currentData() or "NTP"),
                     site_id=self.site.currentData(),
                     program_id=self.program.currentData(),
                     prediction_product_id=self._pred_id,
                     observer=self.observer.text().strip() or "AstroCitizen",
                     notes=self.notes.text().strip(),
+                    video_path=Path(vtxt) if vtxt else None,
+                    lc_csv_path=Path(ltxt) if ltxt else None,
+                    suggest_contacts=self.suggest.isChecked(),
                 )
             except DomainError as exc:
                 QMessageBox.critical(self, "Timing", str(exc))
                 return
             self._timing_id = product.id
+            if product.summary.get("d_time_utc"):
+                self.d_time.setText(str(product.summary["d_time_utc"]))
+            if product.summary.get("r_time_utc"):
+                self.r_time.setText(str(product.summary["r_time_utc"]))
             self._append(
                 f"timing={product.id}  result={product.summary.get('result')}  "
-                f"D={product.summary.get('d_time_utc')}  R={product.summary.get('r_time_utc')}"
+                f"D={product.summary.get('d_time_utc')}  "
+                f"R={product.summary.get('r_time_utc')}  "
+                f"video={product.summary.get('has_video')}  "
+                f"lc_n={product.summary.get('n_lc_points')}"
             )
             if self.on_changed:
                 self.on_changed()
@@ -249,7 +310,7 @@ def build_timing_dashboard() -> type:
                     result=str(self.result.currentData()),
                     d_time_utc=self.d_time.text().strip() or None,
                     r_time_utc=self.r_time.text().strip() or None,
-                    timesource=self.timesource.text().strip() or "NTP",
+                    timesource=str(self.timesource.currentData() or "NTP"),
                     notes=self.notes.text().strip(),
                 )
             except Exception as exc:

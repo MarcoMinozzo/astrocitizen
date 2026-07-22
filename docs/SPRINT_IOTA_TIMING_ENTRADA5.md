@@ -1,6 +1,6 @@
-# Sprint — Timing IOTA (ENTRADA #5 / AC-120)
+# Sprint — Timing IOTA (ENTRADA #5 / AC-120 + IN-VID)
 
-Import previsao + registo de contactos D/R. Video/SER adiado.
+Import previsao + video/SER + LC CSV + contactos D/R + timesource.
 
 ## Entregas
 
@@ -8,7 +8,8 @@ Import previsao + registo de contactos D/R. Video/SER adiado.
 |------|---------|
 | Domain | `observatory/occultation.py` |
 | Produtos | `occultation_prediction`, `occultation_timing` |
-| CLI | `import prediction` · `observe occultation` |
+| Artefactos | `video_ser` / `video_occ` / `occultation_lc` |
+| CLI | `import prediction` · `observe occultation --video/--lc/--suggest-contacts` |
 | GUI | nav **Timing** |
 
 ## Formato previsao (TXT)
@@ -23,18 +24,24 @@ Duration_s: 12.5
 
 Ou CSV com cabecalho `event_id,star,asteroid,event_utc,...`.
 
+## LC CSV
+
+Cabecalho `t_utc,signal` (aliases: time/utc + y/flux/intensity/adu).
+
 ## Uso
 
 ```bash
 astrocitizen import prediction --path pred.txt
 astrocitizen observe occultation --event EV99 --star "HIP 123" --asteroid "(1) Ceres" \
-  --result positive --d-time 2026-07-22T04:00:10Z --r-time 2026-07-22T04:00:22Z
+  --result positive --timesource GPS \
+  --video event.ser --lc lc.csv --suggest-contacts
 ```
 
 ## Checklist
 
-- [x] Parse TXT/CSV
+- [x] Parse TXT/CSV previsao
 - [x] Import product + artifact
-- [x] Timing contacts
+- [x] Timing contacts + timesource NTP|GPS|VTI|manual|PC
+- [x] Video/SER ingest (artifact)
+- [x] LC CSV + measurement_points + suggest D/R (AC-122 inicio)
 - [x] GUI Timing + export pack
-- [ ] Video/SER ingest (proxima onda)

@@ -22,4 +22,4 @@ GUI: **Observar** → Solar (marcar 3 checks + FITS) ou Log visual (objecto + de
 
 ## Sequencia seguinte (ENTRADA #5)
 
-✅ Timing IOTA pred+contactos (SPRINT_IOTA_TIMING_ENTRADA5). Video adiado. Seguinte: ENTRADA #6 radio.
+✅ Timing IOTA pred+contactos+video/LC (SPRINT_IOTA_TIMING_ENTRADA5). Seguinte: ENTRADA #6 radio (SPRINT_RADIO_ENTRADA6).

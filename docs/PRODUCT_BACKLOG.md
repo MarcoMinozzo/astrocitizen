@@ -224,7 +224,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | AC-120 | Import previsão IOTA / arquivo | P2 | M | E3 | ✅ `import prediction` · produto occultation_prediction |
 | AC-121 | Export pacote IOTA-ES / Hub | P2 | M | E14 | ✅ `contribute iota` |
 | AC-121 | Aquisição timed + timestamps | P2 | L | E5 | |
-| AC-122 | Redução de contato + relatório | P2 | L | AC-121 | |
+| AC-122 | Redução de contato + relatório | P2 | L | AC-121 | ✅ suggest D/R a partir de LC (heurística); relatório completo aberto |
 | AC-123 | Templates D02–D04 | P3 | M | AC-122 | |
 
 ---
@@ -269,7 +269,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
-| AC-160 | Backend rádio (potência / série temporal) | P3 | L | E1 | Eixo paralelo |
+| AC-160 | Backend rádio (potência / série temporal) | P3 | L | E1 | ✅ `import radio` · produto radio_timeseries · GUI Radio |
 | AC-161 | Templates PO-I01…I04 | P3 | L | AC-160 | |
 
 ---
