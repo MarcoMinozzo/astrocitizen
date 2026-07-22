@@ -22,4 +22,4 @@ Wizard **Sessao** (IN-CAP) — captura com site/programa/alvo ja cadastrados.
 - [x] CRUD Sites / Programas / Alvos
 - [x] soft_delete_target
 - [x] Testes archive
-- [ ] Wizard Sessao
+- [x] Wizard Sessao

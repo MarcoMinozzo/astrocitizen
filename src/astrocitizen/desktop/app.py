@@ -40,6 +40,7 @@ def run_gui(db_path: str | None = None) -> int:
     )
     from astrocitizen.desktop.import_panel import build_import_dashboard
     from astrocitizen.desktop.night import build_night_dashboard
+    from astrocitizen.desktop.session_panel import build_session_dashboard
     from astrocitizen.desktop.theme import apply_theme, empty_state_text
     from astrocitizen.shared.paths import default_artifacts_root, default_db_path
 
@@ -49,6 +50,7 @@ def run_gui(db_path: str | None = None) -> int:
     SitesPage = build_sites_page()
     ProgramsPage = build_programs_page()
     TargetsPage = build_targets_page()
+    SessionDashboard = build_session_dashboard()
 
     NAV_ITEMS: list[tuple[str, str]] = [
         ("Noite", "Noite"),
@@ -121,6 +123,9 @@ def run_gui(db_path: str | None = None) -> int:
             self.sites_page = SitesPage(archive, on_changed=self._on_entities_changed)
             self.programs_page = ProgramsPage(archive, on_changed=self._on_entities_changed)
             self.targets_page = TargetsPage(archive, on_changed=self._on_entities_changed)
+            self.session_panel = SessionDashboard(
+                archive, artifacts_root=arts, on_changed=self._on_entities_changed
+            )
             self.stack.addWidget(self.night)
             self.stack.addWidget(self.contribute)
             self.stack.addWidget(self.import_panel)
@@ -135,10 +140,15 @@ def run_gui(db_path: str | None = None) -> int:
             self.stack.addWidget(self.programs_page)
             self.stack.addWidget(self.targets_page)
 
-            for name in ("Plano diario", "Sessao", "Arquivo"):
-                page = self._table_page()
-                self.pages[name] = page
-                self.stack.addWidget(page)
+            plan_page = self._table_page()
+            self.pages["Plano diario"] = plan_page
+            self.stack.addWidget(plan_page)
+
+            self.stack.addWidget(self.session_panel)
+
+            arquivo_page = self._table_page()
+            self.pages["Arquivo"] = arquivo_page
+            self.stack.addWidget(arquivo_page)
 
             self.nav.currentRowChanged.connect(self._on_nav)
             self.nav.setCurrentRow(0)
@@ -148,6 +158,7 @@ def run_gui(db_path: str | None = None) -> int:
             self.night.load_sites()
             self.import_panel.load_workspace()
             self.contribute.load_workspace()
+            self.session_panel.reload()
 
         def _on_nav(self, index: int) -> None:
             self.stack.setCurrentIndex(index)
@@ -184,6 +195,7 @@ def run_gui(db_path: str | None = None) -> int:
             self.sites_page.reload()
             self.programs_page.reload()
             self.targets_page.reload()
+            self.session_panel.reload()
             workspaces = self.archive.list_workspaces()
             if not workspaces:
                 return
@@ -235,17 +247,6 @@ def run_gui(db_path: str | None = None) -> int:
                 ],
                 f"Planos ({len(plans)})",
                 "Plano diario",
-            )
-            sessions = self.archive.list_sessions(ws.id)
-            fill(
-                self.pages["Sessao"],
-                ["Estado", "Inicio", "Plano", "Id"],
-                [
-                    [s.state, s.started_at_utc, str(s.daily_plan_id)[:8], str(s.id)[:8]]
-                    for s in sessions
-                ],
-                f"Sessoes ({len(sessions)})",
-                "Sessao",
             )
             obs = self.archive.list_observations(ws.id, include_simulated=True)
             fill(

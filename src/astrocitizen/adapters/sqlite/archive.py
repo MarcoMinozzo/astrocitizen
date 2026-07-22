@@ -1014,6 +1014,45 @@ class SqliteArchive:
         self._conn.commit()
         return blocks
 
+    def add_observation_block(self, block: ObservationBlock) -> ObservationBlock:
+        now = utc_now_iso()
+        self._conn.execute(
+            """
+            INSERT INTO observation_blocks(
+                id, daily_plan_id, program_id, target_id, instrument_config_id,
+                sort_order, window_start_utc, window_end_utc,
+                predicted_altitude_deg, airmass, status, status_reason, priority,
+                notes, ephemeris_snapshot_id, meteo_snapshot_id, technique,
+                created_at, updated_at, version
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                str(block.id),
+                str(block.daily_plan_id),
+                str(block.program_id) if block.program_id else None,
+                str(block.target_id) if block.target_id else None,
+                str(block.instrument_config_id) if block.instrument_config_id else None,
+                block.sort_order,
+                block.window_start_utc,
+                block.window_end_utc,
+                block.predicted_altitude_deg,
+                block.airmass,
+                block.status,
+                block.status_reason,
+                block.priority,
+                block.notes,
+                str(block.ephemeris_snapshot_id) if block.ephemeris_snapshot_id else None,
+                str(block.meteo_snapshot_id) if block.meteo_snapshot_id else None,
+                block.technique,
+                now,
+                now,
+                block.version,
+            ),
+        )
+        self._audit("create", "observation_blocks", str(block.id))
+        self._conn.commit()
+        return block
+
     def list_observation_blocks(self, daily_plan_id: UUID) -> list[ObservationBlock]:
         rows = self._conn.execute(
             """

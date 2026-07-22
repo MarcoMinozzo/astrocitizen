@@ -76,6 +76,8 @@ class CaptureObservation:
         *,
         session_id: UUID,
         block_id: UUID | None = None,
+        program_id: UUID | None = None,
+        target_id: UUID | None = None,
         exptime_s: float = 1.0,
         frame_type: str = "light",
         binning: int = 1,
@@ -90,8 +92,12 @@ class CaptureObservation:
         target = None
         if block and block.program_id:
             program = self.archive.get_program(block.program_id)
+        elif program_id:
+            program = self.archive.get_program(program_id)
         if block and block.target_id:
             target = self.archive.get_target(block.target_id)
+        elif target_id:
+            target = self.archive.get_target(target_id)
 
         if block and target and target.ra_deg is not None and hasattr(self, "_mount"):
             pass  # mount slew handled by caller / session runner
@@ -146,6 +152,12 @@ class CaptureObservation:
         uri = self.artifact_store.put(tmp, key=rel_key)
         tmp.unlink(missing_ok=True)
 
+        resolved_program_id = (
+            block.program_id if block and block.program_id else program_id
+        )
+        resolved_target_id = (
+            block.target_id if block and block.target_id else target_id
+        )
         obs = ObservationRecord(
             id=obs_id,
             workspace_id=session.workspace_id,
@@ -153,8 +165,8 @@ class CaptureObservation:
             site_id=session.site_id,
             session_id=session.id,
             block_id=block.id if block else None,
-            program_id=block.program_id if block else None,
-            target_id=block.target_id if block else None,
+            program_id=resolved_program_id,
+            target_id=resolved_target_id,
             instrument_config_id=block.instrument_config_id if block else None,
             camera_backend=getattr(self.camera, "backend_name", None),
             simulated=simulated,
