@@ -1470,6 +1470,53 @@ class SqliteArchive:
             state=row["state"],
         )
 
+    def list_analysis_products(
+        self,
+        workspace_id: UUID,
+        *,
+        product_type: str | None = None,
+        limit: int = 200,
+    ) -> list[AnalysisProduct]:
+        if product_type:
+            rows = self._conn.execute(
+                """
+                SELECT * FROM analysis_products
+                WHERE workspace_id = ? AND deleted_at IS NULL AND product_type = ?
+                ORDER BY created_at DESC
+                LIMIT ?
+                """,
+                (str(workspace_id), product_type, limit),
+            ).fetchall()
+        else:
+            rows = self._conn.execute(
+                """
+                SELECT * FROM analysis_products
+                WHERE workspace_id = ? AND deleted_at IS NULL
+                ORDER BY created_at DESC
+                LIMIT ?
+                """,
+                (str(workspace_id), limit),
+            ).fetchall()
+        out: list[AnalysisProduct] = []
+        for row in rows:
+            out.append(
+                AnalysisProduct(
+                    id=UUID(row["id"]),
+                    workspace_id=UUID(row["workspace_id"]),
+                    program_id=UUID(row["program_id"]) if row["program_id"] else None,
+                    product_type=row["product_type"],
+                    version_num=row["version_num"],
+                    parent_product_id=(
+                        UUID(row["parent_product_id"]) if row["parent_product_id"] else None
+                    ),
+                    is_publishable=bool(row["is_publishable"]),
+                    parameters=_loads(row["parameters"], {}),
+                    summary=_loads(row["summary"], {}),
+                    state=row["state"],
+                )
+            )
+        return out
+
     def link_product_observation(self, product_id: UUID, observation_id: UUID) -> None:
         self._conn.execute(
             """

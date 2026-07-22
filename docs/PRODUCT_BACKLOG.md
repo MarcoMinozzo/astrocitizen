@@ -136,7 +136,7 @@
 |----|------|-----|-----|-----|-------|
 | AC-060 | Masters bias/dark/flat versionados no BD | P1 | M | AC-012 | ✅ S4 — `BuildMaster` |
 | AC-061 | Aplicar calibração → ProdutoAnalise | P1 | M | AC-060 | ✅ S4 — `ApplyCalibration` |
-| AC-062 | Viewer FITS básico (stretch, ROI, hist) | P1 | M | AC-007 | ✅ S4 — `fits_stats` + stretch; GUI imagem depois |
+| AC-062 | Viewer FITS básico (stretch, ROI, hist) | P1 | M | AC-007 | ✅ `fits_stats` + stretch · GUI Viewer em Analisar (U4) |
 | AC-063 | Stack / align básico | P2 | M | AC-061 | |
 
 ---

@@ -34,6 +34,8 @@ def run_gui(db_path: str | None = None) -> int:
         return 1
 
     from astrocitizen.adapters.sqlite import SqliteArchive
+    from astrocitizen.desktop.analyze_panel import build_analyze_dashboard
+    from astrocitizen.desktop.archive_panel import build_archive_dashboard
     from astrocitizen.desktop.contribute import build_contribute_dashboard
     from astrocitizen.desktop.entities import (
         build_programs_page,
@@ -60,6 +62,8 @@ def run_gui(db_path: str | None = None) -> int:
     NightDashboard = build_night_dashboard()
     ContributeDashboard = build_contribute_dashboard()
     ImportDashboard = build_import_dashboard()
+    ArchiveDashboard = build_archive_dashboard()
+    AnalyzeDashboard = build_analyze_dashboard()
     SitesPage = build_sites_page()
     ProgramsPage = build_programs_page()
     TargetsPage = build_targets_page()
@@ -175,12 +179,14 @@ def run_gui(db_path: str | None = None) -> int:
             self.specialty_panel = SpecialtyDashboard(
                 archive, artifacts_root=arts, on_changed=on_ch
             )
+            self.archive_panel = ArchiveDashboard(archive, on_changed=on_ch)
+            self.analyze_panel = AnalyzeDashboard(
+                archive, artifacts_root=arts, on_changed=on_ch
+            )
 
             self.pages: dict[str, QWidget] = {}
             plan_page = self._table_page()
             self.pages["Plano diario"] = plan_page
-            arquivo_page = self._table_page()
-            self.pages["Arquivo"] = arquivo_page
 
             ser_hint = self._placeholder_page(
                 "Video / SER",
@@ -220,29 +226,6 @@ def run_gui(db_path: str | None = None) -> int:
                 ],
             )
 
-            photo_ph = self._placeholder_page(
-                "Fotometria",
-                "CLI: astrocitizen analyze photometry. GUI = U3/U4.",
-            )
-            spec_ph = self._placeholder_page(
-                "Espectro",
-                "CLI: astrocitizen analyze spectrum | spectrum-report. GUI = U3/U4.",
-            )
-            astrom_ph = self._placeholder_page(
-                "Astrometria / Blink",
-                "CLI: astrocitizen analyze plate-solve | blink. GUI = U3/U4.",
-            )
-            self.analisar = TabHub(
-                title="Analisar",
-                hint="Reducao e produtos; bridges CLI ate U4. "
-                "Entrada de dados em Observatorio/Importar.",
-                tabs=[
-                    ("Fotometria", photo_ph),
-                    ("Espectro", spec_ph),
-                    ("Astrometria", astrom_ph),
-                ],
-            )
-
             self.configurar = TabHub(
                 title="Configurar",
                 hint="Metadados do observatorio (RN-001+).",
@@ -257,9 +240,9 @@ def run_gui(db_path: str | None = None) -> int:
             # Stack = 6 areas
             self.stack.addWidget(self.noite_hub)  # 0 Noite
             self.stack.addWidget(self.observatorio)  # 1 Observatorio
-            self.stack.addWidget(self.analisar)  # 2 Analisar
+            self.stack.addWidget(self.analyze_panel)  # 2 Analisar
             self.stack.addWidget(self.contribute)  # 3 Contribuir
-            self.stack.addWidget(arquivo_page)  # 4 Arquivo
+            self.stack.addWidget(self.archive_panel)  # 4 Arquivo
             self.stack.addWidget(self.configurar)  # 5 Configurar
 
             self.nav.currentRowChanged.connect(self._on_nav)
@@ -292,6 +275,7 @@ def run_gui(db_path: str | None = None) -> int:
                 self.timing_panel,
                 self.session_panel,
                 self.observe_panel,
+                self.analyze_panel,
             ]
 
         def _sync_shell_context(self) -> None:
@@ -328,7 +312,8 @@ def run_gui(db_path: str | None = None) -> int:
             self.radio_panel.reload()
             self.specialty_panel.reload()
             self._reload_context()
-            self._fill_arquivo_and_planos()
+            self._fill_planos()
+            self.archive_panel.reload()
             self._sync_shell_context()
 
         def _on_nav(self, index: int) -> None:
@@ -385,7 +370,7 @@ def run_gui(db_path: str | None = None) -> int:
             programs = self.archive.list_programs(ws.id)
             self.context.reload(sites=sites, programs=programs)
 
-        def _fill_arquivo_and_planos(self) -> None:
+        def _fill_planos(self) -> None:
             ws = self._workspace()
             if ws is None:
                 return
@@ -426,22 +411,6 @@ def run_gui(db_path: str | None = None) -> int:
                 f"Planos ({len(plans)})",
                 "Plano diario",
             )
-            obs = self.archive.list_observations(ws.id, include_simulated=True)
-            fill(
-                self.pages["Arquivo"],
-                ["Quando", "Sim", "Backend", "Id"],
-                [
-                    [
-                        o.get("observed_at_utc", ""),
-                        str(bool(o.get("simulated"))),
-                        str(o.get("camera_backend") or "-"),
-                        str(o.get("id", ""))[:8],
-                    ]
-                    for o in obs[:100]
-                ],
-                f"Observacoes ({len(obs)})",
-                "Arquivo",
-            )
 
         def refresh(self) -> None:
             self.night.load_sites()
@@ -456,8 +425,9 @@ def run_gui(db_path: str | None = None) -> int:
             self.timing_panel.reload()
             self.radio_panel.reload()
             self.specialty_panel.reload()
+            self.archive_panel.reload()
             self._reload_context()
-            self._fill_arquivo_and_planos()
+            self._fill_planos()
             self._sync_shell_context()
 
     db = Path(db_path) if db_path else default_db_path()

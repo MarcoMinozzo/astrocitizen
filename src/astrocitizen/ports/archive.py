@@ -190,6 +190,14 @@ class ArchivePort(Protocol):
 
     def soft_delete_observation(self, observation_id: UUID) -> None: ...
 
+    def list_analysis_products(
+        self,
+        workspace_id: UUID,
+        *,
+        product_type: str | None = None,
+        limit: int = 200,
+    ) -> list: ...
+
     # --- audit ---
     def list_audit(
         self,
