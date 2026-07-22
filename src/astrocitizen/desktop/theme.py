@@ -41,6 +41,14 @@ def app_stylesheet() -> str:
         font-size: 11px;
         color: {c["text_muted"]};
     }}
+    QFrame#brandBar {{
+        background-color: {c["bg_nav"]};
+        border-bottom: 1px solid {c["border"]};
+    }}
+    QFrame#contextBar {{
+        background-color: {c["bg_elevated"]};
+        border-bottom: 1px solid {c["border"]};
+    }}
     QLabel#pageTitle {{
         font-size: 16px;
         font-weight: 600;

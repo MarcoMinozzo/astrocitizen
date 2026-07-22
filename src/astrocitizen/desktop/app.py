@@ -1,4 +1,4 @@
-"""Shell GUI PySide6 - navegacao + tema + Noite + Contribute + Import + CRUD."""
+"""Shell GUI PySide6 — IA 6 areas (U1) + ContextBar (U0)."""
 
 from __future__ import annotations
 
@@ -47,6 +47,7 @@ def run_gui(db_path: str | None = None) -> int:
     from astrocitizen.desktop.specialty_panel import build_specialty_dashboard
     from astrocitizen.desktop.theme import apply_theme, empty_state_text
     from astrocitizen.desktop.timing_panel import build_timing_dashboard
+    from astrocitizen.desktop.widgets import build_shared_widgets
     from astrocitizen.shared.paths import default_artifacts_root, default_db_path
 
     NightDashboard = build_night_dashboard()
@@ -61,22 +62,18 @@ def run_gui(db_path: str | None = None) -> int:
     TimingDashboard = build_timing_dashboard()
     RadioDashboard = build_radio_dashboard()
     SpecialtyDashboard = build_specialty_dashboard()
+    Shared = build_shared_widgets()
+    ContextBar = Shared["ContextBar"]
+    TabHub = Shared["TabHub"]
 
+    # U1: 6 areas (DESKTOP_UI_DESIGN.md)
     NAV_ITEMS: list[tuple[str, str]] = [
         ("Noite", "Noite"),
-        ("Contribute", "Contribute"),
-        ("Import", "Import"),
-        ("Observar", "Observar"),
-        ("Timing", "Timing"),
-        ("Radio", "Radio"),
-        ("Especialidades", "Especialidades"),
-        ("Sites", "Sites"),
-        ("Equipamento", "Equipamento"),
-        ("Programas", "Programas"),
-        ("Alvos", "Alvos"),
-        ("Plano diario", "Plano diario"),
-        ("Sessao", "Sessao"),
+        ("Observatorio", "Observatorio"),
+        ("Analisar", "Analisar"),
+        ("Contribuir", "Contribuir"),
         ("Arquivo", "Arquivo"),
+        ("Configurar", "Configurar"),
     ]
 
     class MainWindow(QMainWindow):
@@ -94,9 +91,6 @@ def run_gui(db_path: str | None = None) -> int:
 
             brand = QFrame()
             brand.setObjectName("brandBar")
-            brand.setStyleSheet(
-                "QFrame#brandBar { background:#0e1626; border-bottom:1px solid #243049; }"
-            )
             brand_l = QVBoxLayout(brand)
             brand_l.setContentsMargins(16, 10, 16, 10)
             title = QLabel("AstroCitizen")
@@ -106,6 +100,9 @@ def run_gui(db_path: str | None = None) -> int:
             brand_l.addWidget(title)
             brand_l.addWidget(sub)
             outer_l.addWidget(brand)
+
+            self.context = ContextBar()
+            outer_l.addWidget(self.context)
 
             body = QWidget()
             layout = QHBoxLayout(body)
@@ -131,54 +128,91 @@ def run_gui(db_path: str | None = None) -> int:
             status.showMessage(f"db={db}")
 
             arts = default_artifacts_root()
+            on_ch = self._on_entities_changed
+
             self.night = NightDashboard(archive, artifacts_root=arts)
             self.contribute = ContributeDashboard(archive, artifacts_root=arts)
             self.import_panel = ImportDashboard(archive, artifacts_root=arts)
-            self.sites_page = SitesPage(archive, on_changed=self._on_entities_changed)
-            self.programs_page = ProgramsPage(archive, on_changed=self._on_entities_changed)
-            self.targets_page = TargetsPage(archive, on_changed=self._on_entities_changed)
-            self.equipment_page = EquipmentPage(
-                archive, on_changed=self._on_entities_changed
-            )
+            self.sites_page = SitesPage(archive, on_changed=on_ch)
+            self.programs_page = ProgramsPage(archive, on_changed=on_ch)
+            self.targets_page = TargetsPage(archive, on_changed=on_ch)
+            self.equipment_page = EquipmentPage(archive, on_changed=on_ch)
             self.session_panel = SessionDashboard(
-                archive, artifacts_root=arts, on_changed=self._on_entities_changed
+                archive, artifacts_root=arts, on_changed=on_ch
             )
             self.observe_panel = ObserveDashboard(
-                archive, artifacts_root=arts, on_changed=self._on_entities_changed
+                archive, artifacts_root=arts, on_changed=on_ch
             )
             self.timing_panel = TimingDashboard(
-                archive, artifacts_root=arts, on_changed=self._on_entities_changed
+                archive, artifacts_root=arts, on_changed=on_ch
             )
             self.radio_panel = RadioDashboard(
-                archive, artifacts_root=arts, on_changed=self._on_entities_changed
+                archive, artifacts_root=arts, on_changed=on_ch
             )
             self.specialty_panel = SpecialtyDashboard(
-                archive, artifacts_root=arts, on_changed=self._on_entities_changed
+                archive, artifacts_root=arts, on_changed=on_ch
             )
-            self.stack.addWidget(self.night)
-            self.stack.addWidget(self.contribute)
-            self.stack.addWidget(self.import_panel)
-            self.stack.addWidget(self.observe_panel)
-            self.stack.addWidget(self.timing_panel)
-            self.stack.addWidget(self.radio_panel)
-            self.stack.addWidget(self.specialty_panel)
-            self.stack.addWidget(self.sites_page)
-            self.stack.addWidget(self.equipment_page)
 
             self.pages: dict[str, QWidget] = {}
-
-            self.stack.addWidget(self.programs_page)
-            self.stack.addWidget(self.targets_page)
-
             plan_page = self._table_page()
             self.pages["Plano diario"] = plan_page
-            self.stack.addWidget(plan_page)
-
-            self.stack.addWidget(self.session_panel)
-
             arquivo_page = self._table_page()
             self.pages["Arquivo"] = arquivo_page
-            self.stack.addWidget(arquivo_page)
+
+            # Noite = meteo + planos embutidos
+            self.noite_hub = TabHub(
+                title="",
+                tabs=[
+                    ("Meteo / radar", self.night),
+                    ("Planos", plan_page),
+                ],
+            )
+
+            self.observatorio = TabHub(
+                title="Observatorio",
+                hint="Sessao, importacao e canais de entrada da noite.",
+                tabs=[
+                    ("Sessao", self.session_panel),
+                    ("Importar", self.import_panel),
+                    ("Observar", self.observe_panel),
+                    ("Timing", self.timing_panel),
+                ],
+            )
+
+            analyze_placeholder = self._placeholder_page(
+                "Analise (CLI bridge)",
+                "Fotometria, espectro e astrometria ainda via CLI "
+                "(analyze photometry|spectrum|plate-solve|blink). "
+                "GUI completa = fase U3/U4.",
+            )
+            self.analisar = TabHub(
+                title="Analisar",
+                hint="Produtos e series; bridges CLI ate U4.",
+                tabs=[
+                    ("Fotometria / Astrom", analyze_placeholder),
+                    ("Radio", self.radio_panel),
+                    ("Especialidades", self.specialty_panel),
+                ],
+            )
+
+            self.configurar = TabHub(
+                title="Configurar",
+                hint="Metadados do observatorio (RN-001+).",
+                tabs=[
+                    ("Sites", self.sites_page),
+                    ("Equipamento", self.equipment_page),
+                    ("Programas", self.programs_page),
+                    ("Alvos", self.targets_page),
+                ],
+            )
+
+            # Stack = 6 areas
+            self.stack.addWidget(self.noite_hub)  # 0 Noite
+            self.stack.addWidget(self.observatorio)  # 1 Observatorio
+            self.stack.addWidget(self.analisar)  # 2 Analisar
+            self.stack.addWidget(self.contribute)  # 3 Contribuir
+            self.stack.addWidget(arquivo_page)  # 4 Arquivo
+            self.stack.addWidget(self.configurar)  # 5 Configurar
 
             self.nav.currentRowChanged.connect(self._on_nav)
             self.nav.setCurrentRow(0)
@@ -191,10 +225,14 @@ def run_gui(db_path: str | None = None) -> int:
             self.session_panel.reload()
             self.equipment_page.reload()
             self.programs_page.reload()
+            self.targets_page.reload()
+            self.sites_page.reload()
             self.observe_panel.reload()
             self.timing_panel.reload()
             self.radio_panel.reload()
             self.specialty_panel.reload()
+            self._reload_context()
+            self._fill_arquivo_and_planos()
 
         def _on_nav(self, index: int) -> None:
             self.stack.setCurrentIndex(index)
@@ -202,6 +240,20 @@ def run_gui(db_path: str | None = None) -> int:
                 self._status.showMessage(
                     f"{self.nav_names[index]}  ·  db={self.db_path}"
                 )
+
+        def _placeholder_page(self, title: str, body: str) -> QWidget:
+            w = QWidget()
+            v = QVBoxLayout(w)
+            v.setContentsMargins(16, 12, 16, 12)
+            t = QLabel(title)
+            t.setObjectName("pageTitle")
+            h = QLabel(body)
+            h.setObjectName("emptyState")
+            h.setWordWrap(True)
+            v.addWidget(t)
+            v.addWidget(h)
+            v.addStretch(1)
+            return w
 
         def _table_page(self) -> QWidget:
             w = QWidget()
@@ -224,23 +276,22 @@ def run_gui(db_path: str | None = None) -> int:
             w._table = table  # type: ignore[attr-defined]
             return w
 
-        def refresh(self) -> None:
-            self.night.load_sites()
-            self.contribute.load_workspace()
-            self.import_panel.load_workspace()
-            self.sites_page.reload()
-            self.programs_page.reload()
-            self.targets_page.reload()
-            self.equipment_page.reload()
-            self.session_panel.reload()
-            self.observe_panel.reload()
-            self.timing_panel.reload()
-            self.radio_panel.reload()
-            self.specialty_panel.reload()
-            workspaces = self.archive.list_workspaces()
-            if not workspaces:
+        def _workspace(self):
+            ws = self.archive.list_workspaces()
+            return ws[0] if ws else None
+
+        def _reload_context(self) -> None:
+            ws = self._workspace()
+            if ws is None:
                 return
-            ws = workspaces[0]
+            sites = self.archive.list_sites(ws.id)
+            programs = self.archive.list_programs(ws.id)
+            self.context.reload(sites=sites, programs=programs)
+
+        def _fill_arquivo_and_planos(self) -> None:
+            ws = self._workspace()
+            if ws is None:
+                return
 
             def fill(
                 page: QWidget,
@@ -295,6 +346,22 @@ def run_gui(db_path: str | None = None) -> int:
                 "Arquivo",
             )
 
+        def refresh(self) -> None:
+            self.night.load_sites()
+            self.contribute.load_workspace()
+            self.import_panel.load_workspace()
+            self.sites_page.reload()
+            self.programs_page.reload()
+            self.targets_page.reload()
+            self.equipment_page.reload()
+            self.session_panel.reload()
+            self.observe_panel.reload()
+            self.timing_panel.reload()
+            self.radio_panel.reload()
+            self.specialty_panel.reload()
+            self._reload_context()
+            self._fill_arquivo_and_planos()
+
     db = Path(db_path) if db_path else default_db_path()
     archive = SqliteArchive(db)
     archive.migrate()
@@ -305,3 +372,14 @@ def run_gui(db_path: str | None = None) -> int:
     code = app.exec()
     archive.close()
     return int(code)
+
+
+# Exportado para testes sem abrir display
+NAV_AREA_KEYS = (
+    "Noite",
+    "Observatorio",
+    "Analisar",
+    "Contribuir",
+    "Arquivo",
+    "Configurar",
+)
