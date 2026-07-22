@@ -18,6 +18,7 @@ from astrocitizen.analysis import (
     BlinkDiff,
     CountSunspots,
     ExtractSpectrum1D,
+    InterpretSpectrum,
     MeasureAstrometry,
     PlateSolve,
 )
@@ -515,6 +516,32 @@ def _cmd_analyze_spectrum(args: argparse.Namespace) -> int:
         f"product={product.id}\ttype={product.product_type}\t"
         f"wave={product.summary.get('wave0_nm')}-{product.summary.get('wave1_nm')}nm\t"
         f"uri={product.parameters.get('spectrum_uri')}"
+    )
+    archive.close()
+    return 0
+
+
+def _cmd_analyze_spectrum_report(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    store = LocalArtifactStore(Path(args.artifacts))
+    extras: list = []
+    if args.extra_products:
+        extras = [UUID(x.strip()) for x in args.extra_products.split(",") if x.strip()]
+    product = InterpretSpectrum(archive, store).execute(
+        workspace_id=ws.id,
+        fits_uri=args.fits_uri,
+        product_id=UUID(args.product) if args.product else None,
+        extra_product_ids=extras or None,
+        program_id=UUID(args.program) if args.program else None,
+        half_width_A=args.half_width,
+        snr_min=args.snr_min,
+        out_path=Path(args.out) if args.out else None,
+    )
+    print(
+        f"product={product.id}\thint={product.summary.get('class_hint')}\t"
+        f"top={product.summary.get('top_line')}\tn_feat={product.summary.get('n_features')}\t"
+        f"report={product.parameters.get('report_path')}"
     )
     archive.close()
     return 0
@@ -1399,6 +1426,24 @@ def build_parser() -> argparse.ArgumentParser:
     p_sp.add_argument("--program", default=None)
     p_sp.add_argument("--artifacts", default=str(default_artifacts_root()))
     p_sp.set_defaults(func=_cmd_analyze_spectrum)
+    p_sr = an_sub.add_parser(
+        "spectrum-report",
+        help="Interpretacao espectral (linhas / SN-ARAS / multi-epoca)",
+    )
+    _add_db_arg(p_sr)
+    p_sr.add_argument("--fits-uri", default=None, help="FITS 1D")
+    p_sr.add_argument("--product", default=None, help="Produto spectrum_1d")
+    p_sr.add_argument(
+        "--extra-products",
+        default=None,
+        help="UUIDs extra separados por virgula (multi-epoca)",
+    )
+    p_sr.add_argument("--half-width", type=float, default=40.0, help="Angstrom")
+    p_sr.add_argument("--snr-min", type=float, default=3.0)
+    p_sr.add_argument("--out", default=None, help="Ficheiro .txt do relatorio")
+    p_sr.add_argument("--program", default=None)
+    p_sr.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_sr.set_defaults(func=_cmd_analyze_spectrum_report)
     p_as = an_sub.add_parser("astrometry", help="Medida astrometrica (PO-C01/C02)")
     _add_db_arg(p_as)
     p_as.add_argument("--fits-uri", required=True)

@@ -6,10 +6,12 @@ from astrocitizen.analysis.photometry import AperturePhotometry
 from astrocitizen.analysis.platesolve import PlateSolve
 from astrocitizen.analysis.solar import CountSunspots
 from astrocitizen.analysis.spectroscopy import ExtractSpectrum1D
+from astrocitizen.analysis.spectrum_report import InterpretSpectrum
 
 __all__ = [
     "AperturePhotometry",
     "ExtractSpectrum1D",
+    "InterpretSpectrum",
     "MeasureAstrometry",
     "BlinkDiff",
     "PlateSolve",

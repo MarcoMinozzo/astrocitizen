@@ -193,10 +193,11 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 |----|------|-----|-----|-----|-------|
 | AC-100 | Extração espectro 1D | P2 | L | E6 | |
 | AC-101 | Calibração λ | P2 | L | AC-100 | |
-| AC-102 | Medidas de linha / EW | P2 | M | AC-101 | |
+| AC-102 | Medidas de linha / EW | P2 | M | AC-101 | inicio via `spectrum-report` (extrema) |
 | AC-103 | Persistência espectro + produto no BD | P2 | M | AC-101 | |
 | AC-104 | Export ARAS/BeSS | P2 | M | E14 | ✅ BeSS FITS 1D · `contribute bess` |
 | AC-105 | Templates B04–B06 | P2–P3 | M | AC-102 | |
+| AC-106 | Interpretacao espectral assistida (linhas / multi-epoca / pista classe) | P1 | M | AC-100 | ✅ `analyze spectrum-report` · PO-B01/B02/B03 |
 
 ---
 
