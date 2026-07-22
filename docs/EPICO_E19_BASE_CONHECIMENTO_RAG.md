@@ -132,7 +132,7 @@ E  RetrieverPort + (opcional) MCP: kb_search / kb_get_chunk / kb_get_glossary
 
 ## 7. Itens de backlog
 
-Ver secao **E19** em [PRODUCT_BACKLOG.md](PRODUCT_BACKLOG.md) (AC-190…AC-199).
+Ver secao **E19** em [PRODUCT_BACKLOG.md](PRODUCT_BACKLOG.md) (AC-190…AC-200).
 
 Ordem sugerida:
 
