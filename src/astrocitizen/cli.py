@@ -32,7 +32,8 @@ from astrocitizen.contribution.solar import ExportSolarReport
 from astrocitizen.contribution.tns import TnsClient, format_tns_at_report, write_tns_report
 from astrocitizen.desktop import run_gui
 from astrocitizen.inventory.models import Equipment, Site
-from astrocitizen.observatory import CaptureObservation, ExecuteSession
+from astrocitizen.observatory import CaptureObservation, ExecuteSession, ImportFits
+from astrocitizen.observatory.import_fits import discover_fits_paths
 from astrocitizen.planning import EditDailyPlan, GenerateDailyPlan, Target
 from astrocitizen.planning.meteo_rules import evaluate_meteo_window
 from astrocitizen.programs.models import Program
@@ -377,6 +378,39 @@ def _cmd_session_list(args: argparse.Namespace) -> int:
     ws = _ensure_default_workspace(archive)
     for s in archive.list_sessions(ws.id, state=args.state):
         print(f"{s.id}\t{s.state}\tplan={s.daily_plan_id}\t{s.started_at_utc}")
+    archive.close()
+    return 0
+
+
+def _cmd_import_fits(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    store = LocalArtifactStore(Path(args.artifacts))
+    site = None
+    if args.site:
+        site = _resolve_site(archive, ws, args.site)
+    program_id = UUID(args.program) if args.program else None
+    target_id = UUID(args.target) if args.target else None
+    paths = discover_fits_paths(Path(args.path), recursive=bool(args.recursive))
+    if args.limit is not None:
+        paths = paths[: max(int(args.limit), 0)]
+    obs_list = ImportFits(archive, store).execute(
+        workspace_id=ws.id,
+        paths=paths,
+        site_id=site.id if site else None,
+        program_id=program_id,
+        target_id=target_id,
+        frame_type=args.frame_type,
+        simulated=bool(args.simulated),
+        notes=args.notes or "",
+    )
+    for obs in obs_list:
+        obj = obs.headers_summary.get("OBJECT") or obs.headers_summary.get("OBJNAME") or "-"
+        print(
+            f"obs={obs.id}\twhen={obs.observed_at_utc}\tobject={obj}\t"
+            f"state={obs.state}\tsim={obs.simulated}"
+        )
+    print(f"imported={len(obs_list)}")
     archive.close()
     return 0
 
@@ -1290,6 +1324,22 @@ def build_parser() -> argparse.ArgumentParser:
     _add_db_arg(p_sl)
     p_sl.add_argument("--state", default=None)
     p_sl.set_defaults(func=_cmd_session_list)
+
+    p_imp = sub.add_parser("import", help="Importar dados externos (IN-IMP)")
+    imp_sub = p_imp.add_subparsers(dest="import_cmd", required=True)
+    p_if = imp_sub.add_parser("fits", help="Importar FITS -> Observation + Artifact")
+    _add_db_arg(p_if)
+    p_if.add_argument("--path", required=True, help="Ficheiro FITS ou directorio")
+    p_if.add_argument("--recursive", action="store_true")
+    p_if.add_argument("--limit", type=int, default=None)
+    p_if.add_argument("--site", default=None)
+    p_if.add_argument("--program", default=None, help="UUID do programa")
+    p_if.add_argument("--target", default=None, help="UUID do alvo")
+    p_if.add_argument("--frame-type", default=None, help="light/bias/dark/flat")
+    p_if.add_argument("--simulated", action="store_true")
+    p_if.add_argument("--notes", default=None)
+    p_if.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_if.set_defaults(func=_cmd_import_fits)
 
     p_gui = sub.add_parser("gui", help="Abrir shell PySide6 (requer [gui])")
     _add_db_arg(p_gui)

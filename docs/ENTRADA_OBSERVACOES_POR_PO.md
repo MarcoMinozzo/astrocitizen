@@ -29,7 +29,7 @@ Uma observação pode ter **zero imagens** (visual, rádio, timing puro) ou **mu
 | ID | Canal | O que o utilizador faz | Artefacto típico | Superfície alvo |
 |----|-------|------------------------|------------------|-----------------|
 | **IN-CAP** | Captura hardware | Sessão → expor (sim / Alpaca / udrv) | FITS 2D | GUI Sessão (wizard) + CLI `session capture` |
-| **IN-IMP** | Import ficheiros | Arrasta / selecciona FITS, SER, AVI, CSV, HDF5… | ficheiro → ArtifactStore URI | GUI Import + CLI `import` (a criar) |
+| **IN-IMP** | Import ficheiros | Arrasta / selecciona FITS, SER, AVI, CSV, HDF5… | ficheiro → ArtifactStore URI | GUI **Import** + CLI `import fits` (FITS feito; SER/CSV depois) |
 | **IN-TAB** | Tabela / série | Cola ou importa CSV de fotometria, timing, rádio | CSV / pontos no BD | GUI Editor de série + CLI |
 | **IN-LOG** | Log estruturado | Preenche formulário (visual, solar count, safety) | JSON + texto | GUI formulário PO-* |
 | **IN-VID** | Vídeo / lucky | Importa SER/AVI ou pasta de frames | SER/AVI/FITS cube | GUI Imaging + pipeline stack |
@@ -208,7 +208,7 @@ Em vez de 50 apps, **7 superfícies**:
 
 | Ordem | Canal / superfície | Desbloqueia |
 |-------|--------------------|-------------|
-| 1 | **Import FITS** (GUI + CLI) | A/B/C/E/F sem depender só de `session capture` |
+| 1 | **Import FITS** (GUI + CLI) | ✅ `import fits` + painel Import |
 | 2 | **CRUD Site/Programa/Alvo na GUI** | metadados comuns |
 | 3 | **Wizard Sessão** | IN-CAP usável no desktop |
 | 4 | **Editor visual log + solar form** | F03, E03 completo |

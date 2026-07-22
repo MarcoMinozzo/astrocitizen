@@ -1,4 +1,4 @@
-"""Shell GUI PySide6 - navegacao + tema + Noite + Contribute."""
+"""Shell GUI PySide6 - navegacao + tema + Noite + Contribute + Import."""
 
 from __future__ import annotations
 
@@ -33,16 +33,19 @@ def run_gui(db_path: str | None = None) -> int:
 
     from astrocitizen.adapters.sqlite import SqliteArchive
     from astrocitizen.desktop.contribute import build_contribute_dashboard
+    from astrocitizen.desktop.import_panel import build_import_dashboard
     from astrocitizen.desktop.night import build_night_dashboard
     from astrocitizen.desktop.theme import apply_theme, empty_state_text
     from astrocitizen.shared.paths import default_artifacts_root, default_db_path
 
     NightDashboard = build_night_dashboard()
     ContributeDashboard = build_contribute_dashboard()
+    ImportDashboard = build_import_dashboard()
 
     NAV_ITEMS: list[tuple[str, str]] = [
         ("Noite", "Noite"),
         ("Contribute", "Contribute"),
+        ("Import", "Import"),
         ("Sites", "Sites"),
         ("Equipamento", "Equipamento"),
         ("Programas", "Programas"),
@@ -105,11 +108,13 @@ def run_gui(db_path: str | None = None) -> int:
             arts = default_artifacts_root()
             self.night = NightDashboard(archive, artifacts_root=arts)
             self.contribute = ContributeDashboard(archive, artifacts_root=arts)
+            self.import_panel = ImportDashboard(archive, artifacts_root=arts)
             self.stack.addWidget(self.night)
             self.stack.addWidget(self.contribute)
+            self.stack.addWidget(self.import_panel)
 
             self.pages: dict[str, QWidget] = {}
-            for name in self.nav_names[2:]:
+            for name in self.nav_names[3:]:
                 page = self._table_page()
                 self.pages[name] = page
                 self.stack.addWidget(page)
@@ -149,6 +154,7 @@ def run_gui(db_path: str | None = None) -> int:
         def refresh(self) -> None:
             self.night.load_sites()
             self.contribute.load_workspace()
+            self.import_panel.load_workspace()
             workspaces = self.archive.list_workspaces()
             if not workspaces:
                 return

@@ -125,7 +125,7 @@
 | AC-051 | Registrar Observacao → BD + FITS (RN-060…064) | P1 | M | AC-012, AC-050 | ✅ S3 |
 | AC-052 | Headers FITS ricos (site, alvo, meteo, PO-*) | P1 | S | AC-051 | ✅ S3 |
 | AC-053 | Política de falha de instrumento (RN-092) | P1 | S | AC-050 | ✅ S3 |
-| AC-054 | Aquisição ad hoc + associação posterior a programa | P2 | S | AC-051 | |
+| AC-054 | Aquisição ad hoc + associação posterior a programa | P2 | S | AC-051 | ✅ inicio — `import fits` (IN-IMP) + painel Import |
 
 ---
 
