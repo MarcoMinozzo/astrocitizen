@@ -17,6 +17,7 @@ def run_gui(db_path: str | None = None) -> int:
             QListWidget,
             QListWidgetItem,
             QMainWindow,
+            QPushButton,
             QStackedWidget,
             QStatusBar,
             QTableWidget,
@@ -45,7 +46,12 @@ def run_gui(db_path: str | None = None) -> int:
     from astrocitizen.desktop.radio_panel import build_radio_dashboard
     from astrocitizen.desktop.session_panel import build_session_dashboard
     from astrocitizen.desktop.specialty_panel import build_specialty_dashboard
-    from astrocitizen.desktop.theme import apply_theme, empty_state_text
+    from astrocitizen.desktop.theme import (
+        apply_theme,
+        empty_state_text,
+        load_night_vision_pref,
+        save_night_vision_pref,
+    )
     from astrocitizen.desktop.timing_panel import build_timing_dashboard
     from astrocitizen.desktop.widgets import build_shared_widgets
     from astrocitizen.shared.paths import default_artifacts_root, default_db_path
@@ -91,18 +97,34 @@ def run_gui(db_path: str | None = None) -> int:
 
             brand = QFrame()
             brand.setObjectName("brandBar")
-            brand_l = QVBoxLayout(brand)
-            brand_l.setContentsMargins(16, 10, 16, 10)
+            brand_row = QHBoxLayout(brand)
+            brand_row.setContentsMargins(16, 10, 16, 10)
+            brand_row.setSpacing(12)
+            brand_text = QVBoxLayout()
+            brand_text.setContentsMargins(0, 0, 0, 0)
+            brand_text.setSpacing(2)
             title = QLabel("AstroCitizen")
             title.setObjectName("brandTitle")
             sub = QLabel("observatorio cidadao · desktop")
             sub.setObjectName("brandSubtitle")
-            brand_l.addWidget(title)
-            brand_l.addWidget(sub)
+            brand_text.addWidget(title)
+            brand_text.addWidget(sub)
+            brand_row.addLayout(brand_text, 1)
+            self.nv_btn = QPushButton("Visao noturna")
+            self.nv_btn.setObjectName("nightVisionBtn")
+            self.nv_btn.setCheckable(True)
+            self.nv_btn.setToolTip(
+                "Tema vermelho para preservar a adaptacao a escuridao "
+                "(como em softwares observacionais)."
+            )
+            self.nv_btn.toggled.connect(self._on_night_vision)
+            brand_row.addWidget(self.nv_btn, 0, Qt.AlignmentFlag.AlignRight)
             outer_l.addWidget(brand)
 
             self.context = ContextBar()
             outer_l.addWidget(self.context)
+            self._night_vision = False
+            self._app = QApplication.instance()
 
             body = QWidget()
             layout = QHBoxLayout(body)
@@ -216,7 +238,23 @@ def run_gui(db_path: str | None = None) -> int:
 
             self.nav.currentRowChanged.connect(self._on_nav)
             self.nav.setCurrentRow(0)
+            # Preferencia visao noturna (apos widgets criados)
+            if load_night_vision_pref():
+                self.nv_btn.blockSignals(True)
+                self.nv_btn.setChecked(True)
+                self.nv_btn.blockSignals(False)
+                self._apply_night_vision(True)
             self.refresh()
+
+        def _on_night_vision(self, enabled: bool) -> None:
+            self._apply_night_vision(bool(enabled))
+            save_night_vision_pref(bool(enabled))
+
+        def _apply_night_vision(self, enabled: bool) -> None:
+            self._night_vision = enabled
+            self.nv_btn.setText("Visao noturna ON" if enabled else "Visao noturna")
+            if self._app is not None:
+                apply_theme(self._app, night_vision=enabled)
 
         def _on_entities_changed(self) -> None:
             self.night.load_sites()
@@ -366,7 +404,8 @@ def run_gui(db_path: str | None = None) -> int:
     archive = SqliteArchive(db)
     archive.migrate()
     app = QApplication(sys.argv)
-    apply_theme(app)
+    nv_pref = load_night_vision_pref()
+    apply_theme(app, night_vision=nv_pref)
     win = MainWindow(archive, db)
     win.show()
     code = app.exec()

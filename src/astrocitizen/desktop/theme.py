@@ -1,4 +1,4 @@
-"""Tema visual do shell desktop (ops night sky)."""
+"""Tema visual do shell desktop (ops night sky + visao noturna)."""
 
 from __future__ import annotations
 
@@ -16,11 +16,36 @@ COLORS = {
     "warn": "#e0a23a",
     "bad": "#e05656",
     "input": "#182236",
+    "btn_text": "#0b1220",
+    "radar": "#060a12",
+}
+
+# Visao noturna: monocromatico vermelho (preserva adaptacao escuridao).
+NIGHT_VISION_COLORS = {
+    "bg": "#0a0000",
+    "bg_elevated": "#140404",
+    "bg_nav": "#0f0202",
+    "border": "#4a1010",
+    "text": "#e08080",
+    "text_muted": "#a05050",
+    "accent": "#c03030",
+    "accent_dim": "#801818",
+    "ok": "#a02828",
+    "warn": "#c04040",
+    "bad": "#ff6060",
+    "input": "#1a0808",
+    "btn_text": "#0a0000",
+    "radar": "#050000",
 }
 
 
-def app_stylesheet() -> str:
-    c = COLORS
+def palette_for(*, night_vision: bool = False) -> dict[str, str]:
+    return dict(NIGHT_VISION_COLORS if night_vision else COLORS)
+
+
+def app_stylesheet(*, night_vision: bool = False) -> str:
+    """Stylesheet global; `night_vision=True` aplica tema vermelho observacional."""
+    c = palette_for(night_vision=night_vision)
     return f"""
     QWidget {{
         background-color: {c["bg"]};
@@ -62,14 +87,14 @@ def app_stylesheet() -> str:
     }}
     QLabel#badgeOk {{
         background-color: {c["ok"]};
-        color: #0b1220;
+        color: {c["btn_text"]};
         font-weight: 700;
         padding: 4px 10px;
         border-radius: 3px;
     }}
     QLabel#badgeBad {{
         background-color: {c["bad"]};
-        color: #fff;
+        color: {c["btn_text"]};
         font-weight: 700;
         padding: 4px 10px;
         border-radius: 3px;
@@ -106,7 +131,7 @@ def app_stylesheet() -> str:
     }}
     QPushButton {{
         background-color: {c["accent"]};
-        color: #0b1220;
+        color: {c["btn_text"]};
         border: none;
         border-radius: 4px;
         padding: 7px 14px;
@@ -129,12 +154,28 @@ def app_stylesheet() -> str:
         color: {c["accent"]};
         background-color: {c["bg_elevated"]};
     }}
+    QPushButton#nightVisionBtn {{
+        background-color: {c["input"]};
+        color: {c["text"]};
+        border: 1px solid {c["border"]};
+        padding: 6px 12px;
+        font-weight: 600;
+    }}
+    QPushButton#nightVisionBtn:checked {{
+        background-color: {c["accent"]};
+        color: {c["btn_text"]};
+        border-color: {c["accent"]};
+    }}
+    QPushButton#nightVisionBtn:hover {{
+        border-color: {c["accent"]};
+    }}
     QLineEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QTextEdit, QPlainTextEdit {{
         background-color: {c["input"]};
         border: 1px solid {c["border"]};
         border-radius: 4px;
         padding: 5px 8px;
         selection-background-color: {c["accent_dim"]};
+        color: {c["text"]};
     }}
     QComboBox::drop-down {{
         border: none;
@@ -146,6 +187,7 @@ def app_stylesheet() -> str:
         gridline-color: {c["border"]};
         border: 1px solid {c["border"]};
         border-radius: 4px;
+        color: {c["text"]};
     }}
     QHeaderView::section {{
         background-color: {c["bg_nav"]};
@@ -193,10 +235,20 @@ def app_stylesheet() -> str:
         min-height: 24px;
     }}
     QLabel#radarPane {{
-        background-color: #060a12;
+        background-color: {c["radar"]};
         color: {c["text_muted"]};
         border: 1px solid {c["border"]};
         border-radius: 4px;
+    }}
+    QMenu {{
+        background-color: {c["bg_elevated"]};
+        color: {c["text"]};
+        border: 1px solid {c["border"]};
+    }}
+    QToolTip {{
+        background-color: {c["bg_elevated"]};
+        color: {c["text"]};
+        border: 1px solid {c["border"]};
     }}
     """
 
@@ -223,8 +275,27 @@ def empty_state_text(module: str) -> str:
     return hints.get(module, "Sem dados.")
 
 
-def apply_theme(app: object) -> None:
-    """Apply stylesheet to QApplication."""
+def apply_theme(app: object, *, night_vision: bool = False) -> None:
+    """Apply stylesheet to QApplication (ops ou visao noturna)."""
     set_style = getattr(app, "setStyleSheet", None)
     if callable(set_style):
-        set_style(app_stylesheet())
+        set_style(app_stylesheet(night_vision=night_vision))
+
+
+def load_night_vision_pref() -> bool:
+    """Le preferencia persistida (QSettings); False se Qt indisponivel."""
+    try:
+        from PySide6.QtCore import QSettings
+    except ImportError:
+        return False
+    settings = QSettings("AstroCitizen", "desktop")
+    return bool(settings.value("night_vision", False, type=bool))
+
+
+def save_night_vision_pref(enabled: bool) -> None:
+    try:
+        from PySide6.QtCore import QSettings
+    except ImportError:
+        return
+    settings = QSettings("AstroCitizen", "desktop")
+    settings.setValue("night_vision", bool(enabled))

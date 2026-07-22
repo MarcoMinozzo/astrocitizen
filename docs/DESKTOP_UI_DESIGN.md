@@ -84,7 +84,12 @@ Paineis **consomem** este contexto; deixam de repetir combos Site/Programa excep
 2. **Uma superficie, muitos canais** — Importar e hub IN-IMP/IN-RAD/IN-VID/P4, nao um ecran por formato.
 3. **CLI = espelho** — cada tab tem comando; Analisar pode comecar a mostrar output de `analyze *`.
 4. **Componentes partilhados antes de features** — `PathBrowseRow`, `ContextBar`, `PanelChrome` (titulo + hint + log).
-5. **Preservar tema** — navy/amber; unificar brand bar com `COLORS`; sem skin nova nesta fase.
+5. **Preservar tema** — navy/amber por defeito; **visao noturna** (vermelho) para campo; unificar brand bar com `COLORS`.
+
+### Visao noturna
+
+Botao **Visao noturna** na brand bar (checkable). Aplica `NIGHT_VISION_COLORS` via `apply_theme(..., night_vision=True)`. Preferencia em `QSettings(AstroCitizen/desktop)`.
+
 
 ---
 
