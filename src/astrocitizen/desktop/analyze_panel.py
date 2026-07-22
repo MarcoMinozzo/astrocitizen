@@ -1,4 +1,4 @@
-"""Painel Analisar: bridges + viewer FITS + curvas (U3/U4/U5)."""
+"""Painel Analisar: bridges + viewer FITS + curvas + plate-solve (U3-U5 / AC-110 GUI)."""
 
 from __future__ import annotations
 
@@ -7,12 +7,23 @@ from typing import Any
 from uuid import UUID
 
 
+def parse_optional_float(text: str) -> float | None:
+    """Converte texto vazio -> None; senao float (ValueError se invalido)."""
+    t = (text or "").strip()
+    if not t:
+        return None
+    return float(t)
+
+
 def build_analyze_dashboard() -> type:
     from PySide6.QtGui import QImage, QPixmap
     from PySide6.QtWidgets import (
+        QCheckBox,
+        QComboBox,
         QDoubleSpinBox,
         QFileDialog,
         QFormLayout,
+        QGroupBox,
         QHBoxLayout,
         QLabel,
         QLineEdit,
@@ -26,11 +37,14 @@ def build_analyze_dashboard() -> type:
     )
 
     from astrocitizen.adapters.fs import LocalArtifactStore
+    from astrocitizen.adapters.platesolve import create_plate_solver
     from astrocitizen.analysis import (
         AperturePhotometry,
         BlinkDiff,
         ExtractSpectrum1D,
+        PlateSolve,
     )
+    from astrocitizen.contribution.credentials import LocalCredentialsStore
     from astrocitizen.desktop.plot_widget import build_series_plot
     from astrocitizen.desktop.series import series_from_measurement_points
     from astrocitizen.reduction import fits_stats, stretch_display
@@ -157,20 +171,67 @@ def build_analyze_dashboard() -> type:
 
         def _tab_blink(self) -> QWidget:
             w = QWidget()
-            form = QFormLayout(w)
+            lay = QVBoxLayout(w)
+            lay.setContentsMargins(0, 0, 0, 0)
+
+            blink_box = QGroupBox("Blink diff")
+            blink_form = QFormLayout(blink_box)
             self.bl_new = QLineEdit()
             self.bl_ref = QLineEdit()
-            form.addRow(
+            blink_form.addRow(
                 "New FITS",
                 self._path_row(self.bl_new, lambda: self._browse(self.bl_new)),
             )
-            form.addRow(
+            blink_form.addRow(
                 "Ref FITS",
                 self._path_row(self.bl_ref, lambda: self._browse(self.bl_ref)),
             )
-            btn = QPushButton("Blink diff")
-            btn.clicked.connect(self._run_blink)
-            form.addRow(btn)
+            btn_bl = QPushButton("Blink diff")
+            btn_bl.clicked.connect(self._run_blink)
+            blink_form.addRow(btn_bl)
+            lay.addWidget(blink_box)
+
+            ps_box = QGroupBox("Plate-solve / WCS (AC-110)")
+            ps_form = QFormLayout(ps_box)
+            self.ps_path = QLineEdit()
+            ps_form.addRow(
+                "FITS",
+                self._path_row(self.ps_path, lambda: self._browse(self.ps_path)),
+            )
+            self.ps_backend = QComboBox()
+            for b in ("auto", "solve-field", "nova", "synthetic"):
+                self.ps_backend.addItem(b, b)
+            self.ps_backend.setCurrentIndex(0)
+            ps_form.addRow("Backend", self.ps_backend)
+            self.ps_ra = QLineEdit()
+            self.ps_ra.setPlaceholderText("RA deg (hint, opcional)")
+            self.ps_dec = QLineEdit()
+            self.ps_dec.setPlaceholderText("Dec deg (hint, opcional)")
+            self.ps_radius = QLineEdit()
+            self.ps_radius.setPlaceholderText("raio busca deg")
+            self.ps_scale_low = QLineEdit()
+            self.ps_scale_low.setPlaceholderText("arcsec/pix")
+            self.ps_scale_high = QLineEdit()
+            self.ps_scale_high.setPlaceholderText("arcsec/pix")
+            ps_form.addRow("RA hint", self.ps_ra)
+            ps_form.addRow("Dec hint", self.ps_dec)
+            ps_form.addRow("Radius", self.ps_radius)
+            ps_form.addRow("Scale low", self.ps_scale_low)
+            ps_form.addRow("Scale high", self.ps_scale_high)
+            self.ps_nova_submit = QCheckBox("Nova: envio real (--submit)")
+            ps_form.addRow(self.ps_nova_submit)
+            hint = QLabel(
+                "synthetic/auto sem solve-field: hints RA/Dec (+ scale) obrigatorios. "
+                "Nova sem submit = dry-run."
+            )
+            hint.setObjectName("emptyState")
+            hint.setWordWrap(True)
+            ps_form.addRow(hint)
+            btn_ps = QPushButton("Plate-solve")
+            btn_ps.clicked.connect(self._run_plate_solve)
+            ps_form.addRow(btn_ps)
+            lay.addWidget(ps_box)
+            lay.addStretch(1)
             return w
 
         def _tab_viewer(self) -> QWidget:
@@ -348,6 +409,59 @@ def build_analyze_dashboard() -> type:
             self._append(
                 f"blink={product.id}  peak={product.summary.get('peak')}  "
                 f"snr={product.summary.get('snr')}"
+            )
+            if self.on_changed:
+                self.on_changed()
+
+        def _run_plate_solve(self) -> None:
+            ws = self._workspace()
+            if ws is None:
+                return
+            path = Path(self.ps_path.text().strip())
+            if not path.is_file():
+                QMessageBox.warning(self, "Plate-solve", "FITS invalido.")
+                return
+            try:
+                ra = parse_optional_float(self.ps_ra.text())
+                dec = parse_optional_float(self.ps_dec.text())
+                radius = parse_optional_float(self.ps_radius.text())
+                scale_low = parse_optional_float(self.ps_scale_low.text())
+                scale_high = parse_optional_float(self.ps_scale_high.text())
+            except ValueError:
+                QMessageBox.warning(
+                    self, "Plate-solve", "Hints numericos invalidos."
+                )
+                return
+            backend = str(self.ps_backend.currentData() or "auto")
+            store = LocalArtifactStore(self.artifacts_root)
+            cred = LocalCredentialsStore()
+            api_key = cred.get_network("astrometrynet").get("api_key")
+            try:
+                uri = self._put_fits(path)
+                nova_dry = not self.ps_nova_submit.isChecked()
+                solver = create_plate_solver(
+                    backend,
+                    api_key=str(api_key) if api_key else None,
+                    nova_dry_run=nova_dry if backend == "nova" else True,
+                )
+                product, result = PlateSolve(self.archive, store, solver).execute(
+                    workspace_id=ws.id,
+                    fits_uri=uri,
+                    ra_hint_deg=ra,
+                    dec_hint_deg=dec,
+                    radius_deg=radius,
+                    scale_low_arcsec=scale_low,
+                    scale_high_arcsec=scale_high,
+                    program_id=self._shell_program_id,
+                )
+            except (DomainError, ValueError, OSError) as exc:
+                QMessageBox.critical(self, "Plate-solve", str(exc))
+                return
+            self._append(
+                f"wcs={product.id}  backend={result.backend}  "
+                f"ra={result.ra_center_deg}  dec={result.dec_center_deg}  "
+                f"scale={result.scale_arcsec}  "
+                f"wcs_uri={product.parameters.get('wcs_uri')}"
             )
             if self.on_changed:
                 self.on_changed()

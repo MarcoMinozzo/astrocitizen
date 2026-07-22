@@ -19,7 +19,7 @@ A shell cresceu por sprint de entrada; U0–U4 reorganizaram IA, hubs e Analisar
 |---------------|----------|------|
 | Noite | Meteo/radar + tab Planos | Hub |
 | Observatorio | Sessao \| Importar (FITS/Radio/Espec./SER) \| Observar \| Timing | Hub |
-| Analisar | Fotometria \| Espectro \| Blink \| Viewer FITS \| Curvas | Bridges + plot |
+| Analisar | Fotometria \| Espectro \| Blink/Astrom (+ plate-solve) \| Viewer \| Curvas | Bridges + AC-110 GUI |
 | Contribuir | Redes | |
 | Arquivo | Observacoes + Produtos + detalhe/plot | U3+U5 |
 | Configurar | Sites \| Equip \| Programas \| Alvos | Hub |
@@ -48,8 +48,8 @@ Mantidos: 4 modos WORKFLOWS, 7 superficies ENTRADA, ops first, CLI=espelho, tema
 ## Melhorias futuras (fora deste epic UX)
 
 - Ocultar combos locais quando ContextBar activo  
-- Plate-solve externo na tab Astrom  
 - Arquivo: abrir artefacto no OS / export directo (sem so hint CLI)  
+- Measure astrometry GUI apos plate-solve (x,y → RA/Dec)
 
 ## Historico
 
@@ -60,3 +60,4 @@ Mantidos: 4 modos WORKFLOWS, 7 superficies ENTRADA, ops first, CLI=espelho, tema
 | 1.2 | 2026-07-22 | U2 |
 | 1.3 | 2026-07-22 | U3+U4 — roadmap UX fechado |
 | 1.4 | 2026-07-22 | U5 plots + Arquivo detalhe |
+| 1.5 | 2026-07-22 | Plate-solve GUI (AC-110 bridge) |

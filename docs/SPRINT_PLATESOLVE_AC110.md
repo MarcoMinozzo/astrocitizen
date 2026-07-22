@@ -38,9 +38,16 @@ astrocitizen analyze astrometry --fits-uri <wcs_uri> --x 42 --y 32
 - Nova upload multipart e minimo; polling com timeout.
 - Sem index files / blind solve sem hints no backend synthetic.
 
+## GUI (2026-07-22)
+
+Bridge em **Analisar ? Blink / Astrom ? Plate-solve / WCS**:
+mesmos backends e hints que o CLI; Nova submit via checkbox;
+credencial `astrometrynet.api_key` de `credentials.json` se existir.
+
 ## DoD
 
 - [x] Port + 3 backends
 - [x] Produto no BD + artefacto FITS
 - [x] CLI + testes sem solver externo
 - [x] Backlog AC-110 marcado
+- [x] Bridge GUI (Analisar)

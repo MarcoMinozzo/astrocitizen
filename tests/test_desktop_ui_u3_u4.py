@@ -75,3 +75,16 @@ def test_analyze_builder() -> None:
 
     assert callable(build_analyze_dashboard)
     assert callable(build_archive_dashboard)
+
+
+def test_parse_optional_float() -> None:
+    from astrocitizen.desktop.analyze_panel import parse_optional_float
+
+    assert parse_optional_float("") is None
+    assert parse_optional_float("  ") is None
+    assert parse_optional_float("12.5") == 12.5
+    try:
+        parse_optional_float("x")
+        raise AssertionError("expected ValueError")
+    except ValueError:
+        pass
