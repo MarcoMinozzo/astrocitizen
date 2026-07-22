@@ -294,18 +294,23 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 
 ## E19 — Base de conhecimento interna + RAG
 
-Epico aberto: corpus interno versionado → retrieval → (opcional) geracao ancorada.  
-Doc: [EPICO_E19_BASE_CONHECIMENTO_RAG.md](EPICO_E19_BASE_CONHECIMENTO_RAG.md).
+Epico aberto: corpus interno versionado → retrieval → (opcional) MCP/LLM ancorado.  
+Doc: [EPICO_E19_BASE_CONHECIMENTO_RAG.md](EPICO_E19_BASE_CONHECIMENTO_RAG.md)  
+**Processo de referencia:** motorsport-agent *Knowledge Base MCP Coaching* (fases KB-0…5, trust tiers, FTS→vector, gold QA).
 
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
-| AC-190 | Modelo `knowledge_documents` / `knowledge_chunks` (+ licenca, source path, hash) | P2 | M | E1 | Schema dedicado (nao misturar com FITS) |
-| AC-191 | Pipeline de ingestao do corpus `docs/` + atlas | P2 | L | AC-190 | Chunking + metadados PO-*/rede |
-| AC-192 | Retriever lexical (FTS) + CLI `knowledge search` | P2 | M | AC-191 | Util sem embeddings |
-| AC-193 | Embeddings locais + indice vetorial (hibrido lexical/vector) | P2 | L | AC-192 | Preferir on-device; D-010 |
-| AC-194 | `RetrieverPort` + filtros (PO, rede, idioma) | P2 | M | AC-192 | Porta hexagonal |
-| AC-195 | Assistente Ajuda grounded (CLI/GUI) so com citacoes | P2 | L | AC-194 | LLM opcional; retrieval obrigatorio |
-| AC-196 | Ligacao spectrum: RAG + AC-107 (explicar relatorio com corpus ARAS/BeSS) | P2 | M | AC-107, AC-194 | Caso de uso piloto |
+| AC-190 | Scaffold `knowledge-base/` (catalog, taxonomy, manifest, licenses, chunk template) | P2 | S | — | Espelho KB-0 Vectron |
+| AC-191 | Modelo `knowledge_documents` / `knowledge_chunks` (+ trust_tier, hash, source_id) | P2 | M | E1, AC-190 | Schema dedicado (nao misturar com FITS) |
+| AC-192 | Pipeline de ingestao T3: `docs/` + atlas (offline; sem PDF em runtime) | P2 | L | AC-191 | Chunk 300–800 tokens |
+| AC-193 | Retriever lexical FTS (SQLite FTS5 Desktop) + CLI `knowledge search` | P2 | M | AC-192 | Util sem embeddings |
+| AC-194 | `RetrieverPort` + filtros (PO-*, rede, topic, lang) | P2 | M | AC-193 | Porta hexagonal |
+| AC-195 | Embeddings locais + indice hibrido (RRF lexical/vector) | P2 | L | AC-193 | Preferir on-device; D-010 |
+| AC-196 | Assistente Ajuda grounded (CLI/GUI) so com citacoes | P2 | L | AC-194 | LLM opcional; retrieval obrigatorio |
+| AC-197 | MCP read-only (`kb_search`, `kb_get_chunk`, `kb_list_sources`) | P2 | M | AC-194 | Contrato tipo Vectron; rate limit |
+| AC-198 | Glossario astro/redes/PO sync → chunks + UI | P2 | M | AC-192 | Analogao glossario piloto |
+| AC-199 | Gold questions + eval citation rate (≥80% factuais) | P2 | M | AC-193 | DoD mensuravel (BL-KB-QA*) |
+| AC-200 | Ligacao spectrum: RAG + AC-107 (explicar relatorio com corpus ARAS/BeSS) | P2 | M | AC-107, AC-194 | Caso de uso piloto KB-5 |
 
 ---
 
