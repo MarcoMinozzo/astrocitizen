@@ -241,7 +241,7 @@ def run_gui(db_path: str | None = None) -> int:
             self.noite_hub = TabHub(
                 title="",
                 tabs=[
-                    ("Meteo / radar", self.night),
+                    ("Meteo / carta", self.night),
                     ("Planos", plan_page),
                 ],
             )

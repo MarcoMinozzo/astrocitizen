@@ -314,7 +314,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             self.radar_label = QLabel("Radar: clique Atualizar")
             self.radar_label.setObjectName("radarPane")
             self.radar_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.radar_label.setMinimumSize(280, 220)
+            self.radar_label.setMinimumSize(200, 140)
             self.radar_attr = QLabel("")
             self.radar_attr.setWordWrap(True)
             self.radar_attr.setTextFormat(Qt.TextFormat.RichText)
@@ -329,6 +329,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             left_l.addWidget(self.plan_label)
 
             sky_pane = QWidget()
+            sky_pane.setMinimumHeight(320)
             sky_l = QVBoxLayout(sky_pane)
             sky_l.setContentsMargins(0, 0, 0, 0)
             sky_l.addWidget(QLabel("Carta do plano"))
@@ -347,14 +348,18 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             right = QSplitter(Qt.Orientation.Vertical)
             right.addWidget(sky_pane)
             right.addWidget(radar_pane)
-            right.setStretchFactor(0, 3)
-            right.setStretchFactor(1, 2)
+            right.setStretchFactor(0, 4)
+            right.setStretchFactor(1, 1)
+            right.setSizes([420, 160])
+            self._right_split = right
 
             split = QSplitter()
             split.addWidget(left)
             split.addWidget(right)
-            split.setStretchFactor(0, 3)
-            split.setStretchFactor(1, 2)
+            split.setStretchFactor(0, 2)
+            split.setStretchFactor(1, 3)
+            split.setSizes([420, 560])
+            self._main_split = split
 
             root = QVBoxLayout(self)
             root.setContentsMargins(16, 12, 16, 12)
@@ -363,6 +368,27 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
 
             self.site_combo.currentIndexChanged.connect(self._on_site_combo_changed)
             self._syncing_shell = False
+
+        def _bootstrap_sky_chart(self) -> None:
+            """Inicializa carta sem esperar meteo/radar (AC-079 UX)."""
+            site = self._current_site()
+            if site is None or self._workspace_id is None:
+                return
+            night_date = self.date_edit.date().toString("yyyy-MM-dd")
+            try:
+                night = self._eph.night_window(
+                    latitude_deg=site.latitude_deg,
+                    longitude_deg=site.longitude_deg,
+                    elevation_m=site.elevation_m,
+                    night_date=night_date,
+                    night_start_rule=getattr(
+                        site, "night_start_rule", "astronomical_twilight"
+                    ),
+                )
+            except Exception as exc:  # noqa: BLE001
+                self.sky_detail.setText(f"erro carta: {exc}")
+                return
+            self._init_sky_from_night(night)
 
         def _set_badge(self, ok: bool | None) -> None:
             label, name = viability_badge(ok)
@@ -402,6 +428,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                 self._set_badge(None)
             else:
                 self._update_coords_label()
+                self._bootstrap_sky_chart()
             self._syncing_shell = False
 
         def set_shell_context(
@@ -420,6 +447,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             self._syncing_shell = False
             self._update_coords_label()
             if changed and self._current_site() is not None:
+                self._bootstrap_sky_chart()
                 self.refresh_night()
 
         def set_shell_night_date(self, night_date: str) -> None:
@@ -433,8 +461,8 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             self._update_coords_label()
             if self._syncing_shell:
                 return
-            # Recarregar meteo ao mudar observatorio
             if self._current_site() is not None:
+                self._bootstrap_sky_chart()
                 self.refresh_night()
 
         def _update_coords_label(self) -> None:

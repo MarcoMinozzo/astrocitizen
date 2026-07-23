@@ -12,7 +12,7 @@ from astrocitizen.planning.sky_projection import SkyChartModel, SkyMarker
 def build_sky_chart_widget(parent: Any | None = None) -> Any:
     from PySide6.QtCore import QPointF, Qt, Signal
     from PySide6.QtGui import QColor, QFont, QPainter, QPen
-    from PySide6.QtWidgets import QWidget
+    from PySide6.QtWidgets import QSizePolicy, QWidget
 
     from astrocitizen.desktop.theme import COLORS
 
@@ -36,6 +36,9 @@ def build_sky_chart_widget(parent: Any | None = None) -> Any:
             self._hit: list[tuple[float, float, SkyMarker]] = []
             self.setMouseTracking(True)
             self.setToolTip("Carta do plano (L0) — nao e um planetario")
+            self.setSizePolicy(
+                QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding
+            )
 
         def set_model(self, model: SkyChartModel | None) -> None:
             self._model = model
