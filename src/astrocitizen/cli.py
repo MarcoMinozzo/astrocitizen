@@ -1825,6 +1825,43 @@ def _cmd_knowledge_ask(args: argparse.Namespace) -> int:
     return 0 if ans.grounded else 1
 
 
+def _cmd_knowledge_eval_gold(args: argparse.Namespace) -> int:
+    import json
+
+    from astrocitizen.adapters.sqlite.hybrid_retriever import HybridRetriever
+    from astrocitizen.knowledge import default_kb_root
+    from astrocitizen.knowledge.eval_gold import evaluate_gold, write_eval_report
+
+    root = Path(args.kb_root) if args.kb_root else default_kb_root()
+    archive = _open_archive(Path(args.db))
+    try:
+        report = evaluate_gold(
+            HybridRetriever(archive),
+            kb_root=root,
+            limit=int(args.limit),
+            mode=str(args.mode or "hybrid"),
+        )
+    finally:
+        archive.close()
+    if args.out:
+        write_eval_report(report, Path(args.out))
+    print(
+        f"gold\tset={report.set_id}\tn={report.n_questions}\t"
+        f"hits={report.n_hits}\trate={report.citation_rate:.3f}\t"
+        f"target={report.target}\tpassed={report.passed}"
+    )
+    for r in report.results:
+        mark = "HIT" if r.hit else "MISS"
+        print(
+            f"q\t{r.question_id}\t{mark}\tcited={','.join(r.cited_source_ids) or '-'}\t"
+            f"expected={','.join(r.expected_source_ids)}"
+        )
+    if args.json:
+        print("---")
+        print(json.dumps(report.to_dict(), ensure_ascii=False, indent=2))
+    return 0 if report.passed else 1
+
+
 def _cmd_knowledge_glossary(args: argparse.Namespace) -> int:
     import json
 
@@ -2744,6 +2781,18 @@ def build_parser() -> argparse.ArgumentParser:
         choices=("fts", "vector", "hybrid"),
     )
     p_kb_ask.set_defaults(func=_cmd_knowledge_ask)
+    p_kb_ev = kb_sub.add_parser(
+        "eval-gold", help="Eval citation rate gold-questions (AC-199)"
+    )
+    _add_db_arg(p_kb_ev)
+    p_kb_ev.add_argument("--kb-root", default=None)
+    p_kb_ev.add_argument("--limit", type=int, default=5)
+    p_kb_ev.add_argument(
+        "--mode", default="hybrid", choices=("fts", "vector", "hybrid")
+    )
+    p_kb_ev.add_argument("--out", default=None, help="Escrever JSON do report")
+    p_kb_ev.add_argument("--json", action="store_true", help="Dump JSON no stdout")
+    p_kb_ev.set_defaults(func=_cmd_knowledge_eval_gold)
     p_kb_gl = kb_sub.add_parser("glossary", help="Glossario astro/redes/PO (AC-198)")
     gl_sub = p_kb_gl.add_subparsers(dest="glossary_cmd", required=True)
     p_gl_list = gl_sub.add_parser("list", help="Listar / pesquisar termos")

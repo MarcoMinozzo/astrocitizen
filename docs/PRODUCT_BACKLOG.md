@@ -312,7 +312,7 @@ Doc: [EPICO_E19_BASE_CONHECIMENTO_RAG.md](EPICO_E19_BASE_CONHECIMENTO_RAG.md)
 | AC-196 | Assistente Ajuda grounded (CLI/GUI) so com citacoes | P2 | L | AC-194 | ✅ `knowledge ask` + HelpPanel KB |
 | AC-197 | MCP read-only (`kb_search`, `kb_get_chunk`, `kb_list_sources`) | P2 | M | AC-194 | ✅ mcp-call / mcp-serve · rate limit |
 | AC-198 | Glossario astro/redes/PO sync → chunks + UI | P2 | M | AC-192 | ✅ glossary.json + sync + kb_get_glossary |
-| AC-199 | Gold questions + eval citation rate (≥80% factuais) | P2 | M | AC-193 | DoD mensuravel (BL-KB-QA*) |
+| AC-199 | Gold questions + eval citation rate (≥80% factuais) | P2 | M | AC-193 | ✅ `eval-gold` · gold-v0 ≥80% |
 | AC-200 | Ligacao spectrum: RAG + AC-107 (explicar relatorio com corpus ARAS/BeSS) | P2 | M | AC-107, AC-194 | Caso de uso piloto KB-5 |
 
 ---

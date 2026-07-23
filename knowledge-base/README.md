@@ -2,7 +2,7 @@
 
 Scaffold interno para RAG futuro. **Nao** e indice de FITS nem dados do observador.
 
-**Estado:** KB-0…KB-4 ✅ · Ajuda AC-196 ✅ · MCP AC-197 ✅ · **AC-198** glossario ✅ · gold QA AC-199 pendente.
+**Estado:** KB-0…KB-5 (Ajuda) ✅ · glossario AC-198 ✅ · **AC-199** gold QA ✅ · AC-200 spectrum RAG pendente.
 
 ## Layout
 

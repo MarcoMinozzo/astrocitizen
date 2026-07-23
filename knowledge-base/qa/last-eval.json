@@ -1,0 +1,222 @@
+{
+  "set_id": "gold-v0",
+  "n_questions": 10,
+  "n_hits": 10,
+  "citation_rate": 1.0,
+  "target": 0.8,
+  "passed": true,
+  "results": [
+    {
+      "id": "GQ-001",
+      "hit": true,
+      "grounded": true,
+      "cited_source_ids": [
+        "docs-workflows",
+        "docs-rn"
+      ],
+      "expected_source_ids": [
+        "docs-workflows"
+      ],
+      "chunk_ids": [
+        "docs-workflows-012",
+        "docs-workflows-001",
+        "docs-workflows-011",
+        "docs-workflows-002",
+        "docs-rn-010"
+      ]
+    },
+    {
+      "id": "GQ-002",
+      "hit": true,
+      "grounded": true,
+      "cited_source_ids": [
+        "docs-programas",
+        "docs-rn",
+        "atlas-reporte",
+        "docs-workflows"
+      ],
+      "expected_source_ids": [
+        "docs-entrada",
+        "docs-programas"
+      ],
+      "chunk_ids": [
+        "docs-programas-001",
+        "docs-rn-008",
+        "atlas-reporte-001",
+        "docs-rn-001",
+        "docs-workflows-007"
+      ]
+    },
+    {
+      "id": "GQ-003",
+      "hit": true,
+      "grounded": true,
+      "cited_source_ids": [
+        "docs-analise-espectral",
+        "docs-workflows",
+        "docs-programas"
+      ],
+      "expected_source_ids": [
+        "docs-analise-espectral"
+      ],
+      "chunk_ids": [
+        "docs-analise-espectral-003",
+        "docs-analise-espectral-001",
+        "docs-workflows-007",
+        "docs-analise-espectral-002",
+        "docs-programas-002"
+      ]
+    },
+    {
+      "id": "GQ-004",
+      "hit": true,
+      "grounded": true,
+      "cited_source_ids": [
+        "atlas-reporte",
+        "docs-programas",
+        "docs-workflows"
+      ],
+      "expected_source_ids": [
+        "atlas-reporte",
+        "docs-programas"
+      ],
+      "chunk_ids": [
+        "atlas-reporte-002",
+        "docs-programas-002",
+        "atlas-reporte-003",
+        "docs-workflows-009",
+        "docs-workflows-008"
+      ]
+    },
+    {
+      "id": "GQ-005",
+      "hit": true,
+      "grounded": true,
+      "cited_source_ids": [
+        "docs-entrada",
+        "atlas-reporte",
+        "docs-programas",
+        "docs-analise-espectral"
+      ],
+      "expected_source_ids": [
+        "atlas-reporte",
+        "docs-analise-espectral",
+        "docs-programas"
+      ],
+      "chunk_ids": [
+        "docs-entrada-003",
+        "atlas-reporte-004",
+        "docs-programas-003",
+        "docs-analise-espectral-003",
+        "docs-programas-008"
+      ]
+    },
+    {
+      "id": "GQ-006",
+      "hit": true,
+      "grounded": true,
+      "cited_source_ids": [
+        "atlas-reporte",
+        "docs-analise-espectral",
+        "docs-workflows"
+      ],
+      "expected_source_ids": [
+        "docs-entrada",
+        "docs-programas",
+        "atlas-reporte"
+      ],
+      "chunk_ids": [
+        "atlas-reporte-004",
+        "docs-analise-espectral-003",
+        "atlas-reporte-006",
+        "docs-workflows-009",
+        "atlas-reporte-007"
+      ]
+    },
+    {
+      "id": "GQ-007",
+      "hit": true,
+      "grounded": true,
+      "cited_source_ids": [
+        "atlas-reporte",
+        "docs-programas",
+        "docs-rn",
+        "docs-entrada"
+      ],
+      "expected_source_ids": [
+        "docs-programas",
+        "docs-entrada",
+        "atlas-reporte"
+      ],
+      "chunk_ids": [
+        "atlas-reporte-003",
+        "docs-programas-002",
+        "atlas-reporte-002",
+        "docs-rn-008",
+        "docs-entrada-010"
+      ]
+    },
+    {
+      "id": "GQ-008",
+      "hit": true,
+      "grounded": true,
+      "cited_source_ids": [
+        "docs-rn",
+        "docs-workflows"
+      ],
+      "expected_source_ids": [
+        "docs-rn"
+      ],
+      "chunk_ids": [
+        "docs-rn-004",
+        "docs-workflows-001",
+        "docs-rn-001",
+        "docs-rn-002",
+        "docs-rn-007"
+      ]
+    },
+    {
+      "id": "GQ-009",
+      "hit": true,
+      "grounded": true,
+      "cited_source_ids": [
+        "docs-workflows",
+        "atlas-reporte",
+        "docs-rn"
+      ],
+      "expected_source_ids": [
+        "docs-workflows",
+        "atlas-reporte"
+      ],
+      "chunk_ids": [
+        "docs-workflows-008",
+        "atlas-reporte-001",
+        "docs-rn-008",
+        "docs-workflows-012",
+        "docs-workflows-001"
+      ]
+    },
+    {
+      "id": "GQ-010",
+      "hit": true,
+      "grounded": true,
+      "cited_source_ids": [
+        "docs-analise-espectral",
+        "docs-entrada",
+        "docs-workflows"
+      ],
+      "expected_source_ids": [
+        "docs-rn",
+        "docs-entrada",
+        "docs-workflows"
+      ],
+      "chunk_ids": [
+        "docs-analise-espectral-001",
+        "docs-entrada-010",
+        "docs-analise-espectral-002",
+        "docs-entrada-001",
+        "docs-workflows-007"
+      ]
+    }
+  ]
+}

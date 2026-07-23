@@ -1,20 +1,20 @@
 {
   "schema_version": 1,
   "set_id": "gold-v0",
-  "status": "placeholder",
+  "status": "active",
   "citation_rate_target": 0.8,
-  "notes": "Fill in AC-199; questions must be answerable from catalogued T3 sources.",
+  "notes": "AC-199: factual questions answerable from T3 ingested sources. Citation hit = any expected_source_id in top citations.",
   "questions": [
     {
       "id": "GQ-001",
-      "question": "Quais sao as 6 areas da navegacao desktop?",
+      "question": "Workflows do utilizador jornada Modo Configurar Planejar Executar Analisar Desktop",
       "expected_topics": ["ux", "workflows"],
       "expected_source_ids": ["docs-workflows"],
       "lang": "pt"
     },
     {
       "id": "GQ-002",
-      "question": "O que e o produto double_measure (PO-G01)?",
+      "question": "O que e o produto double_measure PO-G01?",
       "expected_topics": ["programs", "entrada"],
       "expected_source_ids": ["docs-entrada", "docs-programas"],
       "lang": "pt"
@@ -26,6 +26,55 @@
       "expected_source_ids": ["docs-analise-espectral"],
       "lang": "pt",
       "expected_answer_hint": "Nao; e interpretacao assistida deterministica"
+    },
+    {
+      "id": "GQ-004",
+      "question": "Como reportar fotometria AAVSO Extended WebObs?",
+      "expected_topics": ["networks", "export"],
+      "expected_source_ids": ["atlas-reporte", "docs-programas"],
+      "lang": "pt"
+    },
+    {
+      "id": "GQ-005",
+      "question": "O que e BeSS e espectros Be?",
+      "expected_topics": ["networks", "spectrum"],
+      "expected_source_ids": ["atlas-reporte", "docs-analise-espectral", "docs-programas"],
+      "lang": "pt"
+    },
+    {
+      "id": "GQ-006",
+      "question": "Como exportar medidas WDS de duplas?",
+      "expected_topics": ["networks", "entrada"],
+      "expected_source_ids": ["docs-entrada", "docs-programas", "atlas-reporte"],
+      "lang": "pt"
+    },
+    {
+      "id": "GQ-007",
+      "question": "O que e COBS ICQ reporte de cometas?",
+      "expected_topics": ["networks", "export"],
+      "expected_source_ids": ["docs-programas", "docs-entrada", "atlas-reporte"],
+      "lang": "pt"
+    },
+    {
+      "id": "GQ-008",
+      "question": "Quais sao as regras de negocio RN do fluxo dia a dia?",
+      "expected_topics": ["rules", "product"],
+      "expected_source_ids": ["docs-rn"],
+      "lang": "pt"
+    },
+    {
+      "id": "GQ-009",
+      "question": "Como funciona o Modo Contribuir e envio as redes?",
+      "expected_topics": ["workflows", "export"],
+      "expected_source_ids": ["docs-workflows", "atlas-reporte"],
+      "lang": "pt"
+    },
+    {
+      "id": "GQ-010",
+      "question": "O que e AnalysisProduct e NetworkSubmission?",
+      "expected_topics": ["product", "export"],
+      "expected_source_ids": ["docs-rn", "docs-entrada", "docs-workflows"],
+      "lang": "pt"
     }
   ]
 }
