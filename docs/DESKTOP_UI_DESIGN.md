@@ -49,7 +49,7 @@ Mantidos: 4 modos WORKFLOWS, 7 superficies ENTRADA, ops first, CLI=espelho, tema
 
 - Ocultar combos locais quando ContextBar activo  
 - Enrollment multi-observador / membership de programas partilhados  
-- Contribuir: UI Revisar campos atlas — AAVSO/MPC ✅ (R2); outras redes depois 
+- Contribuir: UI Revisar campos atlas — AAVSO/MPC ✅ (R2); WDS ✅ (EXP-WDS); outras redes depois 
 
 ## Historico
 

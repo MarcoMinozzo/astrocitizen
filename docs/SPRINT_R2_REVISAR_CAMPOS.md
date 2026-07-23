@@ -14,9 +14,11 @@
 
 ## Fora deste slice
 
-- Revisar campos para TNS / BeSS / ExoClock / IOTA / WDS / COBS
+- Revisar campos para TNS / BeSS / ExoClock / IOTA (R3)
+- WDS — feito em [SPRINT_EXP_WDS.md](SPRINT_EXP_WDS.md)
 - Upload WebObs automatico
 - ADES XML
+- COBS
 
 ## DoD
 

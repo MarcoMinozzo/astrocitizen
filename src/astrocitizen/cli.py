@@ -32,6 +32,7 @@ from astrocitizen.contribution.mpc import MpcAdesSubmitter, write_ades_psv
 from astrocitizen.contribution.solar import ExportSolarReport
 from astrocitizen.contribution.tns import TnsClient, format_tns_at_report, write_tns_report
 from astrocitizen.contribution.validate_minimum import validate_product_for_network
+from astrocitizen.contribution.wds import ExportWds
 from astrocitizen.desktop import run_gui
 from astrocitizen.inventory.models import Equipment, Site
 from astrocitizen.observatory import (
@@ -1396,6 +1397,67 @@ def _cmd_contribute_solar(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_contribute_wds(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    cred = LocalCredentialsStore(Path(args.credentials) if args.credentials else None)
+    wds_cred = cred.get_network("wds")
+    product_id = UUID(args.product)
+    check = validate_product_for_network(
+        archive,
+        network="wds",
+        product_id=product_id,
+        payload={"object": args.object} if args.object else {},
+    )
+    for issue in check.issues:
+        print(f"{issue.severity}\t{issue.code}\t{issue.message}")
+    if not check.ok:
+        archive.close()
+        return 1
+    overrides: dict = {}
+    if args.object:
+        overrides["object_name"] = args.object
+    if args.observer or wds_cred.get("observer"):
+        overrides["observer"] = args.observer or wds_cred.get("observer")
+    if args.observatory:
+        overrides["observatory"] = args.observatory
+    if args.discoverer:
+        overrides["discoverer"] = args.discoverer
+    if args.notes:
+        overrides["notes"] = args.notes
+    out = Path(args.out)
+    ExportWds(archive).execute(
+        product_id=product_id,
+        out_path=out,
+        overrides=overrides or None,
+        write_csv=not args.no_csv,
+    )
+    store = LocalArtifactStore(Path(args.artifacts))
+    uri = store.put(out, key=f"export/wds/{out.name}")
+    csv_path = out.with_suffix(".csv")
+    if csv_path.is_file():
+        store.put(csv_path, key=f"export/wds/{csv_path.name}")
+    sub = NetworkSubmission(
+        id=new_id(),
+        workspace_id=ws.id,
+        network="wds",
+        status="validated",
+        artifact_uri=uri,
+        product_id=product_id,
+        payload_summary={
+            "object": args.object,
+            "note": "submit manual USNO / WDS maintainer",
+        },
+    )
+    archive.save_network_submission(sub)
+    print(
+        f"wrote={out}\turi={uri}\tsubmission={sub.id}\t"
+        "submit=https://www.astro.gsu.edu/wds/"
+    )
+    archive.close()
+    return 0
+
+
 def _cmd_meteo_forecast(args: argparse.Namespace) -> int:
     archive = _open_archive(Path(args.db))
     ws = _ensure_default_workspace(archive)
@@ -2124,12 +2186,26 @@ def build_parser() -> argparse.ArgumentParser:
     p_csol.add_argument("--credentials", default=None)
     p_csol.set_defaults(func=_cmd_contribute_solar)
 
+    p_cwds = c_sub.add_parser("wds", help="Export medida WDS / USNO (PO-G01)")
+    _add_db_arg(p_cwds)
+    p_cwds.add_argument("--product", required=True)
+    p_cwds.add_argument("--object", default=None, help="Override WDS / object id")
+    p_cwds.add_argument("--observer", default=None)
+    p_cwds.add_argument("--observatory", default=None)
+    p_cwds.add_argument("--discoverer", default=None)
+    p_cwds.add_argument("--notes", default=None)
+    p_cwds.add_argument("--no-csv", action="store_true")
+    p_cwds.add_argument("--out", required=True)
+    p_cwds.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_cwds.add_argument("--credentials", default=None)
+    p_cwds.set_defaults(func=_cmd_contribute_wds)
+
     p_cl = c_sub.add_parser("list", help="Listar network_submissions")
     _add_db_arg(p_cl)
     p_cl.add_argument(
         "--network",
         default=None,
-        choices=("aavso", "mpc", "tns", "bess", "exoclock", "iota", "solar"),
+        choices=("aavso", "mpc", "tns", "bess", "exoclock", "iota", "solar", "wds"),
     )
     p_cl.set_defaults(func=_cmd_contribute_list)
 

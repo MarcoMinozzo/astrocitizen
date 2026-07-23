@@ -87,7 +87,12 @@ def test_validate_mpc_form() -> None:
 def test_validate_wds_double() -> None:
     product = SimpleNamespace(
         product_type="double_measure",
-        summary={"pa_deg": 10.0, "sep_arcsec": 2.0, "epoch_utc": "2026-07-23T00:00:00Z"},
+        summary={
+            "object": "WDS 04184+2135",
+            "pa_deg": 10.0,
+            "sep_arcsec": 2.0,
+            "epoch_utc": "2026-07-23T00:00:00Z",
+        },
         parameters={},
     )
     archive = SimpleNamespace(

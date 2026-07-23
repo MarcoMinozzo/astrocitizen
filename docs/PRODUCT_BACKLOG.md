@@ -251,6 +251,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | AC-143 | Painel de envios pendentes | P2 | M | E7 | ✅ GUI **Contribute** + Revisar campos AAVSO/MPC (R2) + CLI list |
 | AC-144 | TNS Bulk API AT-rep | P1 | M | AC-140 | ✅ sandbox + dry-run · `contribute tns` |
 | AC-145 | Export ExoClock LC | P1 | M | AC-140 | ✅ `contribute exoclock` |
+| AC-146 | Export WDS (duplas PO-G01) | P2 | M | AC-152, AC-141 | ✅ EXP-WDS texto+CSV · `contribute wds` · GUI Revisar |
 
 ---
 

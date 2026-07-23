@@ -65,7 +65,7 @@ def validate_product_for_network(
     elif net == "solar":
         issues.extend(_validate_solar(product))
     elif net == "wds":
-        issues.extend(_validate_wds(product))
+        issues.extend(_validate_wds(product, payload))
     else:
         issues.append(
             _issue("network_unknown", f"rede sem regras AC-141: {network}", severity="warning")
@@ -188,8 +188,11 @@ def _validate_solar(product: Any | None) -> list[ValidationIssue]:
     return issues
 
 
-def _validate_wds(product: Any | None) -> list[ValidationIssue]:
+def _validate_wds(
+    product: Any | None, payload: dict[str, Any] | None = None
+) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
+    payload = dict(payload or {})
     if product is None:
         issues.append(_issue("wds_product", "WDS exige produto double_measure"))
         return issues
@@ -197,8 +200,18 @@ def _validate_wds(product: Any | None) -> list[ValidationIssue]:
         issues.append(_issue("wds_type", "produto deve ser double_measure"))
         return issues
     summary = product.summary or {}
+    params = product.parameters or {}
     if summary.get("pa_deg") is None or summary.get("sep_arcsec") is None:
         issues.append(_issue("wds_pasep", "double_measure sem pa_deg/sep_arcsec"))
     if not summary.get("epoch_utc"):
         issues.append(_issue("wds_epoch", "double_measure sem epoch_utc"))
+    obj = str(
+        payload.get("object")
+        or payload.get("object_name")
+        or summary.get("object")
+        or params.get("object_name")
+        or ""
+    ).strip()
+    if not obj:
+        issues.append(_issue("wds_object", "identificacao do par WDS obrigatoria"))
     return issues

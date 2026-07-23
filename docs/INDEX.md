@@ -46,6 +46,7 @@
 | [SPRINT_AC190_KB_SCAFFOLD.md](SPRINT_AC190_KB_SCAFFOLD.md) | E19 KB-0 scaffold knowledge-base |
 | [SPRINT_AC141_D011.md](SPRINT_AC141_D011.md) | AC-141 validacao redes + D-011 ferramentas imagem |
 | [SPRINT_R2_REVISAR_CAMPOS.md](SPRINT_R2_REVISAR_CAMPOS.md) | R2: Revisar campos atlas (AAVSO/MPC) |
+| [SPRINT_EXP_WDS.md](SPRINT_EXP_WDS.md) | EXP-WDS: export + Revisar campos (PO-G01) |
 | [decisoes/D-011-imagem-ferramentas-externas.md](decisoes/D-011-imagem-ferramentas-externas.md) | Decisao: imagem via ferramentas externas |
 | [ANALISE_ESPECTRAL_ASSISTIDA.md](ANALISE_ESPECTRAL_ASSISTIDA.md) | AC-106: como funciona a interpretacao espectral (sem LLM) |
 | [EPICO_E19_BASE_CONHECIMENTO_RAG.md](EPICO_E19_BASE_CONHECIMENTO_RAG.md) | Epico E19: base interna de conhecimento para RAG |

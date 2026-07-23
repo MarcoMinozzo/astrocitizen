@@ -13,11 +13,13 @@ from astrocitizen.contribution.validate_minimum import (
     ValidationResult,
     validate_product_for_network,
 )
+from astrocitizen.contribution.wds import ExportWds, format_wds_measure
 
 __all__ = [
     "ExportAavso",
     "ExportExoclock",
     "ExportSolarReport",
+    "ExportWds",
     "LocalCredentialsStore",
     "MpcAdesSubmitter",
     "NetworkSubmission",
@@ -30,6 +32,7 @@ __all__ = [
     "format_iota_es_txt",
     "format_solar_report",
     "format_tns_at_report",
+    "format_wds_measure",
     "validate_product_for_network",
     "write_ades_psv",
     "write_bess_fits",
