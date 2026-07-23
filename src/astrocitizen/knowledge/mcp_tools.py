@@ -13,6 +13,7 @@ from astrocitizen.ports.retriever import RetrieveFilters
 TOOL_KB_SEARCH = "kb_search"
 TOOL_KB_GET_CHUNK = "kb_get_chunk"
 TOOL_KB_LIST_SOURCES = "kb_list_sources"
+TOOL_KB_GET_GLOSSARY = "kb_get_glossary"
 
 TOOL_DEFS: list[dict[str, Any]] = [
     {
@@ -58,6 +59,25 @@ TOOL_DEFS: list[dict[str, Any]] = [
             "properties": {"trust_tier": {"type": "string"}},
         },
     },
+    {
+        "name": TOOL_KB_GET_GLOSSARY,
+        "description": (
+            "Consulta o glossario astro/redes/PO (AC-198). "
+            "Passe term para lookup exacto, ou query para pesquisa parcial."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "term": {"type": "string", "description": "Lookup exacto (term/alias)"},
+                "query": {"type": "string", "description": "Pesquisa parcial"},
+                "limit": {"type": "integer", "default": 20},
+                "topic": {"type": "string"},
+                "network": {"type": "string"},
+                "po_id": {"type": "string"},
+                "lang": {"type": "string"},
+            },
+        },
+    },
 ]
 
 
@@ -101,6 +121,7 @@ class KbMcpServer:
             TOOL_KB_SEARCH: self._kb_search,
             TOOL_KB_GET_CHUNK: self._kb_get_chunk,
             TOOL_KB_LIST_SOURCES: self._kb_list_sources,
+            TOOL_KB_GET_GLOSSARY: self._kb_get_glossary,
         }
         handler = handlers.get(name)
         if handler is None:
@@ -174,6 +195,39 @@ class KbMcpServer:
     def _kb_list_sources(self, args: dict[str, Any]) -> dict[str, Any]:
         sources = self.retriever.list_sources(trust_tier=args.get("trust_tier"))
         return {"ok": True, "sources": sources}
+
+    def _kb_get_glossary(self, args: dict[str, Any]) -> dict[str, Any]:
+        from astrocitizen.knowledge.glossary import (
+            entry_to_dict,
+            get_entry,
+            list_entries,
+            search_entries,
+        )
+
+        term = str(args.get("term") or "").strip()
+        query = str(args.get("query") or "").strip()
+        if term:
+            hit = get_entry(term, lang=args.get("lang"))
+            if hit is None:
+                return {"ok": False, "error": "not_found", "message": term}
+            return {"ok": True, "entry": entry_to_dict(hit)}
+        if query:
+            hits = search_entries(
+                query,
+                limit=int(args.get("limit") or 20),
+                topic=args.get("topic"),
+                network=args.get("network"),
+                po_id=args.get("po_id"),
+            )
+            return {"ok": True, "entries": [entry_to_dict(e) for e in hits]}
+        # list all (capped)
+        all_entries = list_entries()
+        lim = int(args.get("limit") or 50)
+        return {
+            "ok": True,
+            "entries": [entry_to_dict(e) for e in all_entries[:lim]],
+            "n_total": len(all_entries),
+        }
 
 
 def handle_mcp_jsonrpc(server: KbMcpServer, message: dict[str, Any]) -> dict[str, Any] | None:

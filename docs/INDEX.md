@@ -51,6 +51,7 @@
 | [SPRINT_AC195_KB_EMBED.md](SPRINT_AC195_KB_EMBED.md) | E19 AC-195 embeddings locais + RRF |
 | [SPRINT_AC196_KB_HELP.md](SPRINT_AC196_KB_HELP.md) | E19 AC-196 Ajuda grounded + citacoes |
 | [SPRINT_AC197_KB_MCP.md](SPRINT_AC197_KB_MCP.md) | E19 AC-197 MCP kb_search/get/list |
+| [SPRINT_AC198_KB_GLOSSARY.md](SPRINT_AC198_KB_GLOSSARY.md) | E19 AC-198 glossario → chunks + MCP |
 | [SPRINT_AC141_D011.md](SPRINT_AC141_D011.md) | AC-141 validacao redes + D-011 ferramentas imagem |
 | [SPRINT_R2_REVISAR_CAMPOS.md](SPRINT_R2_REVISAR_CAMPOS.md) | R2: Revisar campos atlas (AAVSO/MPC) |
 | [SPRINT_EXP_WDS.md](SPRINT_EXP_WDS.md) | EXP-WDS: export + Revisar campos (PO-G01) |

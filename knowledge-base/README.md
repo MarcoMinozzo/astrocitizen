@@ -2,7 +2,7 @@
 
 Scaffold interno para RAG futuro. **Nao** e indice de FITS nem dados do observador.
 
-**Estado:** KB-0…KB-4 ✅ · MCP AC-197 ✅ · **AC-196** Ajuda grounded ✅ · glossario AC-198 / gold QA AC-199 pendentes.
+**Estado:** KB-0…KB-4 ✅ · Ajuda AC-196 ✅ · MCP AC-197 ✅ · **AC-198** glossario ✅ · gold QA AC-199 pendente.
 
 ## Layout
 
@@ -10,7 +10,7 @@ Scaffold interno para RAG futuro. **Nao** e indice de FITS nem dados do observad
 knowledge-base/
   README.md                 # este ficheiro
   catalog.json              # fontes registadas (path + trust + license)
-  taxonomy.json             # topics, networks, po_id, trust tiers
+  glossary.json             # glossario astro/redes/PO (AC-198)
   manifest.json             # versao do corpus / ingest (KB-1: 51 chunks)
   conflict-policy.md        # T1..T5 e resolucao de conflitos
   licenses/                 # textos / notas de licenca

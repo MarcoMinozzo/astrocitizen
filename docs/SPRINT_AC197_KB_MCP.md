@@ -15,7 +15,7 @@
 
 ## Fora deste slice
 
-- Glossario MCP `kb_get_glossary` (AC-198)
+- Glossario MCP `kb_get_glossary` (AC-198) — ver [SPRINT_AC198_KB_GLOSSARY.md](SPRINT_AC198_KB_GLOSSARY.md)
 - Assistente Ajuda GUI (AC-196)
 - SDK oficial `mcp` package (opcional)
 

@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "name": "astrocitizen-glossary",
+  "updated_utc": "2026-07-23",
+  "lang_default": "pt",
+  "entries": [
+    {
+      "term_id": "spectrum-report",
+      "term": "spectrum_report",
+      "aliases": ["AC-106", "spectrum-report"],
+      "lang": "pt",
+      "definition": "Produto deterministico de interpretacao espectral assistida (AC-106). Nao substitui extracao 1D, fotometria nem plate-solve.",
+      "topics": ["spectrum", "analysis"],
+      "po_ids": ["PO-B01", "PO-B02", "PO-B03"],
+      "networks": ["bess"]
+    },
+    {
+      "term_id": "po-a01",
+      "term": "PO-A01",
+      "aliases": ["AAVSO variables"],
+      "lang": "pt",
+      "definition": "Programa observacional de variaveis para reporte AAVSO (fotometria / visual).",
+      "topics": ["programs", "po"],
+      "po_ids": ["PO-A01"],
+      "networks": ["aavso"]
+    },
+    {
+      "term_id": "po-g01",
+      "term": "PO-G01",
+      "aliases": ["duplas", "double_measure"],
+      "lang": "pt",
+      "definition": "Medidas de estrelas duplas (PA/sep). Produto tipico: double_measure; rede WDS.",
+      "topics": ["programs", "entrada"],
+      "po_ids": ["PO-G01"],
+      "networks": ["wds"]
+    },
+    {
+      "term_id": "po-d01",
+      "term": "PO-D01",
+      "aliases": ["ocultacao", "IOTA"],
+      "lang": "pt",
+      "definition": "Ocultacoes de asteroides / lua: contactos D/R e timing; export IOTA.",
+      "topics": ["occultation", "programs"],
+      "po_ids": ["PO-D01"],
+      "networks": ["iota"]
+    },
+    {
+      "term_id": "network-aavso",
+      "term": "AAVSO",
+      "aliases": ["WebObs", "Extended"],
+      "lang": "pt",
+      "definition": "American Association of Variable Star Observers. Export Extended / WebObs.",
+      "topics": ["networks", "export"],
+      "po_ids": ["PO-A01"],
+      "networks": ["aavso"]
+    },
+    {
+      "term_id": "network-mpc",
+      "term": "MPC",
+      "aliases": ["Minor Planet Center"],
+      "lang": "pt",
+      "definition": "Minor Planet Center — reporte de asteroides / NEO (astrometria).",
+      "topics": ["networks", "astrometry"],
+      "po_ids": ["PO-C01", "PO-C02"],
+      "networks": ["mpc"]
+    },
+    {
+      "term_id": "network-bess",
+      "term": "BeSS",
+      "aliases": ["ARAS"],
+      "lang": "pt",
+      "definition": "Base Be star Spectra — espectros Be; alinhado a PO-B* e spectrum_report.",
+      "topics": ["networks", "spectrum"],
+      "po_ids": ["PO-B01"],
+      "networks": ["bess"]
+    },
+    {
+      "term_id": "network-wds",
+      "term": "WDS",
+      "aliases": ["Washington Double Star"],
+      "lang": "pt",
+      "definition": "Washington Double Star Catalog — medidas de duplas (PO-G01).",
+      "topics": ["networks"],
+      "po_ids": ["PO-G01"],
+      "networks": ["wds"]
+    },
+    {
+      "term_id": "network-cobs",
+      "term": "COBS",
+      "aliases": ["ICQ", "cometas"],
+      "lang": "pt",
+      "definition": "Comet Observation Database / ICQ — reportes de cometas (PO-A10).",
+      "topics": ["networks", "export"],
+      "po_ids": ["PO-A10"],
+      "networks": ["cobs"]
+    },
+    {
+      "term_id": "trust-t3",
+      "term": "T3",
+      "aliases": ["trust tier T3"],
+      "lang": "pt",
+      "definition": "Trust tier da documentacao da plataforma AstroCitizen (docs/, PO, RN, atlas).",
+      "topics": ["product"],
+      "po_ids": [],
+      "networks": []
+    },
+    {
+      "term_id": "fts5",
+      "term": "FTS5",
+      "aliases": ["full-text search", "knowledge search"],
+      "lang": "pt",
+      "definition": "Indice lexical SQLite FTS5 da KB (AC-193). Base do RetrieverPort e do modo fts.",
+      "topics": ["product"],
+      "po_ids": [],
+      "networks": []
+    },
+    {
+      "term_id": "rrf",
+      "term": "RRF",
+      "aliases": ["Reciprocal Rank Fusion", "hybrid"],
+      "lang": "pt",
+      "definition": "Fusao de rankings FTS + embeddings (AC-195) para pesquisa hibrida.",
+      "topics": ["product"],
+      "po_ids": [],
+      "networks": []
+    },
+    {
+      "term_id": "context-bar",
+      "term": "ContextBar",
+      "aliases": ["barra de contexto"],
+      "lang": "pt",
+      "definition": "Barra da shell Desktop com Site, Programa e data da noite activos.",
+      "topics": ["ux", "workflows"],
+      "po_ids": [],
+      "networks": []
+    },
+    {
+      "term_id": "analysis-product",
+      "term": "AnalysisProduct",
+      "aliases": ["produto de analise"],
+      "lang": "pt",
+      "definition": "Entidade de dominio: resultado de analise (fotometria, spectrum_report, etc.) ligado a observacao/programa.",
+      "topics": ["product", "analysis"],
+      "po_ids": [],
+      "networks": []
+    },
+    {
+      "term_id": "network-submission",
+      "term": "NetworkSubmission",
+      "aliases": ["envio rede"],
+      "lang": "pt",
+      "definition": "Registo de tentativa/exportacao para uma rede (AAVSO, MPC, …) a partir de um AnalysisProduct.",
+      "topics": ["export", "networks"],
+      "po_ids": [],
+      "networks": []
+    }
+  ]
+}

@@ -7,6 +7,7 @@ from pathlib import Path
 from astrocitizen.adapters.sqlite import HybridRetriever, SqliteArchive
 from astrocitizen.knowledge.mcp_tools import (
     TOOL_KB_GET_CHUNK,
+    TOOL_KB_GET_GLOSSARY,
     TOOL_KB_LIST_SOURCES,
     TOOL_KB_SEARCH,
     KbMcpServer,
@@ -51,7 +52,12 @@ def test_mcp_tools_search_get_list(tmp_path: Path) -> None:
     _seed(archive)
     server = KbMcpServer(HybridRetriever(archive))
     names = {t["name"] for t in server.list_tools()}
-    assert names == {TOOL_KB_SEARCH, TOOL_KB_GET_CHUNK, TOOL_KB_LIST_SOURCES}
+    assert names == {
+        TOOL_KB_SEARCH,
+        TOOL_KB_GET_CHUNK,
+        TOOL_KB_LIST_SOURCES,
+        TOOL_KB_GET_GLOSSARY,
+    }
 
     search = server.call_tool(TOOL_KB_SEARCH, {"query": "AC-106 spectrum", "limit": 3})
     assert search["ok"]
@@ -100,7 +106,7 @@ def test_mcp_jsonrpc_tools_call(tmp_path: Path) -> None:
     listed = handle_mcp_jsonrpc(
         server, {"jsonrpc": "2.0", "id": 2, "method": "tools/list", "params": {}}
     )
-    assert listed and len(listed["result"]["tools"]) == 3
+    assert listed and len(listed["result"]["tools"]) == 4
     called = handle_mcp_jsonrpc(
         server,
         {

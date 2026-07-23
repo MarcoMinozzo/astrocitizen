@@ -1825,6 +1825,52 @@ def _cmd_knowledge_ask(args: argparse.Namespace) -> int:
     return 0 if ans.grounded else 1
 
 
+def _cmd_knowledge_glossary(args: argparse.Namespace) -> int:
+    import json
+
+    from astrocitizen.knowledge import default_kb_root
+    from astrocitizen.knowledge.glossary import (
+        entry_to_dict,
+        get_entry,
+        list_entries,
+        search_entries,
+        sync_glossary_chunks,
+    )
+
+    root = Path(args.kb_root) if args.kb_root else default_kb_root()
+    action = str(args.glossary_cmd)
+    if action == "sync":
+        report = sync_glossary_chunks(kb_root=root)
+        print(
+            f"glossary\tsync\tentries={report.n_entries}\t"
+            f"chunks={report.n_chunks_written}\tok={report.n_chunks_written > 0}"
+        )
+        return 0 if report.n_chunks_written > 0 else 1
+    if action == "get":
+        hit = get_entry(str(args.term), kb_root=root, lang=args.lang)
+        if hit is None:
+            print(f"error\tnot_found\t{args.term}")
+            return 1
+        print(json.dumps(entry_to_dict(hit), ensure_ascii=False, indent=2))
+        return 0
+    # list / search
+    if args.query:
+        entries = search_entries(
+            str(args.query),
+            kb_root=root,
+            limit=int(args.limit),
+            topic=args.topic,
+            network=args.network,
+            po_id=args.po_id,
+        )
+    else:
+        entries = list_entries(root)[: int(args.limit)]
+    print(f"entries\t{len(entries)}")
+    for e in entries:
+        print(f"term\t{e.term_id}\t{e.term}\t{e.definition[:100]}")
+    return 0 if entries else 1
+
+
 def _cmd_knowledge_mcp_tools(args: argparse.Namespace) -> int:
     from astrocitizen.knowledge.mcp_tools import TOOL_DEFS
 
@@ -2698,11 +2744,32 @@ def build_parser() -> argparse.ArgumentParser:
         choices=("fts", "vector", "hybrid"),
     )
     p_kb_ask.set_defaults(func=_cmd_knowledge_ask)
+    p_kb_gl = kb_sub.add_parser("glossary", help="Glossario astro/redes/PO (AC-198)")
+    gl_sub = p_kb_gl.add_subparsers(dest="glossary_cmd", required=True)
+    p_gl_list = gl_sub.add_parser("list", help="Listar / pesquisar termos")
+    p_gl_list.add_argument("--kb-root", default=None)
+    p_gl_list.add_argument("--query", default=None)
+    p_gl_list.add_argument("--limit", type=int, default=50)
+    p_gl_list.add_argument("--topic", default=None)
+    p_gl_list.add_argument("--network", default=None)
+    p_gl_list.add_argument("--po-id", default=None)
+    p_gl_list.set_defaults(func=_cmd_knowledge_glossary)
+    p_gl_get = gl_sub.add_parser("get", help="Lookup exacto por term/alias")
+    p_gl_get.add_argument("term")
+    p_gl_get.add_argument("--kb-root", default=None)
+    p_gl_get.add_argument("--lang", default=None)
+    p_gl_get.set_defaults(func=_cmd_knowledge_glossary)
+    p_gl_sync = gl_sub.add_parser("sync", help="Gerar chunks glossary-* em chunks/v1")
+    p_gl_sync.add_argument("--kb-root", default=None)
+    p_gl_sync.set_defaults(func=_cmd_knowledge_glossary)
     p_kb_mt = kb_sub.add_parser("mcp-tools", help="Listar tools MCP KB (AC-197)")
     p_kb_mt.set_defaults(func=_cmd_knowledge_mcp_tools)
     p_kb_mc = kb_sub.add_parser("mcp-call", help="Invocar tool MCP KB uma vez")
     _add_db_arg(p_kb_mc)
-    p_kb_mc.add_argument("tool", help="kb_search | kb_get_chunk | kb_list_sources")
+    p_kb_mc.add_argument(
+        "tool",
+        help="kb_search | kb_get_chunk | kb_list_sources | kb_get_glossary",
+    )
     p_kb_mc.add_argument(
         "--arguments",
         default="{}",

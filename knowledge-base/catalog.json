@@ -103,6 +103,19 @@
       ],
       "status": "planned_ingest",
       "notes": "Pointers only; not full books"
+    },
+    {
+      "source_id": "glossary",
+      "path": "knowledge-base/glossary.json",
+      "title": "Glossario astro / redes / PO",
+      "trust_tier": "T3",
+      "license_id": "project-docs",
+      "lang": "pt",
+      "topics": [
+        "glossary",
+        "product"
+      ],
+      "status": "ingested"
     }
   ]
 }
