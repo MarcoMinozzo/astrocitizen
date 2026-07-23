@@ -147,6 +147,10 @@ def _validate_bess(product: Any | None, payload: dict[str, Any]) -> list[Validat
                     severity="warning",
                 )
             )
+    obj = str(payload.get("objname") or payload.get("object") or "").strip()
+    if "objname" in payload or "object" in payload:
+        if not obj:
+            issues.append(_issue("bess_objname", "OBJNAME BeSS obrigatorio"))
     observer = str(payload.get("observer") or "").strip()
     if not observer:
         issues.append(_issue("bess_observer", "observer BeSS obrigatorio", severity="warning"))

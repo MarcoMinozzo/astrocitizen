@@ -211,6 +211,170 @@ def prefill_wds_fields(
     return out
 
 
+def prefill_tns_fields(
+    archive: Any,
+    *,
+    credentials: dict[str, Any] | None = None,
+    current: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Preenche rascunho TNS (form ou produto blink/astrometry)."""
+    cred = dict(credentials or {})
+    cur = dict(current or {})
+    out: dict[str, Any] = {
+        "product_id": str(cur.get("product_id") or "").strip(),
+        "ra_deg": cur.get("ra_deg"),
+        "dec_deg": cur.get("dec_deg"),
+        "mag": cur.get("mag"),
+        "groupid": str(cur.get("groupid") if cur.get("groupid") is not None else ""),
+    }
+    if out["groupid"] == "" and cred.get("groupid") is not None:
+        out["groupid"] = str(cred["groupid"])
+    pid = _parse_uuid(out["product_id"])
+    if pid is None:
+        return out
+    product = archive.get_analysis_product(pid)
+    if product is None:
+        return out
+    summary = dict(product.summary or {})
+    params = dict(product.parameters or {})
+    if out["ra_deg"] is None and summary.get("ra_deg") is not None:
+        out["ra_deg"] = float(summary["ra_deg"])
+    if out["dec_deg"] is None and summary.get("dec_deg") is not None:
+        out["dec_deg"] = float(summary["dec_deg"])
+    if out["mag"] is None:
+        for key in ("mag", "discovery_mag", "mag_approx"):
+            if summary.get(key) is not None:
+                out["mag"] = float(summary[key])
+                break
+            if params.get(key) is not None:
+                out["mag"] = float(params[key])
+                break
+    return out
+
+
+def prefill_exoclock_fields(
+    archive: Any,
+    *,
+    credentials: dict[str, Any] | None = None,
+    current: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Preenche rascunho ExoClock a partir do produto LC."""
+    cred = dict(credentials or {})
+    cur = dict(current or {})
+    out: dict[str, Any] = {
+        "product_id": str(cur.get("product_id") or "").strip(),
+        "target": str(cur.get("target") or "").strip(),
+        "observer": str(cur.get("observer") or cred.get("observer") or "").strip(),
+    }
+    pid = _parse_uuid(out["product_id"])
+    if pid is None:
+        return out
+    product = archive.get_analysis_product(pid)
+    if product is None:
+        return out
+    params = dict(product.parameters or {})
+    summary = dict(product.summary or {})
+    if not out["target"] or out["target"].upper() == "TARGET":
+        for key in ("target", "target_name", "object", "planet"):
+            val = params.get(key) or summary.get(key)
+            if val and str(val).strip().upper() not in ("", "TARGET"):
+                out["target"] = str(val).strip()
+                break
+        if (not out["target"] or out["target"].upper() == "TARGET") and params.get(
+            "target_id"
+        ):
+            tid = _parse_uuid(params.get("target_id"))
+            if tid is not None and hasattr(archive, "get_target"):
+                tgt = archive.get_target(tid)
+                if tgt is not None and getattr(tgt, "designation", None):
+                    out["target"] = str(tgt.designation).strip()
+    return out
+
+
+def prefill_bess_fields(
+    archive: Any,
+    *,
+    credentials: dict[str, Any] | None = None,
+    current: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Preenche rascunho BeSS (form ou spectrum_1d)."""
+    cred = dict(credentials or {})
+    cur = dict(current or {})
+    out: dict[str, Any] = {
+        "product_id": str(cur.get("product_id") or "").strip(),
+        "objname": str(cur.get("objname") or cur.get("object") or "").strip(),
+        "observer": str(cur.get("observer") or cred.get("observer") or "").strip(),
+        "date_obs": str(cur.get("date_obs") or "").strip(),
+    }
+    pid = _parse_uuid(out["product_id"])
+    if pid is None:
+        return out
+    product = archive.get_analysis_product(pid)
+    if product is None:
+        return out
+    params = dict(product.parameters or {})
+    summary = dict(product.summary or {})
+    if not out["objname"]:
+        for key in ("objname", "object", "target_name", "star"):
+            val = params.get(key) or summary.get(key)
+            if val:
+                out["objname"] = str(val).strip()
+                break
+    if not out["date_obs"]:
+        out["date_obs"] = str(
+            params.get("date_obs") or summary.get("epoch_utc") or summary.get("date_obs") or ""
+        ).strip()
+    if not out["observer"]:
+        out["observer"] = str(
+            params.get("observer") or summary.get("observer") or cred.get("observer") or ""
+        ).strip()
+    return out
+
+
+def prefill_iota_fields(
+    archive: Any,
+    *,
+    credentials: dict[str, Any] | None = None,
+    current: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Preenche rascunho IOTA a partir de occultation_* ou form."""
+    cred = dict(credentials or {})
+    cur = dict(current or {})
+    out: dict[str, Any] = {
+        "product_id": str(cur.get("product_id") or "").strip(),
+        "event_id": str(cur.get("event_id") or "").strip(),
+        "star": str(cur.get("star") or "").strip(),
+        "asteroid": str(cur.get("asteroid") or "").strip(),
+        "observer": str(cur.get("observer") or cred.get("observer") or "").strip(),
+        "result": str(cur.get("result") or "positive").strip() or "positive",
+    }
+    pid = _parse_uuid(out["product_id"])
+    if pid is None:
+        return out
+    product = archive.get_analysis_product(pid)
+    if product is None:
+        return out
+    params = dict(product.parameters or {})
+    summary = dict(product.summary or {})
+    if not out["event_id"]:
+        out["event_id"] = str(
+            params.get("event_id") or summary.get("event_id") or ""
+        ).strip()
+    if not out["star"]:
+        out["star"] = str(params.get("star") or summary.get("star") or "").strip()
+    if not out["asteroid"]:
+        out["asteroid"] = str(
+            params.get("asteroid") or summary.get("asteroid") or ""
+        ).strip()
+    if not out["observer"]:
+        out["observer"] = str(
+            params.get("observer") or summary.get("observer") or cred.get("observer") or ""
+        ).strip()
+    if cur.get("result") is None and (params.get("result") or summary.get("result")):
+        out["result"] = str(params.get("result") or summary.get("result")).strip()
+    return out
+
+
 def format_validation_issue_lines(result: Any) -> list[str]:
     lines: list[str] = []
     for issue in getattr(result, "issues", None) or []:
@@ -262,7 +426,7 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
     from astrocitizen.shared.paths import default_artifacts_root
 
     class FieldReviewDialog(QDialog):
-        """Revisar campos atlas antes de export (AAVSO / MPC / WDS)."""
+        """Revisar campos atlas antes de export (AAVSO/MPC/WDS + R3)."""
 
         def __init__(
             self,
@@ -352,6 +516,64 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                 form.addRow("Observatory", self._fields["observatory"])
                 form.addRow("Discoverer", self._fields["discoverer"])
                 form.addRow("Notes", self._fields["notes"])
+            elif self.network == "tns":
+                self._fields["product_id"] = QLineEdit(str(initial.get("product_id") or ""))
+                self._fields["ra_deg"] = QDoubleSpinBox()
+                self._fields["ra_deg"].setRange(0, 360)
+                self._fields["ra_deg"].setDecimals(6)
+                if initial.get("ra_deg") is not None:
+                    self._fields["ra_deg"].setValue(float(initial["ra_deg"]))
+                self._fields["dec_deg"] = QDoubleSpinBox()
+                self._fields["dec_deg"].setRange(-90, 90)
+                self._fields["dec_deg"].setDecimals(6)
+                if initial.get("dec_deg") is not None:
+                    self._fields["dec_deg"].setValue(float(initial["dec_deg"]))
+                self._fields["mag"] = QDoubleSpinBox()
+                self._fields["mag"].setRange(0, 30)
+                self._fields["mag"].setDecimals(3)
+                self._fields["mag"].setValue(
+                    float(initial["mag"]) if initial.get("mag") is not None else 19.0
+                )
+                self._fields["groupid"] = QLineEdit(str(initial.get("groupid") or "0"))
+                form.addRow("Product UUID", self._fields["product_id"])
+                form.addRow("RA deg", self._fields["ra_deg"])
+                form.addRow("Dec deg", self._fields["dec_deg"])
+                form.addRow("Mag", self._fields["mag"])
+                form.addRow("Group id", self._fields["groupid"])
+            elif self.network == "exoclock":
+                self._fields["product_id"] = QLineEdit(str(initial.get("product_id") or ""))
+                self._fields["target"] = QLineEdit(str(initial.get("target") or ""))
+                self._fields["observer"] = QLineEdit(str(initial.get("observer") or ""))
+                form.addRow("Product UUID", self._fields["product_id"])
+                form.addRow("Target", self._fields["target"])
+                form.addRow("Observer", self._fields["observer"])
+            elif self.network == "bess":
+                self._fields["product_id"] = QLineEdit(str(initial.get("product_id") or ""))
+                self._fields["objname"] = QLineEdit(str(initial.get("objname") or ""))
+                self._fields["observer"] = QLineEdit(str(initial.get("observer") or ""))
+                self._fields["date_obs"] = QLineEdit(str(initial.get("date_obs") or ""))
+                form.addRow("Product UUID", self._fields["product_id"])
+                form.addRow("OBJNAME", self._fields["objname"])
+                form.addRow("Observer", self._fields["observer"])
+                form.addRow("DATE-OBS", self._fields["date_obs"])
+            elif self.network == "iota":
+                self._fields["product_id"] = QLineEdit(str(initial.get("product_id") or ""))
+                self._fields["event_id"] = QLineEdit(str(initial.get("event_id") or ""))
+                self._fields["star"] = QLineEdit(str(initial.get("star") or ""))
+                self._fields["asteroid"] = QLineEdit(str(initial.get("asteroid") or ""))
+                self._fields["observer"] = QLineEdit(str(initial.get("observer") or ""))
+                self._fields["result"] = QComboBox()
+                self._fields["result"].addItems(["positive", "negative"])
+                res = str(initial.get("result") or "positive")
+                ri = self._fields["result"].findText(res)
+                if ri >= 0:
+                    self._fields["result"].setCurrentIndex(ri)
+                form.addRow("Product UUID", self._fields["product_id"])
+                form.addRow("Event ID", self._fields["event_id"])
+                form.addRow("Star", self._fields["star"])
+                form.addRow("Asteroid", self._fields["asteroid"])
+                form.addRow("Observer", self._fields["observer"])
+                form.addRow("Result", self._fields["result"])
             else:
                 self._fields["product_id"] = QLineEdit(str(initial.get("product_id") or ""))
                 self._fields["designation"] = QLineEdit(
@@ -443,6 +665,36 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                     "discoverer": self._fields["discoverer"].text().strip(),
                     "notes": self._fields["notes"].text().strip(),
                 }
+            if self.network == "tns":
+                return {
+                    "product_id": self._fields["product_id"].text().strip(),
+                    "ra_deg": float(self._fields["ra_deg"].value()),
+                    "dec_deg": float(self._fields["dec_deg"].value()),
+                    "mag": float(self._fields["mag"].value()),
+                    "groupid": self._fields["groupid"].text().strip() or "0",
+                }
+            if self.network == "exoclock":
+                return {
+                    "product_id": self._fields["product_id"].text().strip(),
+                    "target": self._fields["target"].text().strip(),
+                    "observer": self._fields["observer"].text().strip(),
+                }
+            if self.network == "bess":
+                return {
+                    "product_id": self._fields["product_id"].text().strip(),
+                    "objname": self._fields["objname"].text().strip(),
+                    "observer": self._fields["observer"].text().strip(),
+                    "date_obs": self._fields["date_obs"].text().strip(),
+                }
+            if self.network == "iota":
+                return {
+                    "product_id": self._fields["product_id"].text().strip(),
+                    "event_id": self._fields["event_id"].text().strip(),
+                    "star": self._fields["star"].text().strip(),
+                    "asteroid": self._fields["asteroid"].text().strip(),
+                    "observer": self._fields["observer"].text().strip(),
+                    "result": self._fields["result"].currentText(),
+                }
             mag_val = float(self._fields["mag"].value())
             return {
                 "product_id": self._fields["product_id"].text().strip(),
@@ -480,6 +732,32 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                 self._fields["observatory"].setText(str(filled.get("observatory") or ""))
                 self._fields["discoverer"].setText(str(filled.get("discoverer") or ""))
                 self._fields["notes"].setText(str(filled.get("notes") or ""))
+            elif self.network == "tns":
+                if filled.get("ra_deg") is not None:
+                    self._fields["ra_deg"].setValue(float(filled["ra_deg"]))
+                if filled.get("dec_deg") is not None:
+                    self._fields["dec_deg"].setValue(float(filled["dec_deg"]))
+                if filled.get("mag") is not None:
+                    self._fields["mag"].setValue(float(filled["mag"]))
+                if filled.get("groupid") is not None:
+                    self._fields["groupid"].setText(str(filled["groupid"]))
+            elif self.network == "exoclock":
+                self._fields["target"].setText(str(filled.get("target") or ""))
+                if filled.get("observer"):
+                    self._fields["observer"].setText(str(filled["observer"]))
+            elif self.network == "bess":
+                self._fields["objname"].setText(str(filled.get("objname") or ""))
+                self._fields["observer"].setText(str(filled.get("observer") or ""))
+                self._fields["date_obs"].setText(str(filled.get("date_obs") or ""))
+            elif self.network == "iota":
+                self._fields["event_id"].setText(str(filled.get("event_id") or ""))
+                self._fields["star"].setText(str(filled.get("star") or ""))
+                self._fields["asteroid"].setText(str(filled.get("asteroid") or ""))
+                self._fields["observer"].setText(str(filled.get("observer") or ""))
+                res = str(filled.get("result") or "positive")
+                ri = self._fields["result"].findText(res)
+                if ri >= 0:
+                    self._fields["result"].setCurrentIndex(ri)
             else:
                 self._fields["designation"].setText(
                     str(filled.get("designation") or "")
@@ -495,18 +773,17 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
 
         def _prefill_from_product(self) -> None:
             vals = self.values()
-            if self.network == "aavso":
-                filled = prefill_aavso_fields(
-                    self.archive, credentials={}, current=vals
-                )
-            elif self.network == "wds":
-                filled = prefill_wds_fields(
-                    self.archive, credentials={}, current=vals
-                )
-            else:
-                filled = prefill_mpc_fields(
-                    self.archive, credentials={}, current=vals
-                )
+            prefills = {
+                "aavso": prefill_aavso_fields,
+                "wds": prefill_wds_fields,
+                "mpc": prefill_mpc_fields,
+                "tns": prefill_tns_fields,
+                "exoclock": prefill_exoclock_fields,
+                "bess": prefill_bess_fields,
+                "iota": prefill_iota_fields,
+            }
+            fn = prefills.get(self.network, prefill_mpc_fields)
+            filled = fn(self.archive, credentials={}, current=vals)
             self._apply_filled(filled)
             self._run_check()
 
@@ -529,6 +806,46 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                     network="wds",
                     product_id=pid,
                     payload={"object": vals.get("object")},
+                )
+            elif self.network == "tns":
+                result = validate_product_for_network(
+                    self.archive,
+                    network="tns",
+                    product_id=pid,
+                    payload={
+                        "ra_deg": vals.get("ra_deg"),
+                        "dec_deg": vals.get("dec_deg"),
+                    },
+                )
+            elif self.network == "exoclock":
+                result = validate_product_for_network(
+                    self.archive,
+                    network="exoclock",
+                    product_id=pid,
+                    payload={"target": vals.get("target")},
+                )
+            elif self.network == "bess":
+                result = validate_product_for_network(
+                    self.archive,
+                    network="bess",
+                    product_id=pid,
+                    payload={
+                        "observer": vals.get("observer"),
+                        "objname": vals.get("objname"),
+                        "date_obs": vals.get("date_obs"),
+                    },
+                )
+            elif self.network == "iota":
+                result = validate_product_for_network(
+                    self.archive,
+                    network="iota",
+                    product_id=pid,
+                    payload={
+                        "event_id": vals.get("event_id"),
+                        "star": vals.get("star"),
+                        "asteroid": vals.get("asteroid"),
+                        "observer": vals.get("observer"),
+                    },
                 )
             else:
                 result = validate_product_for_network(
@@ -735,6 +1052,7 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
         def _tab_tns(self) -> QWidget:
             w = QWidget()
             form = QFormLayout(w)
+            self.t_product = QLineEdit()
             self.t_ra = QDoubleSpinBox()
             self.t_ra.setRange(0, 360)
             self.t_ra.setDecimals(6)
@@ -750,30 +1068,43 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             self.t_submit = QComboBox()
             self.t_submit.addItem("Dry-run sandbox", False)
             self.t_submit.addItem("Submit sandbox", True)
+            review = QPushButton("Revisar campos")
+            review.clicked.connect(lambda: self._review_fields("tns"))
             btn = QPushButton("TNS AT-rep")
             btn.clicked.connect(self._run_tns)
+            form.addRow("Product UUID", self.t_product)
             form.addRow("RA deg", self.t_ra)
             form.addRow("Dec deg", self.t_dec)
             form.addRow("Mag", self.t_mag)
             form.addRow("Group id", self.t_group)
             form.addRow("Modo", self.t_submit)
-            form.addRow(btn)
+            row = QHBoxLayout()
+            row.addWidget(review)
+            row.addWidget(btn)
+            form.addRow(row)
             return w
 
         def _tab_bess(self) -> QWidget:
             w = QWidget()
             form = QFormLayout(w)
+            self.b_product = QLineEdit()
             self.b_obj = QLineEdit()
             self.b_obj.setText("gam Cas")
             self.b_obs = QLineEdit()
             self.b_date = QLineEdit()
             self.b_date.setText("2026-07-21T01:00:00")
+            review = QPushButton("Revisar campos")
+            review.clicked.connect(lambda: self._review_fields("bess"))
             btn = QPushButton("Gerar FITS 1D BeSS")
             btn.clicked.connect(self._run_bess)
+            form.addRow("Product UUID", self.b_product)
             form.addRow("OBJNAME", self.b_obj)
             form.addRow("Observer", self.b_obs)
             form.addRow("DATE-OBS", self.b_date)
-            form.addRow(btn)
+            row = QHBoxLayout()
+            row.addWidget(review)
+            row.addWidget(btn)
+            form.addRow(row)
             return w
 
         def _tab_exoclock(self) -> QWidget:
@@ -782,30 +1113,42 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             self.e_product = QLineEdit()
             self.e_target = QLineEdit()
             self.e_target.setText("WASP-12b")
+            review = QPushButton("Revisar campos")
+            review.clicked.connect(lambda: self._review_fields("exoclock"))
             btn = QPushButton("Export LC ExoClock")
             btn.clicked.connect(self._run_exoclock)
             form.addRow("Product UUID", self.e_product)
             form.addRow("Target", self.e_target)
-            form.addRow(btn)
+            row = QHBoxLayout()
+            row.addWidget(review)
+            row.addWidget(btn)
+            form.addRow(row)
             return w
 
         def _tab_iota(self) -> QWidget:
             w = QWidget()
             form = QFormLayout(w)
+            self.i_product = QLineEdit()
             self.i_event = QLineEdit()
             self.i_star = QLineEdit()
             self.i_ast = QLineEdit()
             self.i_obs = QLineEdit()
             self.i_result = QComboBox()
             self.i_result.addItems(["positive", "negative"])
+            review = QPushButton("Revisar campos")
+            review.clicked.connect(lambda: self._review_fields("iota"))
             btn = QPushButton("Pacote IOTA-ES")
             btn.clicked.connect(self._run_iota)
+            form.addRow("Product UUID", self.i_product)
             form.addRow("Event ID", self.i_event)
             form.addRow("Star", self.i_star)
             form.addRow("Asteroid", self.i_ast)
             form.addRow("Observer", self.i_obs)
             form.addRow("Result", self.i_result)
-            form.addRow(btn)
+            row = QHBoxLayout()
+            row.addWidget(review)
+            row.addWidget(btn)
+            form.addRow(row)
             return w
 
         def load_workspace(self) -> None:
@@ -825,6 +1168,14 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             t_cred = self.creds.get_network("tns")
             if t_cred.get("groupid") is not None and self.t_group.text() == "0":
                 self.t_group.setText(str(t_cred["groupid"]))
+            for net, widget in (
+                ("bess", self.b_obs),
+                ("exoclock", None),
+                ("iota", self.i_obs),
+            ):
+                cred = self.creds.get_network(net)
+                if widget is not None and cred.get("observer") and not widget.text():
+                    widget.setText(str(cred["observer"]))
             self.refresh()
 
         def refresh(self) -> None:
@@ -871,8 +1222,10 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                     "a_product",
                     "m_product",
                     "w_product",
+                    "t_product",
                     "e_product",
                     "b_product",
+                    "i_product",
                 ):
                     edit = getattr(self, edit_name, None)
                     if edit is not None and hasattr(edit, "setText"):
@@ -968,6 +1321,74 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             self.w_observer.setText(str(vals.get("observer") or ""))
             self.w_observatory.setText(str(vals.get("observatory") or ""))
 
+        def _tns_current(self) -> dict[str, Any]:
+            return {
+                "product_id": self.t_product.text().strip(),
+                "ra_deg": float(self.t_ra.value()),
+                "dec_deg": float(self.t_dec.value()),
+                "mag": float(self.t_mag.value()),
+                "groupid": self.t_group.text().strip() or "0",
+            }
+
+        def _exoclock_current(self) -> dict[str, Any]:
+            return {
+                "product_id": self.e_product.text().strip(),
+                "target": self.e_target.text().strip(),
+                "observer": str(
+                    self.creds.get_network("exoclock").get("observer") or ""
+                ),
+            }
+
+        def _bess_current(self) -> dict[str, Any]:
+            return {
+                "product_id": self.b_product.text().strip(),
+                "objname": self.b_obj.text().strip(),
+                "observer": self.b_obs.text().strip(),
+                "date_obs": self.b_date.text().strip(),
+            }
+
+        def _iota_current(self) -> dict[str, Any]:
+            return {
+                "product_id": self.i_product.text().strip(),
+                "event_id": self.i_event.text().strip(),
+                "star": self.i_star.text().strip(),
+                "asteroid": self.i_ast.text().strip(),
+                "observer": self.i_obs.text().strip(),
+                "result": self.i_result.currentText(),
+            }
+
+        def _apply_tns_fields(self, vals: dict[str, Any]) -> None:
+            self.t_product.setText(str(vals.get("product_id") or ""))
+            if vals.get("ra_deg") is not None:
+                self.t_ra.setValue(float(vals["ra_deg"]))
+            if vals.get("dec_deg") is not None:
+                self.t_dec.setValue(float(vals["dec_deg"]))
+            if vals.get("mag") is not None:
+                self.t_mag.setValue(float(vals["mag"]))
+            if vals.get("groupid") is not None:
+                self.t_group.setText(str(vals["groupid"]))
+
+        def _apply_exoclock_fields(self, vals: dict[str, Any]) -> None:
+            self.e_product.setText(str(vals.get("product_id") or ""))
+            self.e_target.setText(str(vals.get("target") or ""))
+
+        def _apply_bess_fields(self, vals: dict[str, Any]) -> None:
+            self.b_product.setText(str(vals.get("product_id") or ""))
+            self.b_obj.setText(str(vals.get("objname") or ""))
+            self.b_obs.setText(str(vals.get("observer") or ""))
+            self.b_date.setText(str(vals.get("date_obs") or ""))
+
+        def _apply_iota_fields(self, vals: dict[str, Any]) -> None:
+            self.i_product.setText(str(vals.get("product_id") or ""))
+            self.i_event.setText(str(vals.get("event_id") or ""))
+            self.i_star.setText(str(vals.get("star") or ""))
+            self.i_ast.setText(str(vals.get("asteroid") or ""))
+            self.i_obs.setText(str(vals.get("observer") or ""))
+            res = str(vals.get("result") or "positive")
+            ri = self.i_result.findText(res)
+            if ri >= 0:
+                self.i_result.setCurrentIndex(ri)
+
         def _save_review_draft(
             self, *, network: str, vals: dict[str, Any], product_id: UUID | None
         ) -> None:
@@ -988,36 +1409,32 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             self.refresh()
 
         def _review_fields(self, network: str) -> None:
-            if network == "aavso":
-                initial = prefill_aavso_fields(
-                    self.archive,
-                    credentials=self.creds.get_network("aavso"),
-                    current=self._aavso_current(),
-                )
-            elif network == "wds":
-                initial = prefill_wds_fields(
-                    self.archive,
-                    credentials=self.creds.get_network("wds"),
-                    current=self._wds_current(),
-                )
-            else:
-                initial = prefill_mpc_fields(
-                    self.archive,
-                    credentials=self.creds.get_network("mpc"),
-                    current=self._mpc_current(),
-                )
+            builders = {
+                "aavso": (prefill_aavso_fields, self._aavso_current, self._apply_aavso_fields),
+                "mpc": (prefill_mpc_fields, self._mpc_current, self._apply_mpc_fields),
+                "wds": (prefill_wds_fields, self._wds_current, self._apply_wds_fields),
+                "tns": (prefill_tns_fields, self._tns_current, self._apply_tns_fields),
+                "exoclock": (
+                    prefill_exoclock_fields,
+                    self._exoclock_current,
+                    self._apply_exoclock_fields,
+                ),
+                "bess": (prefill_bess_fields, self._bess_current, self._apply_bess_fields),
+                "iota": (prefill_iota_fields, self._iota_current, self._apply_iota_fields),
+            }
+            prefill_fn, current_fn, apply_fn = builders[network]
+            initial = prefill_fn(
+                self.archive,
+                credentials=self.creds.get_network(network),
+                current=current_fn(),
+            )
             dlg = FieldReviewDialog(
                 self, network=network, archive=self.archive, initial=initial
             )
             if dlg.exec() != QDialog.DialogCode.Accepted:
                 return
             vals = dlg.values()
-            if network == "aavso":
-                self._apply_aavso_fields(vals)
-            elif network == "wds":
-                self._apply_wds_fields(vals)
-            else:
-                self._apply_mpc_fields(vals)
+            apply_fn(vals)
             self._save_review_draft(
                 network=network,
                 vals=vals,
@@ -1244,10 +1661,33 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                 QMessageBox.warning(self, "Contribute", "Sem workspace.")
                 return
             tcred = self.creds.get_network("tns")
+            if self.t_product.text().strip():
+                filled = prefill_tns_fields(
+                    self.archive,
+                    credentials=tcred,
+                    current=self._tns_current(),
+                )
+                self._apply_tns_fields(filled)
             try:
                 groupid = int(self.t_group.text().strip() or tcred.get("groupid") or 0)
             except ValueError:
                 QMessageBox.warning(self, "TNS", "groupid invalido.")
+                return
+            check = validate_product_for_network(
+                self.archive,
+                network="tns",
+                product_id=_parse_uuid(self.t_product.text()),
+                payload={
+                    "ra_deg": float(self.t_ra.value()),
+                    "dec_deg": float(self.t_dec.value()),
+                },
+            )
+            if not check.ok:
+                QMessageBox.warning(
+                    self,
+                    "Validacao TNS",
+                    "\n".join(check.error_messages()) or "Campos incompletos.",
+                )
                 return
             report = format_tns_at_report(
                 ra_deg=float(self.t_ra.value()),
@@ -1295,11 +1735,35 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                 return
             import numpy as np
 
+            if self.b_product.text().strip():
+                filled = prefill_bess_fields(
+                    self.archive,
+                    credentials=self.creds.get_network("bess"),
+                    current=self._bess_current(),
+                )
+                self._apply_bess_fields(filled)
             observer = (
                 self.b_obs.text().strip()
                 or self.creds.get_network("bess").get("observer")
                 or "AstroCitizen"
             )
+            check = validate_product_for_network(
+                self.archive,
+                network="bess",
+                product_id=_parse_uuid(self.b_product.text()),
+                payload={
+                    "observer": observer,
+                    "objname": self.b_obj.text().strip(),
+                    "date_obs": self.b_date.text().strip(),
+                },
+            )
+            if not check.ok:
+                QMessageBox.warning(
+                    self,
+                    "Validacao BeSS",
+                    "\n".join(check.error_messages()) or "Campos incompletos.",
+                )
+                return
             out = self.artifacts_root / "export" / "bess" / "gui_bess.fits"
             try:
                 wave = np.linspace(400.0, 700.0, 301)
@@ -1320,6 +1784,7 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                     network="bess",
                     status="draft",
                     artifact_uri=uri,
+                    product_id=_parse_uuid(self.b_product.text()),
                     payload_summary={"note": "upload BeSS portal"},
                 )
                 self.archive.save_network_submission(sub)
@@ -1337,12 +1802,32 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             except ValueError:
                 QMessageBox.warning(self, "ExoClock", "Product UUID invalido.")
                 return
+            filled = prefill_exoclock_fields(
+                self.archive,
+                credentials=self.creds.get_network("exoclock"),
+                current=self._exoclock_current(),
+            )
+            self._apply_exoclock_fields(filled)
+            target = self.e_target.text().strip() or "TARGET"
+            check = validate_product_for_network(
+                self.archive,
+                network="exoclock",
+                product_id=pid,
+                payload={"target": target},
+            )
+            if not check.ok:
+                QMessageBox.warning(
+                    self,
+                    "Validacao ExoClock",
+                    "\n".join(check.error_messages()) or "Produto incompleto.",
+                )
+                return
             observer = self.creds.get_network("exoclock").get("observer") or "AstroCitizen"
             out = self.artifacts_root / "export" / "exoclock" / f"{pid}.txt"
             try:
                 ExportExoclock(self.archive).execute(
                     product_id=pid,
-                    target=self.e_target.text().strip() or "TARGET",
+                    target=target,
                     out_path=out,
                     observer=str(observer),
                 )
@@ -1355,7 +1840,7 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                     status="draft",
                     artifact_uri=uri,
                     product_id=pid,
-                    payload_summary={"target": self.e_target.text()},
+                    payload_summary={"target": target},
                 )
                 self.archive.save_network_submission(sub)
                 self._log(f"ExoClock wrote {out} - https://www.exoclock.space/upload/")
@@ -1369,6 +1854,36 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             if self._workspace_id is None:
                 QMessageBox.warning(self, "Contribute", "Sem workspace.")
                 return
+            if self.i_product.text().strip():
+                filled = prefill_iota_fields(
+                    self.archive,
+                    credentials=self.creds.get_network("iota"),
+                    current=self._iota_current(),
+                )
+                self._apply_iota_fields(filled)
+            observer = (
+                self.i_obs.text().strip()
+                or self.creds.get_network("iota").get("observer")
+                or "AstroCitizen"
+            )
+            check = validate_product_for_network(
+                self.archive,
+                network="iota",
+                product_id=_parse_uuid(self.i_product.text()),
+                payload={
+                    "event_id": self.i_event.text().strip(),
+                    "star": self.i_star.text().strip(),
+                    "asteroid": self.i_ast.text().strip(),
+                    "observer": observer,
+                },
+            )
+            if not check.ok:
+                QMessageBox.warning(
+                    self,
+                    "Validacao IOTA",
+                    "\n".join(check.error_messages()) or "Campos incompletos.",
+                )
+                return
             if not self.i_event.text().strip():
                 QMessageBox.warning(self, "IOTA", "Event ID obrigatorio.")
                 return
@@ -1377,11 +1892,6 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                 QMessageBox.warning(self, "IOTA", "Sem sites no workspace.")
                 return
             site = sites[0]
-            observer = (
-                self.i_obs.text().strip()
-                or self.creds.get_network("iota").get("observer")
-                or "AstroCitizen"
-            )
             pack = self.artifacts_root / "export" / "iota" / "gui_pack"
             try:
                 write_iota_pack(
@@ -1404,6 +1914,7 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                     network="iota",
                     status="draft",
                     artifact_uri=uri,
+                    product_id=_parse_uuid(self.i_product.text()),
                     payload_summary={"event": self.i_event.text()},
                 )
                 self.archive.save_network_submission(sub)
