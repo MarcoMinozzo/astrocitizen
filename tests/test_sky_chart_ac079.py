@@ -83,6 +83,7 @@ def test_build_model_with_target_and_bodies() -> None:
         blocks=[block],
         targets_by_id={tid: target},
         include_sun_moon=True,
+        include_bright_stars=False,
     )
     assert model.site_name == "Casa"
     kinds = {m.kind for m in model.markers}
@@ -92,6 +93,29 @@ def test_build_model_with_target_and_bodies() -> None:
     vega = next(m for m in model.markers if m.kind == "target")
     assert vega.label == "Vega"
     assert vega.block_id == bid
+
+
+def test_bright_stars_appear_above_horizon() -> None:
+    eph = AstropyEphemeris()
+    site = SimpleNamespace(
+        name="Casa",
+        latitude_deg=-29.7,
+        longitude_deg=-51.1,
+        elevation_m=100.0,
+        min_altitude_deg=25.0,
+    )
+    model = build_sky_chart_model(
+        ephemeris=eph,
+        site=site,
+        utc_iso="2026-07-22T02:00:00Z",
+        blocks=[],
+        include_bright_stars=True,
+        include_sun_moon=True,
+    )
+    stars = [m for m in model.markers if m.kind == "star"]
+    assert len(stars) >= 5
+    assert all(m.alt_deg >= 0 for m in stars)
+    assert model.n_stars == len(stars)
 
 
 def test_southern_site_projection_stable() -> None:

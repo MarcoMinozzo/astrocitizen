@@ -22,6 +22,7 @@ def build_sky_chart_widget(parent: Any | None = None) -> Any:
         "below_horizon": QColor(COLORS["text_muted"]),
         "inviavel_ceu": QColor(COLORS["bad"]),
         "body": QColor(COLORS["accent"]),
+        "star": QColor("#e8eef8"),
     }
 
     class SkyChartWidget(QWidget):
@@ -118,6 +119,22 @@ def build_sky_chart_widget(parent: Any | None = None) -> Any:
                     and m.block_id == self._selected_block_id
                 )
                 below = m.alt_deg < 0.0 or m.state == "below_horizon"
+                if m.kind == "star":
+                    # tamanho por brilho aproximado (V)
+                    size = 2.0
+                    if m.status and m.status.startswith("V="):
+                        try:
+                            v = float(m.status[2:])
+                            size = 5.5 if v < 0 else (4.0 if v < 1 else 2.8)
+                        except ValueError:
+                            size = 2.8
+                    p.setBrush(QColor("#f2f6ff"))
+                    p.setPen(Qt.PenStyle.NoPen)
+                    p.drawEllipse(pt, size, size)
+                    if m.label:
+                        p.setPen(QColor(c["text_muted"]))
+                        p.drawText(int(pt.x() + 6), int(pt.y() - 2), m.label[:12])
+                    continue
                 size = 7.0 if m.kind == "target" else 9.0
                 if m.kind == "sun":
                     col = QColor(c["accent"])
@@ -152,12 +169,19 @@ def build_sky_chart_widget(parent: Any | None = None) -> Any:
             if self._model.site_name:
                 caption = f"{self._model.site_name} · {caption}"
             p.drawText(8, self.height() - 8, caption)
-            if self._model.n_targets == 0:
+            if self._model.n_targets == 0 and self._model.n_stars == 0:
                 p.setPen(QColor(c["warn"]))
                 p.drawText(
                     8,
                     18,
-                    "Sem alvos no plano — Gerar plano (com alvos)",
+                    "Sem estrelas/alvos acima do horizonte neste instante",
+                )
+            elif self._model.n_targets == 0:
+                p.setPen(QColor(c["text_muted"]))
+                p.drawText(
+                    8,
+                    18,
+                    "Estrelas brilhantes · alvos: Gerar plano",
                 )
             p.end()
 

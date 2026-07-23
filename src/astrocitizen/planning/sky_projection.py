@@ -12,13 +12,14 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Literal
 from uuid import UUID
 
-SkyMarkerKind = Literal["target", "sun", "moon"]
+SkyMarkerKind = Literal["target", "sun", "moon", "star"]
 SkyVisualState = Literal[
     "above",
     "below_threshold",
     "below_horizon",
     "inviavel_ceu",
     "body",
+    "star",
 ]
 
 DEFAULT_MIN_ALTITUDE_DEG = 25.0
@@ -55,18 +56,22 @@ class SkyChartModel:
         return altitude_to_radius(self.min_altitude_deg)
 
     @property
-    def n_targets(self) -> int:
-        return sum(1 for m in self.markers if m.kind == "target")
+    def n_stars(self) -> int:
+        return sum(1 for m in self.markers if m.kind == "star")
 
     @property
     def status_line(self) -> str:
         n = self.n_targets
+        ns = self.n_stars
+        bits = []
+        if ns:
+            bits.append(f"{ns} estrela(s) brilhantes")
         if n == 0:
-            return (
-                "Sem alvos do plano — use Gerar plano (com programas/alvos activos). "
-                "Sol/Lua: ↓ = abaixo do horizonte."
-            )
-        return f"{n} alvo(s) do plano · ↓ = abaixo do horizonte"
+            bits.append("sem alvos do plano (Gerar plano)")
+        else:
+            bits.append(f"{n} alvo(s) do plano")
+        bits.append("↓ = abaixo do horizonte")
+        return " · ".join(bits)
 
 
 def altitude_to_radius(alt_deg: float) -> float:
@@ -191,8 +196,10 @@ def build_sky_chart_model(
     night_start_utc: str | None = None,
     night_end_utc: str | None = None,
     include_sun_moon: bool = True,
+    include_bright_stars: bool = True,
+    star_max_vmag: float = 2.2,
 ) -> SkyChartModel:
-    """Monta marcadores a partir do Site + blocos do plano + Sol/Lua."""
+    """Monta marcadores: estrelas brilhantes + alvos do plano + Sol/Lua."""
     min_alt = float(
         min_altitude_deg
         if min_altitude_deg is not None
@@ -203,6 +210,33 @@ def build_sky_chart_model(
     elev = float(getattr(site, "elevation_m", 0.0) or 0.0)
     markers: list[SkyMarker] = []
     targets_by_id = targets_by_id or {}
+
+    if include_bright_stars:
+        from astrocitizen.planning.bright_stars import stars_brighter_than
+
+        for star in stars_brighter_than(star_max_vmag):
+            aa = ephemeris.altitude_azimuth(
+                ra_deg=star.ra_deg,
+                dec_deg=star.dec_deg,
+                latitude_deg=lat,
+                longitude_deg=lon,
+                elevation_m=elev,
+                utc_iso=utc_iso,
+            )
+            alt = float(aa["alt_deg"])
+            if alt < 0.0:
+                continue  # so estrelas acima do horizonte
+            az = float(aa["az_deg"])
+            markers.append(
+                make_marker(
+                    kind="star",
+                    label=star.name if star.vmag <= 1.0 else "",
+                    alt_deg=alt,
+                    az_deg=az,
+                    state="star",
+                    status=f"V={star.vmag:.2f}",
+                )
+            )
 
     for block in blocks or []:
         tid = getattr(block, "target_id", None)
@@ -286,6 +320,7 @@ def load_sky_chart_from_archive(
     utc_iso: str,
     ephemeris: Any,
     night_window: dict[str, str] | None = None,
+    include_bright_stars: bool = True,
 ) -> SkyChartModel:
     """Carrega plano do arquivo e constroi o modelo da carta."""
     plan = archive.get_daily_plan_for_night(workspace_id, site.id, night_date)
@@ -314,6 +349,7 @@ def load_sky_chart_from_archive(
         targets_by_id=targets,
         night_start_utc=(nw or {}).get("start_utc"),
         night_end_utc=(nw or {}).get("end_utc"),
+        include_bright_stars=include_bright_stars,
     )
 
 

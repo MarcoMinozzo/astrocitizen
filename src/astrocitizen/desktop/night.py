@@ -174,6 +174,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
     from PySide6.QtCore import QDate, QObject, Qt, QThread, Signal
     from PySide6.QtGui import QPixmap
     from PySide6.QtWidgets import (
+        QCheckBox,
         QComboBox,
         QDateEdit,
         QFrame,
@@ -309,8 +310,15 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             self.sky_now_btn = QPushButton("Agora")
             self.sky_now_btn.setObjectName("secondaryBtn")
             self.sky_now_btn.clicked.connect(self._sky_now)
+            self.sky_stars = QCheckBox("Estrelas brilhantes")
+            self.sky_stars.setChecked(True)
+            self.sky_stars.setToolTip(
+                "Catalogo leve (~50 estrelas; nao e planetario)"
+            )
+            self.sky_stars.toggled.connect(lambda _=None: self._refresh_sky_chart())
             sky_time_row = QHBoxLayout()
             sky_time_row.addWidget(self.sky_time_label, 1)
+            sky_time_row.addWidget(self.sky_stars)
             sky_time_row.addWidget(self.sky_now_btn)
 
             self.radar_label = QLabel("Radar: clique Atualizar")
@@ -588,6 +596,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                     utc_iso=self._sky_utc,
                     ephemeris=self._eph,
                     night_window=self._night_window,
+                    include_bright_stars=bool(self.sky_stars.isChecked()),
                 )
             except Exception as exc:  # noqa: BLE001 - UI boundary
                 self.sky_detail.setText(f"erro carta: {exc}")
