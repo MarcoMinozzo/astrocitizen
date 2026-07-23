@@ -57,7 +57,7 @@ Nenhuma área da §2 pode ser removida do produto sem decisão documentada de ex
 
 | ID | Área | Redes | Status |
 |----|------|-------|--------|
-| CS-S1 | Espectroscopia slit amadora (extração 1D) | — | Planejado |
+| CS-S1 | Espectroscopia slit amadora (extração 1D) | — | ✅ AC-100 (sky+auto-trace; λ linear → AC-101) |
 | CS-S2 | Calibração em comprimento de onda | — | Planejado |
 | CS-S3 | Medidas de linhas / classificação | — | Planejado |
 | CS-S4 | Monitoramento Be / eruptivas | **ARAS / BeSS** | Planejado |

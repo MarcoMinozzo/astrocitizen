@@ -514,12 +514,21 @@ def _cmd_analyze_spectrum(args: argparse.Namespace) -> int:
     archive = _open_archive(Path(args.db))
     ws = _ensure_default_workspace(archive)
     store = LocalArtifactStore(Path(args.artifacts))
+    auto = bool(args.auto_trace or args.trace_y is None)
+    if not auto and args.trace_y is None:
+        print("indique --trace-y ou --auto-trace")
+        archive.close()
+        return 2
     product = ExtractSpectrum1D(archive, store).execute(
         workspace_id=ws.id,
         fits_uri=args.fits_uri,
-        trace_y=args.trace_y,
+        trace_y=None if auto else float(args.trace_y),
         half_width=args.half_width,
         axis=args.axis,
+        auto_trace=auto,
+        subtract_sky=not bool(args.no_sky),
+        sky_offset=args.sky_offset,
+        sky_half_width=args.sky_width,
         wave0_nm=args.wave0,
         wave1_nm=args.wave1,
         pix_a=args.pix_a,
@@ -531,6 +540,9 @@ def _cmd_analyze_spectrum(args: argparse.Namespace) -> int:
     )
     print(
         f"product={product.id}\ttype={product.product_type}\t"
+        f"trace={product.summary.get('trace_y')}\t"
+        f"snr={product.summary.get('snr_est')}\t"
+        f"sky={product.summary.get('subtract_sky')}\t"
         f"wave={product.summary.get('wave0_nm')}-{product.summary.get('wave1_nm')}nm\t"
         f"uri={product.parameters.get('spectrum_uri')}"
     )
@@ -2354,12 +2366,29 @@ def build_parser() -> argparse.ArgumentParser:
     p_ph.add_argument("--program", default=None)
     p_ph.add_argument("--artifacts", default=str(default_artifacts_root()))
     p_ph.set_defaults(func=_cmd_analyze_photometry)
-    p_sp = an_sub.add_parser("spectrum", help="Extracao espectro 1D (PO-B01)")
+    p_sp = an_sub.add_parser("spectrum", help="Extracao espectro 1D (AC-100 / PO-B01)")
     _add_db_arg(p_sp)
     p_sp.add_argument("--fits-uri", required=True)
-    p_sp.add_argument("--trace-y", type=float, required=True)
+    p_sp.add_argument(
+        "--trace-y",
+        type=float,
+        default=None,
+        help="Posicao do trace (pix); omitir com --auto-trace",
+    )
+    p_sp.add_argument(
+        "--auto-trace",
+        action="store_true",
+        help="Detectar pico espacial automaticamente",
+    )
     p_sp.add_argument("--half-width", type=int, default=3)
     p_sp.add_argument("--axis", choices=("x", "y"), default="x")
+    p_sp.add_argument(
+        "--no-sky",
+        action="store_true",
+        help="Desligar subtracao de ceu (default: ligada)",
+    )
+    p_sp.add_argument("--sky-offset", type=int, default=None, help="pix do centro")
+    p_sp.add_argument("--sky-width", type=int, default=None, help="half-width ceu")
     p_sp.add_argument("--wave0", type=float, default=None, help="nm")
     p_sp.add_argument("--wave1", type=float, default=None, help="nm")
     p_sp.add_argument("--pix-a", type=float, default=None)

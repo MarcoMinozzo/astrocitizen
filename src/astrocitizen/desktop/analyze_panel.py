@@ -169,8 +169,14 @@ def build_analyze_dashboard() -> type:
             self.sp_hw = QDoubleSpinBox()
             self.sp_hw.setRange(1, 50)
             self.sp_hw.setValue(3)
+            self.sp_auto = QCheckBox("Auto-trace (AC-100)")
+            self.sp_auto.setChecked(True)
+            self.sp_sky = QCheckBox("Subtrair ceu")
+            self.sp_sky.setChecked(True)
             form.addRow("Trace Y", self.sp_trace)
             form.addRow("Half-width", self.sp_hw)
+            form.addRow(self.sp_auto)
+            form.addRow(self.sp_sky)
             btn = QPushButton("Extrair espectro 1D")
             btn.clicked.connect(self._run_spectrum)
             form.addRow(btn)
@@ -425,13 +431,16 @@ def build_analyze_dashboard() -> type:
                 QMessageBox.warning(self, "Analisar", "FITS invalido.")
                 return
             store = LocalArtifactStore(self.artifacts_root)
+            auto = bool(self.sp_auto.isChecked())
             try:
                 uri = self._put_fits(path)
                 product = ExtractSpectrum1D(self.archive, store).execute(
                     workspace_id=ws.id,
                     fits_uri=uri,
-                    trace_y=float(self.sp_trace.value()),
+                    trace_y=None if auto else float(self.sp_trace.value()),
                     half_width=int(self.sp_hw.value()),
+                    auto_trace=auto,
+                    subtract_sky=bool(self.sp_sky.isChecked()),
                     program_id=self._shell_program_id,
                 )
             except (DomainError, ValueError, OSError) as exc:
@@ -439,6 +448,8 @@ def build_analyze_dashboard() -> type:
                 return
             self._append(
                 f"spectrum={product.id}  "
+                f"trace={product.summary.get('trace_y')}  "
+                f"snr={product.summary.get('snr_est')}  "
                 f"wave={product.summary.get('wave0_nm')}-{product.summary.get('wave1_nm')}nm"
             )
             self.cu_product.setText(str(product.id))
