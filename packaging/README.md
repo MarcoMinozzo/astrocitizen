@@ -1,8 +1,8 @@
-# Empacote Desktop ù PyInstaller (AC-075 / AC-076)
+# Empacote Desktop ? PyInstaller (AC-075 / AC-076)
 
-**Objectivo:** `.exe` Windows utilizùvel sem Python no PATH do utilizador final (DoD Desktop).
+**Objectivo:** `.exe` Windows utilizavel sem Python no PATH do utilizador final (DoD Desktop).
 
-Espelha o padrùo do `sbig-suite`: **onefile** + smoke CLI em CI.
+Espelha o padrao do `sbig-suite`: **onefile** + smoke CLI em CI.
 
 ## Build local
 
@@ -39,20 +39,34 @@ O script confirma:
 
 ## GUI (PySide6)
 
-O build CI **exclui** PySide6 para manter o binùrio CLI mais leve e o smoke estùvel.
+O build CI **exclui** PySide6 para manter o binario CLI mais leve e o smoke estavel.
 Para um `.exe` com `astrocitizen gui`:
 
 1. `pip install PySide6`
 2. Remover `--exclude-module PySide6` do comando / script
 3. Opcional: `--hidden-import astrocitizen.desktop.app`
 
-Drivers de hardware (SBIG udrv / ASCOM Alpaca) **nùo** vùo dentro do `.exe` ù instalaùùo de sistema separada.
+Drivers de hardware (SBIG udrv / ASCOM Alpaca) **nao** vao dentro do `.exe` ?
+instalacao de sistema separada.
+
+## Browser AAVSO (Qt WebEngine, AC-095)
+
+O `.exe` / build base **nao** inclui Chromium (D-010). Para o painel
+**Observatorio ? Campanhas AAVSO** embutido:
+
+```bash
+pip install 'astrocitizen[gui-web]'   # PySide6-WebEngine
+```
+
+Sem o extra, o painel mostra fallback e o botao **Abrir no browser** usa o
+browser do sistema. Um instalador "full" com WebEngine exigiria
+`--collect-all PySide6` / plugins `QtWebEngineProcess` e aumenta ~80?150 MB.
 
 ## onedir vs onefile
 
 - **onefile** (default CI): um ficheiro; arranque um pouco mais lento.
-- **onedir**: pasta com DLL; arranque mais rùpido (bom para GUI). Trocar `--onefile` por `--onedir`.
+- **onedir**: pasta com DLL; arranque mais rapido (bom para GUI). Trocar `--onefile` por `--onedir`.
 
 ## CI
 
-Job `windows-exe` em `.github/workflows/ci.yml` ù build + smoke + upload do artefacto `astrocitizen-windows`.
+Job `windows-exe` em `.github/workflows/ci.yml` ? build + smoke + upload do artefacto `astrocitizen-windows`.

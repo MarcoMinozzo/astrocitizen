@@ -189,6 +189,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | AC-092 | Curva de luz → BD (pontos) | P2 | M | AC-091, E1 | ✅ S5 — measurement_points |
 | AC-093 | Export AAVSO | P2 | M | AC-092, E14 | ✅ Extended com JD · `contribute aavso` · WebObs manual |
 | AC-094 | Templates A02–A04, A09 | P2 | M | AC-091 | |
+| AC-095 | Browser embutido Observing Campaigns (Qt WebEngine opt-in) | P2 | M | AC-071, CS-F14 | ✅ portal `apps.aavso.org` · extra `gui-web` · fallback browser SO |
 
 ---
 

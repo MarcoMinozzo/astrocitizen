@@ -32,6 +32,9 @@ alpaca = [
 gui = [
   "PySide6>=6.6",
 ]
+gui-web = [
+  "PySide6-WebEngine>=6.6",
+]
 
 [project.scripts]
 astrocitizen = "astrocitizen.cli:main"

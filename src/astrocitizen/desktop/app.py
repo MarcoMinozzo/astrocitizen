@@ -37,6 +37,9 @@ def run_gui(db_path: str | None = None) -> int:
     from astrocitizen.adapters.sqlite import SqliteArchive
     from astrocitizen.desktop.analyze_panel import build_analyze_dashboard
     from astrocitizen.desktop.archive_panel import build_archive_dashboard
+    from astrocitizen.desktop.aavso_campaigns_browser import (
+        build_aavso_campaigns_browser,
+    )
     from astrocitizen.desktop.contribute import build_contribute_dashboard
     from astrocitizen.desktop.entities import (
         build_programs_page,
@@ -85,6 +88,7 @@ def run_gui(db_path: str | None = None) -> int:
     RadioDashboard = build_radio_dashboard()
     SpecialtyDashboard = build_specialty_dashboard()
     ProgramActiveDashboard = build_program_active_dashboard()
+    AavsoCampaignsBrowser = build_aavso_campaigns_browser()
     HelpPanel = build_help_panel()
     PrefsPanel = build_prefs_panel()
     Shared = build_shared_widgets()
@@ -213,6 +217,7 @@ def run_gui(db_path: str | None = None) -> int:
                 on_navigate=self._navigate_to,
                 on_changed=on_ch,
             )
+            self.aavso_campaigns = AavsoCampaignsBrowser()
             self.help_panel = HelpPanel(archive=archive)
             self.prefs_panel = PrefsPanel(on_language_changed=self._on_language_changed)
 
@@ -252,6 +257,7 @@ def run_gui(db_path: str | None = None) -> int:
                 hint="Programa activo, sessao, importacao e canais da noite.",
                 tabs=[
                     ("Programa", self.program_active),
+                    ("Campanhas AAVSO", self.aavso_campaigns),
                     ("Sessao", self.session_panel),
                     ("Importar", self.import_hub),
                     ("Observar", self.observe_panel),
@@ -609,6 +615,15 @@ def run_gui(db_path: str | None = None) -> int:
     db = Path(db_path) if db_path else default_db_path()
     archive = SqliteArchive(db)
     archive.migrate()
+    # QtWebEngine (AC-095) exige partilha de contextos OpenGL antes do QApplication.
+    try:
+        from PySide6.QtCore import Qt as _Qt
+
+        QApplication.setAttribute(
+            _Qt.ApplicationAttribute.AA_ShareOpenGLContexts, True
+        )
+    except Exception:
+        pass
     app = QApplication(sys.argv)
     lang = resolve_ui_lang(load_ui_lang_pref(), detected=detect_system_lang())
     set_current_lang(lang)
