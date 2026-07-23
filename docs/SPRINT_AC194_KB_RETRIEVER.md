@@ -17,7 +17,7 @@
 ## Fora deste slice
 
 - MCP `kb_search` / `kb_get_chunk` (AC-197)
-- Embeddings / RRF (AC-195)
+- Embeddings / RRF (AC-195) — ver [SPRINT_AC195_KB_EMBED.md](SPRINT_AC195_KB_EMBED.md)
 - Assistente Ajuda GUI (AC-196)
 - Gold citation eval (AC-199)
 

@@ -2199,3 +2199,79 @@ class SqliteArchive:
                 }
             )
         return out
+
+    # --- knowledge embeddings (v8 / AC-195) ---
+    def upsert_knowledge_embeddings(
+        self,
+        rows: list[dict[str, Any]],
+        *,
+        model_id: str,
+    ) -> int:
+        """Substitui embeddings do model_id; rows = {chunk_id, model_id, dim, vector}."""
+        now = utc_now_iso()
+        self._conn.execute(
+            "DELETE FROM knowledge_chunk_embeddings WHERE model_id = ?",
+            (model_id,),
+        )
+        payload = []
+        for r in rows:
+            cid = str(r.get("chunk_id") or "").strip()
+            if not cid:
+                continue
+            blob = r.get("vector")
+            if not isinstance(blob, (bytes, bytearray)):
+                continue
+            payload.append(
+                (
+                    cid,
+                    str(r.get("model_id") or model_id),
+                    int(r.get("dim") or 0),
+                    bytes(blob),
+                    now,
+                )
+            )
+        if payload:
+            self._conn.executemany(
+                """
+                INSERT INTO knowledge_chunk_embeddings(
+                    chunk_id, model_id, dim, vector, updated_at
+                ) VALUES (?, ?, ?, ?, ?)
+                """,
+                payload,
+            )
+        self._conn.commit()
+        return len(payload)
+
+    def list_knowledge_embeddings(
+        self,
+        *,
+        model_id: str | None = None,
+    ) -> list[dict[str, Any]]:
+        if model_id:
+            rows = self._conn.execute(
+                """
+                SELECT chunk_id, model_id, dim, vector, updated_at
+                FROM knowledge_chunk_embeddings
+                WHERE model_id = ?
+                ORDER BY chunk_id ASC
+                """,
+                (model_id,),
+            ).fetchall()
+        else:
+            rows = self._conn.execute(
+                """
+                SELECT chunk_id, model_id, dim, vector, updated_at
+                FROM knowledge_chunk_embeddings
+                ORDER BY chunk_id ASC
+                """
+            ).fetchall()
+        return [
+            {
+                "chunk_id": r["chunk_id"],
+                "model_id": r["model_id"],
+                "dim": int(r["dim"]),
+                "vector": r["vector"],
+                "updated_at": r["updated_at"],
+            }
+            for r in rows
+        ]

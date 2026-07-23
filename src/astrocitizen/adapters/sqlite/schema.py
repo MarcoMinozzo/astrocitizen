@@ -1,6 +1,6 @@
 """Schema SQLite — alinhado a MODELO_DADOS_V1 (subset S1+S2)."""
 
-SCHEMA_VERSION = 7
+SCHEMA_VERSION = 8
 
 # Tabelas S1 (v1)
 SCHEMA_V1_SQL = """
@@ -443,6 +443,20 @@ CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_chunks_fts USING fts5(
 );
 """
 
+# AC-195: embeddings locais (BLOB float32) para RRF hibrido
+SCHEMA_V8_SQL = """
+CREATE TABLE IF NOT EXISTS knowledge_chunk_embeddings (
+    chunk_id TEXT PRIMARY KEY REFERENCES knowledge_chunks(id),
+    model_id TEXT NOT NULL,
+    dim INTEGER NOT NULL,
+    vector BLOB NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_knowledge_emb_model
+    ON knowledge_chunk_embeddings(model_id);
+"""
+
 SCHEMA_SQL = (
     SCHEMA_V1_SQL
     + SCHEMA_V2_SQL
@@ -451,6 +465,7 @@ SCHEMA_SQL = (
     + SCHEMA_V5_SQL
     + SCHEMA_V6_SQL
     + SCHEMA_V7_SQL
+    + SCHEMA_V8_SQL
 )
 
 # Colunas extra em observations (ALTER idempotente via migrate helper)

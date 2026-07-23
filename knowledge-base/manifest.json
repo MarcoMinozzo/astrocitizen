@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "corpus_version": "0.1.0-kb1",
-  "phase": "KB-2",
+  "phase": "KB-4",
   "created_utc": "2026-07-23",
   "updated_utc": "2026-07-23",
   "n_sources": 6,
@@ -18,7 +18,13 @@
       "built_utc": "2026-07-23T18:52:01Z",
       "n_rows": 51
     },
-    "embeddings": null
+    "embeddings": {
+      "engine": "sqlite-blob",
+      "model_id": "hashing-ngram-v1",
+      "dim": 384,
+      "built_utc": "2026-07-23T19:44:49Z",
+      "n_rows": 51
+    }
   },
   "chunk_schema": "templates/chunk.md"
 }
