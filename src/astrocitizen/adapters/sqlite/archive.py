@@ -1677,3 +1677,345 @@ class SqliteArchive:
             if item is not None:
                 out.append(item)
         return out
+
+    # --- knowledge corpus (v6 / AC-191) ---
+    def upsert_knowledge_document(self, doc: Any) -> Any:
+        from astrocitizen.knowledge.models import KnowledgeDocument
+
+        assert isinstance(doc, KnowledgeDocument)
+        now = utc_now_iso()
+        doc_id = (doc.id or doc.source_id).strip()
+        source_id = (doc.source_id or doc_id).strip()
+        if not doc_id or not source_id:
+            raise ValueError("knowledge document exige id/source_id")
+        existing = self.get_knowledge_document(doc_id)
+        if existing is None and source_id != doc_id:
+            existing = self.get_knowledge_document(source_id)
+        if existing is None:
+            self._conn.execute(
+                """
+                INSERT INTO knowledge_documents(
+                    id, source_id, path, title, trust_tier, license_id, lang,
+                    topics, networks, content_hash, corpus_version, status,
+                    created_at, updated_at, version
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    doc_id,
+                    source_id,
+                    doc.path,
+                    doc.title,
+                    doc.trust_tier,
+                    doc.license_id,
+                    doc.lang,
+                    _j(list(doc.topics or [])),
+                    _j(list(doc.networks or [])),
+                    doc.content_hash,
+                    doc.corpus_version,
+                    doc.status or "planned",
+                    now,
+                    now,
+                    doc.version,
+                ),
+            )
+            doc.id = doc_id
+            doc.source_id = source_id
+            doc.created_at = now
+        else:
+            self._conn.execute(
+                """
+                UPDATE knowledge_documents SET
+                    source_id = ?, path = ?, title = ?, trust_tier = ?,
+                    license_id = ?, lang = ?, topics = ?, networks = ?,
+                    content_hash = ?, corpus_version = ?, status = ?,
+                    updated_at = ?, version = version + 1
+                WHERE id = ? AND deleted_at IS NULL
+                """,
+                (
+                    source_id,
+                    doc.path,
+                    doc.title,
+                    doc.trust_tier,
+                    doc.license_id,
+                    doc.lang,
+                    _j(list(doc.topics or [])),
+                    _j(list(doc.networks or [])),
+                    doc.content_hash,
+                    doc.corpus_version,
+                    doc.status or "planned",
+                    now,
+                    existing.id,
+                ),
+            )
+            doc.id = existing.id
+            doc.source_id = source_id
+            doc.created_at = existing.created_at
+            doc.version = int(existing.version) + 1
+        doc.updated_at = now
+        self._conn.commit()
+        return doc
+
+    def get_knowledge_document(self, document_id: str) -> Any | None:
+        from astrocitizen.knowledge.models import KnowledgeDocument
+
+        key = (document_id or "").strip()
+        if not key:
+            return None
+        row = self._conn.execute(
+            """
+            SELECT * FROM knowledge_documents
+            WHERE (id = ? OR source_id = ?) AND deleted_at IS NULL
+            """,
+            (key, key),
+        ).fetchone()
+        if row is None:
+            return None
+        return KnowledgeDocument(
+            id=row["id"],
+            source_id=row["source_id"],
+            path=row["path"],
+            title=row["title"],
+            trust_tier=row["trust_tier"],
+            license_id=row["license_id"],
+            lang=row["lang"],
+            topics=list(_loads(row["topics"], [])),
+            networks=list(_loads(row["networks"], [])),
+            content_hash=row["content_hash"],
+            corpus_version=row["corpus_version"],
+            status=row["status"],
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+            version=int(row["version"]),
+        )
+
+    def list_knowledge_documents(
+        self,
+        *,
+        trust_tier: str | None = None,
+        status: str | None = None,
+        lang: str | None = None,
+    ) -> list[Any]:
+        clauses = ["deleted_at IS NULL"]
+        params: list[Any] = []
+        if trust_tier:
+            clauses.append("trust_tier = ?")
+            params.append(trust_tier)
+        if status:
+            clauses.append("status = ?")
+            params.append(status)
+        if lang:
+            clauses.append("lang = ?")
+            params.append(lang)
+        where = " AND ".join(clauses)
+        rows = self._conn.execute(
+            f"""
+            SELECT id FROM knowledge_documents
+            WHERE {where}
+            ORDER BY source_id ASC
+            """,
+            params,
+        ).fetchall()
+        out = []
+        for r in rows:
+            item = self.get_knowledge_document(r["id"])
+            if item is not None:
+                out.append(item)
+        return out
+
+    def soft_delete_knowledge_document(self, document_id: str) -> None:
+        now = utc_now_iso()
+        key = (document_id or "").strip()
+        doc = self.get_knowledge_document(key)
+        if doc is None:
+            raise NotFoundError(f"knowledge_documents nao encontrado: {document_id}")
+        self._conn.execute(
+            """
+            UPDATE knowledge_chunks SET deleted_at = ?, updated_at = ?, version = version + 1
+            WHERE document_id = ? AND deleted_at IS NULL
+            """,
+            (now, now, doc.id),
+        )
+        cur = self._conn.execute(
+            """
+            UPDATE knowledge_documents SET deleted_at = ?, updated_at = ?, version = version + 1
+            WHERE id = ? AND deleted_at IS NULL
+            """,
+            (now, now, doc.id),
+        )
+        if cur.rowcount == 0:
+            raise NotFoundError(f"knowledge_documents nao encontrado: {document_id}")
+        self._conn.commit()
+
+    def upsert_knowledge_chunk(self, chunk: Any) -> Any:
+        from astrocitizen.knowledge.models import KnowledgeChunk
+
+        assert isinstance(chunk, KnowledgeChunk)
+        now = utc_now_iso()
+        chunk_id = (chunk.id or "").strip()
+        if not chunk_id:
+            raise ValueError("knowledge chunk exige id")
+        if not (chunk.chunk_hash or "").strip():
+            raise ValueError("knowledge chunk exige chunk_hash")
+        doc = self.get_knowledge_document(chunk.document_id or chunk.source_id)
+        if doc is None:
+            raise NotFoundError(
+                f"documento KB nao encontrado para chunk: {chunk.document_id}"
+            )
+        existing = self.get_knowledge_chunk(chunk_id)
+        source_id = (chunk.source_id or doc.source_id).strip()
+        trust = (chunk.trust_tier or doc.trust_tier).strip()
+        if existing is None:
+            self._conn.execute(
+                """
+                INSERT INTO knowledge_chunks(
+                    id, document_id, source_id, path, title, trust_tier, lang,
+                    topics, po_id, network, pipeline_stage, token_estimate,
+                    chunk_hash, corpus_version, body, sort_order,
+                    created_at, updated_at, version
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    chunk_id,
+                    doc.id,
+                    source_id,
+                    chunk.path,
+                    chunk.title,
+                    trust,
+                    chunk.lang,
+                    _j(list(chunk.topics or [])),
+                    chunk.po_id,
+                    chunk.network,
+                    chunk.pipeline_stage,
+                    chunk.token_estimate,
+                    chunk.chunk_hash,
+                    chunk.corpus_version,
+                    chunk.body,
+                    int(chunk.sort_order or 0),
+                    now,
+                    now,
+                    chunk.version,
+                ),
+            )
+            chunk.created_at = now
+        else:
+            self._conn.execute(
+                """
+                UPDATE knowledge_chunks SET
+                    document_id = ?, source_id = ?, path = ?, title = ?,
+                    trust_tier = ?, lang = ?, topics = ?, po_id = ?, network = ?,
+                    pipeline_stage = ?, token_estimate = ?, chunk_hash = ?,
+                    corpus_version = ?, body = ?, sort_order = ?,
+                    updated_at = ?, version = version + 1
+                WHERE id = ? AND deleted_at IS NULL
+                """,
+                (
+                    doc.id,
+                    source_id,
+                    chunk.path,
+                    chunk.title,
+                    trust,
+                    chunk.lang,
+                    _j(list(chunk.topics or [])),
+                    chunk.po_id,
+                    chunk.network,
+                    chunk.pipeline_stage,
+                    chunk.token_estimate,
+                    chunk.chunk_hash,
+                    chunk.corpus_version,
+                    chunk.body,
+                    int(chunk.sort_order or 0),
+                    now,
+                    chunk_id,
+                ),
+            )
+            chunk.created_at = existing.created_at
+            chunk.version = int(existing.version) + 1
+        chunk.id = chunk_id
+        chunk.document_id = doc.id
+        chunk.source_id = source_id
+        chunk.trust_tier = trust
+        chunk.updated_at = now
+        self._conn.commit()
+        return chunk
+
+    def get_knowledge_chunk(self, chunk_id: str) -> Any | None:
+        from astrocitizen.knowledge.models import KnowledgeChunk
+
+        key = (chunk_id or "").strip()
+        if not key:
+            return None
+        row = self._conn.execute(
+            "SELECT * FROM knowledge_chunks WHERE id = ? AND deleted_at IS NULL",
+            (key,),
+        ).fetchone()
+        if row is None:
+            return None
+        return KnowledgeChunk(
+            id=row["id"],
+            document_id=row["document_id"],
+            source_id=row["source_id"],
+            body=row["body"],
+            trust_tier=row["trust_tier"],
+            chunk_hash=row["chunk_hash"],
+            path=row["path"],
+            title=row["title"],
+            lang=row["lang"],
+            topics=list(_loads(row["topics"], [])),
+            po_id=row["po_id"],
+            network=row["network"],
+            pipeline_stage=row["pipeline_stage"],
+            token_estimate=row["token_estimate"],
+            corpus_version=row["corpus_version"],
+            sort_order=int(row["sort_order"] or 0),
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+            version=int(row["version"]),
+        )
+
+    def list_knowledge_chunks(
+        self,
+        *,
+        source_id: str | None = None,
+        document_id: str | None = None,
+        trust_tier: str | None = None,
+    ) -> list[Any]:
+        clauses = ["deleted_at IS NULL"]
+        params: list[Any] = []
+        if source_id:
+            clauses.append("source_id = ?")
+            params.append(source_id)
+        if document_id:
+            clauses.append("document_id = ?")
+            params.append(document_id)
+        if trust_tier:
+            clauses.append("trust_tier = ?")
+            params.append(trust_tier)
+        where = " AND ".join(clauses)
+        rows = self._conn.execute(
+            f"""
+            SELECT id FROM knowledge_chunks
+            WHERE {where}
+            ORDER BY document_id ASC, sort_order ASC, id ASC
+            """,
+            params,
+        ).fetchall()
+        out = []
+        for r in rows:
+            item = self.get_knowledge_chunk(r["id"])
+            if item is not None:
+                out.append(item)
+        return out
+
+    def soft_delete_knowledge_chunk(self, chunk_id: str) -> None:
+        now = utc_now_iso()
+        key = (chunk_id or "").strip()
+        cur = self._conn.execute(
+            """
+            UPDATE knowledge_chunks SET deleted_at = ?, updated_at = ?, version = version + 1
+            WHERE id = ? AND deleted_at IS NULL
+            """,
+            (now, now, key),
+        )
+        if cur.rowcount == 0:
+            raise NotFoundError(f"knowledge_chunks nao encontrado: {chunk_id}")
+        self._conn.commit()

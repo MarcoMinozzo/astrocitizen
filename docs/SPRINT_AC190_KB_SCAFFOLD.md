@@ -24,4 +24,5 @@ Pasta `knowledge-base/`:
 
 ## Seguinte
 
-AC-191 schema BD chunks · AC-192 ingest T3 docs/atlas.
+AC-191 ✅ schema BD — ver [SPRINT_AC191_KB_SCHEMA.md](SPRINT_AC191_KB_SCHEMA.md) · seguinte: AC-192 ingest T3.
+

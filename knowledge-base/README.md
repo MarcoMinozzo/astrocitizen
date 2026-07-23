@@ -2,6 +2,8 @@
 
 Scaffold interno para RAG futuro. **Nao** e indice de FITS nem dados do observador.
 
+**Estado:** KB-0 scaffold ✅ · **AC-191** schema SQLite `knowledge_documents` / `knowledge_chunks` ✅ · ingest AC-192 pendente.
+
 ## Layout
 
 ```text

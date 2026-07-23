@@ -29,7 +29,7 @@ def _fits(path: Path, data: np.ndarray, **hdr) -> Path:
 
 def test_schema_v4(tmp_path: Path) -> None:
     archive = SqliteArchive(tmp_path / "r.sqlite3")
-    assert archive.migrate() == SCHEMA_VERSION == 5
+    assert archive.migrate() == SCHEMA_VERSION == 6
     archive.close()
 
 

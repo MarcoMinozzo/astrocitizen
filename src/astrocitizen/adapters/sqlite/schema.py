@@ -1,6 +1,6 @@
 """Schema SQLite — alinhado a MODELO_DADOS_V1 (subset S1+S2)."""
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 
 # Tabelas S1 (v1)
 SCHEMA_V1_SQL = """
@@ -368,7 +368,74 @@ CREATE INDEX IF NOT EXISTS idx_network_submissions_ws
     ON network_submissions(workspace_id, network, created_at) WHERE deleted_at IS NULL;
 """
 
-SCHEMA_SQL = SCHEMA_V1_SQL + SCHEMA_V2_SQL + SCHEMA_V3_SQL + SCHEMA_V4_SQL + SCHEMA_V5_SQL
+SCHEMA_V6_SQL = """
+CREATE TABLE IF NOT EXISTS knowledge_documents (
+    id TEXT PRIMARY KEY,
+    source_id TEXT NOT NULL UNIQUE,
+    path TEXT NOT NULL,
+    title TEXT NOT NULL,
+    trust_tier TEXT NOT NULL,
+    license_id TEXT,
+    lang TEXT,
+    topics TEXT NOT NULL DEFAULT '[]',
+    networks TEXT NOT NULL DEFAULT '[]',
+    content_hash TEXT,
+    corpus_version TEXT,
+    status TEXT NOT NULL DEFAULT 'planned',
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    version INTEGER NOT NULL DEFAULT 1,
+    deleted_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_knowledge_documents_tier
+    ON knowledge_documents(trust_tier) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_knowledge_documents_status
+    ON knowledge_documents(status) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_knowledge_documents_lang
+    ON knowledge_documents(lang) WHERE deleted_at IS NULL;
+
+CREATE TABLE IF NOT EXISTS knowledge_chunks (
+    id TEXT PRIMARY KEY,
+    document_id TEXT NOT NULL REFERENCES knowledge_documents(id),
+    source_id TEXT NOT NULL,
+    path TEXT,
+    title TEXT,
+    trust_tier TEXT NOT NULL,
+    lang TEXT,
+    topics TEXT NOT NULL DEFAULT '[]',
+    po_id TEXT,
+    network TEXT,
+    pipeline_stage TEXT,
+    token_estimate INTEGER,
+    chunk_hash TEXT NOT NULL,
+    corpus_version TEXT,
+    body TEXT NOT NULL,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    version INTEGER NOT NULL DEFAULT 1,
+    deleted_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_source
+    ON knowledge_chunks(source_id) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_doc
+    ON knowledge_chunks(document_id, sort_order) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_tier
+    ON knowledge_chunks(trust_tier) WHERE deleted_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_filters
+    ON knowledge_chunks(lang, po_id, network) WHERE deleted_at IS NULL;
+"""
+
+SCHEMA_SQL = (
+    SCHEMA_V1_SQL
+    + SCHEMA_V2_SQL
+    + SCHEMA_V3_SQL
+    + SCHEMA_V4_SQL
+    + SCHEMA_V5_SQL
+    + SCHEMA_V6_SQL
+)
 
 # Colunas extra em observations (ALTER idempotente via migrate helper)
 OBSERVATION_V3_COLUMNS = (

@@ -44,6 +44,7 @@
 | [SPRINT_RADIO_AC161.md](SPRINT_RADIO_AC161.md) | Radio I02–I04 (espectro / scan / lab notes) |
 | [SPRINT_PO_G01_DUPLAS.md](SPRINT_PO_G01_DUPLAS.md) | Duplas PO-G01 (PA/sep / AC-152) |
 | [SPRINT_AC190_KB_SCAFFOLD.md](SPRINT_AC190_KB_SCAFFOLD.md) | E19 KB-0 scaffold knowledge-base |
+| [SPRINT_AC191_KB_SCHEMA.md](SPRINT_AC191_KB_SCHEMA.md) | E19 AC-191 schema knowledge_documents/chunks |
 | [SPRINT_AC141_D011.md](SPRINT_AC141_D011.md) | AC-141 validacao redes + D-011 ferramentas imagem |
 | [SPRINT_R2_REVISAR_CAMPOS.md](SPRINT_R2_REVISAR_CAMPOS.md) | R2: Revisar campos atlas (AAVSO/MPC) |
 | [SPRINT_EXP_WDS.md](SPRINT_EXP_WDS.md) | EXP-WDS: export + Revisar campos (PO-G01) |
