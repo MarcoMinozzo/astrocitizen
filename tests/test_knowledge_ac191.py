@@ -14,7 +14,8 @@ from astrocitizen.shared.errors import NotFoundError
 
 def test_schema_v6_knowledge_tables(tmp_path: Path) -> None:
     archive = SqliteArchive(tmp_path / "kb.sqlite3")
-    assert archive.migrate() == SCHEMA_VERSION == 6
+    assert archive.migrate() == SCHEMA_VERSION
+    assert SCHEMA_VERSION >= 6
     tables = {
         r[0]
         for r in archive._conn.execute(
@@ -24,7 +25,7 @@ def test_schema_v6_knowledge_tables(tmp_path: Path) -> None:
     assert "knowledge_documents" in tables
     assert "knowledge_chunks" in tables
     # idempotent
-    assert archive.migrate() == 6
+    assert archive.migrate() == SCHEMA_VERSION
     archive.close()
 
 

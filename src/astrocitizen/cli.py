@@ -1671,6 +1671,57 @@ def _cmd_knowledge_ingest(args: argparse.Namespace) -> int:
     return 0 if report.ok or (args.dry_run and report.n_chunks > 0) else 1
 
 
+def _cmd_knowledge_index(args: argparse.Namespace) -> int:
+    from astrocitizen.knowledge import default_kb_root, rebuild_fts_index
+
+    root = Path(args.kb_root) if args.kb_root else default_kb_root()
+    archive = _open_archive(Path(args.db))
+    archive.migrate()
+    try:
+        report = rebuild_fts_index(
+            archive, kb_root=root, update_manifest=not args.no_manifest
+        )
+    finally:
+        archive.close()
+    print(
+        f"fts\tn_rows={report.n_rows}\tbuilt={report.built_utc}\t"
+        f"engine={report.engine}\tok={report.n_rows > 0}"
+    )
+    return 0 if report.n_rows > 0 else 1
+
+
+def _cmd_knowledge_search(args: argparse.Namespace) -> int:
+    from astrocitizen.knowledge import search_knowledge
+
+    archive = _open_archive(Path(args.db))
+    archive.migrate()
+    try:
+        hits = search_knowledge(
+            archive,
+            str(args.query),
+            limit=int(args.limit),
+            trust_tier=args.tier,
+            source_id=args.source_id,
+            lang=args.lang,
+            po_id=args.po_id,
+            network=args.network,
+        )
+    finally:
+        archive.close()
+    if not hits:
+        print("hits\t0")
+        return 1
+    print(f"hits\t{len(hits)}")
+    for h in hits:
+        title = (h.title or "").replace("\t", " ")[:80]
+        snip = (h.snippet or "").replace("\n", " ").replace("\t", " ")[:160]
+        print(
+            f"hit\t{h.chunk_id}\t{h.source_id}\t{h.trust_tier}\t"
+            f"score={h.score:.4f}\t{title}\t{snip}"
+        )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="astrocitizen",
@@ -2396,6 +2447,25 @@ def build_parser() -> argparse.ArgumentParser:
     p_kb_ing.add_argument("--no-files", action="store_true", help="So SQLite")
     p_kb_ing.add_argument("--corpus-version", default="0.1.0-kb1")
     p_kb_ing.set_defaults(func=_cmd_knowledge_ingest)
+    p_kb_idx = kb_sub.add_parser("index", help="Rebuild indice FTS5 (AC-193)")
+    _add_db_arg(p_kb_idx)
+    p_kb_idx.add_argument("--kb-root", default=None)
+    p_kb_idx.add_argument(
+        "--no-manifest",
+        action="store_true",
+        help="Nao actualizar knowledge-base/manifest.json",
+    )
+    p_kb_idx.set_defaults(func=_cmd_knowledge_index)
+    p_kb_se = kb_sub.add_parser("search", help="Pesquisa lexical FTS5 (AC-193)")
+    _add_db_arg(p_kb_se)
+    p_kb_se.add_argument("query", help="Texto livre a pesquisar")
+    p_kb_se.add_argument("--limit", type=int, default=10)
+    p_kb_se.add_argument("--tier", default=None, help="Filtrar trust_tier (ex. T3)")
+    p_kb_se.add_argument("--source-id", default=None)
+    p_kb_se.add_argument("--lang", default=None)
+    p_kb_se.add_argument("--po-id", default=None)
+    p_kb_se.add_argument("--network", default=None)
+    p_kb_se.set_defaults(func=_cmd_knowledge_search)
 
     return parser
 

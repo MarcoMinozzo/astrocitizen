@@ -236,6 +236,12 @@ def ingest_sources(
             n_chunks=report.n_chunks,
         )
 
+    if write_db and archive is not None and total_chunks > 0:
+        from astrocitizen.knowledge.search import rebuild_fts_index
+
+        # Manifest e leve; actualiza index.fts mesmo com --no-files
+        rebuild_fts_index(archive, kb_root=kb, update_manifest=True)
+
     return report
 
 

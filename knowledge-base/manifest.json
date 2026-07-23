@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "corpus_version": "0.1.0-kb1",
-  "phase": "KB-1",
+  "phase": "KB-2",
   "created_utc": "2026-07-23",
   "updated_utc": "2026-07-23",
   "n_sources": 6,
@@ -11,7 +11,13 @@
     "notes": "AC-192 offline ingest 2026-07-23T18:21:10Z"
   },
   "index": {
-    "fts": null,
+    "fts": {
+      "engine": "sqlite-fts5",
+      "table": "knowledge_chunks_fts",
+      "tokenizer": "unicode61",
+      "built_utc": "2026-07-23T18:52:01Z",
+      "n_rows": 51
+    },
     "embeddings": null
   },
   "chunk_schema": "templates/chunk.md"

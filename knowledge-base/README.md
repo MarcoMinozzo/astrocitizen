@@ -2,7 +2,7 @@
 
 Scaffold interno para RAG futuro. **Nao** e indice de FITS nem dados do observador.
 
-**Estado:** KB-0 scaffold ✅ · AC-191 schema ✅ · **AC-192** ingest T3 ✅ (`processed/` + `chunks/v1/`) · FTS AC-193 pendente.
+**Estado:** KB-0 scaffold ✅ · AC-191 schema ✅ · AC-192 ingest T3 ✅ · **AC-193** FTS5 ✅ (`knowledge search`) · RetrieverPort AC-194 pendente.
 
 ## Layout
 
@@ -26,7 +26,7 @@ knowledge-base/
 |------|--------|
 | KB-0 scaffold | ✅ AC-190 |
 | KB-1 conteudo T3 | ✅ AC-192 (51 chunks) |
-| KB-2 FTS | aberto (AC-193) |
+| KB-2 FTS | ✅ AC-193 |
 | KB-3 Retriever/MCP | aberto |
 | KB-4 embeddings | aberto |
 | KB-5 produto | aberto |

@@ -162,8 +162,10 @@ def test_ingest_t3_tmp_kb(tmp_path: Path) -> None:
     assert archive.list_knowledge_documents(status="ingested")
     assert len(archive.list_knowledge_chunks(source_id="docs-workflows")) >= 1
     manifest = json.loads((kb / "manifest.json").read_text(encoding="utf-8"))
-    assert manifest["phase"] == "KB-1"
+    # ingest + FTS rebuild (AC-193) promove fase a KB-2
+    assert manifest["phase"] == "KB-2"
     assert manifest["n_chunks"] == report.n_chunks
+    assert manifest["index"]["fts"]["n_rows"] == report.n_chunks
     catalog2 = json.loads((kb / "catalog.json").read_text(encoding="utf-8"))
     statuses = {
         s["source_id"]: s["status"] for s in catalog2["sources"] if s["trust_tier"] == "T3"

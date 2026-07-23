@@ -14,7 +14,7 @@
 
 ## Fora deste slice
 
-- FTS / `knowledge search` (AC-193)
+- FTS / `knowledge search` (AC-193) — ver [SPRINT_AC193_KB_FTS.md](SPRINT_AC193_KB_FTS.md)
 - Embeddings / RetrieverPort
 - Ingest T5 literatura
 

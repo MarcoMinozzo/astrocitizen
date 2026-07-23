@@ -2053,3 +2053,141 @@ class SqliteArchive:
         if cur.rowcount == 0:
             raise NotFoundError(f"knowledge_chunks nao encontrado: {chunk_id}")
         self._conn.commit()
+
+    # --- knowledge FTS5 (v7 / AC-193) ---
+    def rebuild_knowledge_fts(self) -> int:
+        """Reconstroi knowledge_chunks_fts a partir dos chunks activos. Devolve n_rows."""
+        from astrocitizen.knowledge.search import fold_corrupt_accents
+
+        self._conn.execute("DELETE FROM knowledge_chunks_fts")
+        rows = self._conn.execute(
+            """
+            SELECT
+                id,
+                COALESCE(title, '') AS title,
+                body,
+                source_id,
+                trust_tier,
+                COALESCE(lang, '') AS lang,
+                COALESCE(po_id, '') AS po_id,
+                COALESCE(network, '') AS network
+            FROM knowledge_chunks
+            WHERE deleted_at IS NULL
+            """
+        ).fetchall()
+        payload = [
+            (
+                r["id"],
+                fold_corrupt_accents(r["title"] or ""),
+                fold_corrupt_accents(r["body"] or ""),
+                r["source_id"],
+                r["trust_tier"],
+                r["lang"],
+                r["po_id"],
+                r["network"],
+            )
+            for r in rows
+        ]
+        self._conn.executemany(
+            """
+            INSERT INTO knowledge_chunks_fts(
+                chunk_id, title, body, source_id, trust_tier, lang, po_id, network
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            payload,
+        )
+        self._conn.commit()
+        return len(payload)
+
+    def search_knowledge_chunks(
+        self,
+        query: str,
+        *,
+        limit: int = 10,
+        trust_tier: str | None = None,
+        source_id: str | None = None,
+        lang: str | None = None,
+        po_id: str | None = None,
+        network: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Pesquisa lexical FTS5; devolve dicts com chunk + score + snippet."""
+        from astrocitizen.knowledge.search import build_fts_query
+
+        fts_q = build_fts_query(query)
+        if not fts_q:
+            return []
+        lim = max(1, min(int(limit or 10), 100))
+        clauses = [
+            "knowledge_chunks_fts MATCH ?",
+            "c.deleted_at IS NULL",
+        ]
+        params: list[Any] = [fts_q]
+        if trust_tier:
+            clauses.append("c.trust_tier = ?")
+            params.append(trust_tier)
+        if source_id:
+            clauses.append("c.source_id = ?")
+            params.append(source_id)
+        if lang:
+            clauses.append("c.lang = ?")
+            params.append(lang)
+        if po_id:
+            clauses.append("c.po_id = ?")
+            params.append(po_id)
+        if network:
+            clauses.append("c.network = ?")
+            params.append(network)
+        where = " AND ".join(clauses)
+        params.append(lim)
+        try:
+            rows = self._conn.execute(
+                f"""
+                SELECT
+                    c.id AS chunk_id,
+                    c.source_id,
+                    c.document_id,
+                    c.path,
+                    c.title,
+                    c.trust_tier,
+                    c.lang,
+                    c.po_id,
+                    c.network,
+                    c.topics,
+                    c.chunk_hash,
+                    c.token_estimate,
+                    c.body,
+                    bm25(knowledge_chunks_fts) AS score,
+                    snippet(knowledge_chunks_fts, 2, '«', '»', '…', 28) AS snippet
+                FROM knowledge_chunks_fts
+                JOIN knowledge_chunks c ON c.id = knowledge_chunks_fts.chunk_id
+                WHERE {where}
+                ORDER BY score ASC, c.source_id ASC, c.sort_order ASC
+                LIMIT ?
+                """,
+                params,
+            ).fetchall()
+        except sqlite3.OperationalError:
+            # indice vazio / query invalida → sem hits
+            return []
+        out: list[dict[str, Any]] = []
+        for r in rows:
+            out.append(
+                {
+                    "chunk_id": r["chunk_id"],
+                    "source_id": r["source_id"],
+                    "document_id": r["document_id"],
+                    "path": r["path"],
+                    "title": r["title"],
+                    "trust_tier": r["trust_tier"],
+                    "lang": r["lang"],
+                    "po_id": r["po_id"],
+                    "network": r["network"],
+                    "topics": list(_loads(r["topics"], [])),
+                    "chunk_hash": r["chunk_hash"],
+                    "token_estimate": r["token_estimate"],
+                    "score": float(r["score"]) if r["score"] is not None else 0.0,
+                    "snippet": r["snippet"] or "",
+                    "body": r["body"],
+                }
+            )
+        return out

@@ -1,6 +1,6 @@
 """Schema SQLite — alinhado a MODELO_DADOS_V1 (subset S1+S2)."""
 
-SCHEMA_VERSION = 6
+SCHEMA_VERSION = 7
 
 # Tabelas S1 (v1)
 SCHEMA_V1_SQL = """
@@ -428,6 +428,21 @@ CREATE INDEX IF NOT EXISTS idx_knowledge_chunks_filters
     ON knowledge_chunks(lang, po_id, network) WHERE deleted_at IS NULL;
 """
 
+# AC-193: indice lexical FTS5 (rebuild via SqliteArchive.rebuild_knowledge_fts)
+SCHEMA_V7_SQL = """
+CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_chunks_fts USING fts5(
+    chunk_id UNINDEXED,
+    title,
+    body,
+    source_id UNINDEXED,
+    trust_tier UNINDEXED,
+    lang UNINDEXED,
+    po_id UNINDEXED,
+    network UNINDEXED,
+    tokenize = 'unicode61 remove_diacritics 2'
+);
+"""
+
 SCHEMA_SQL = (
     SCHEMA_V1_SQL
     + SCHEMA_V2_SQL
@@ -435,6 +450,7 @@ SCHEMA_SQL = (
     + SCHEMA_V4_SQL
     + SCHEMA_V5_SQL
     + SCHEMA_V6_SQL
+    + SCHEMA_V7_SQL
 )
 
 # Colunas extra em observations (ALTER idempotente via migrate helper)

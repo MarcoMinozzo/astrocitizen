@@ -46,6 +46,7 @@
 | [SPRINT_AC190_KB_SCAFFOLD.md](SPRINT_AC190_KB_SCAFFOLD.md) | E19 KB-0 scaffold knowledge-base |
 | [SPRINT_AC191_KB_SCHEMA.md](SPRINT_AC191_KB_SCHEMA.md) | E19 AC-191 schema knowledge_documents/chunks |
 | [SPRINT_AC192_KB_INGEST.md](SPRINT_AC192_KB_INGEST.md) | E19 AC-192 ingest T3 docs/atlas → chunks |
+| [SPRINT_AC193_KB_FTS.md](SPRINT_AC193_KB_FTS.md) | E19 AC-193 FTS5 + `knowledge search` |
 | [SPRINT_AC141_D011.md](SPRINT_AC141_D011.md) | AC-141 validacao redes + D-011 ferramentas imagem |
 | [SPRINT_R2_REVISAR_CAMPOS.md](SPRINT_R2_REVISAR_CAMPOS.md) | R2: Revisar campos atlas (AAVSO/MPC) |
 | [SPRINT_EXP_WDS.md](SPRINT_EXP_WDS.md) | EXP-WDS: export + Revisar campos (PO-G01) |
