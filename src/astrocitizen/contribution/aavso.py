@@ -70,6 +70,7 @@ class ExportAavso:
         observer_code: str,
         out_path: Path,
         band: str = "V",
+        chart: str = "NA",
     ) -> Path:
         product = self.archive.get_analysis_product(product_id)
         if product is None:
@@ -82,6 +83,7 @@ class ExportAavso:
             observer_code=observer_code,
             points=points,
             band=band or (points[0].get("band") or "V"),
+            chart=chart or "NA",
         )
         out_path = Path(out_path)
         out_path.parent.mkdir(parents=True, exist_ok=True)

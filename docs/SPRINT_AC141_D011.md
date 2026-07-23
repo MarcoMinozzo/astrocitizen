@@ -14,7 +14,7 @@
 
 ## Fora deste slice
 
-- UI completa "Revisar campos" (proximo R2)
+- UI completa "Revisar campos" — feito em [SPRINT_R2_REVISAR_CAMPOS.md](SPRINT_R2_REVISAR_CAMPOS.md)
 - Exporters WDS/COBS
 - Suite de processamento embutida (nunca — D-011)
 
