@@ -38,6 +38,9 @@ def test_altaz_horizon_east() -> None:
 
 def test_altaz_below_horizon() -> None:
     assert altaz_to_sky_xy(-5.0, 10.0) is None
+    xy = altaz_to_sky_xy(-5.0, 90.0, clamp_horizon=True)
+    assert xy is not None
+    assert abs(xy[0] - 1.0) < 1e-9
 
 
 def test_min_alt_radius() -> None:

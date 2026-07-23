@@ -117,29 +117,48 @@ def build_sky_chart_widget(parent: Any | None = None) -> Any:
                     m.block_id is not None
                     and m.block_id == self._selected_block_id
                 )
+                below = m.alt_deg < 0.0 or m.state == "below_horizon"
                 size = 7.0 if m.kind == "target" else 9.0
                 if m.kind == "sun":
-                    p.setBrush(QColor(c["accent"]))
-                    p.setPen(QPen(QColor(c["text"]), 1))
+                    col = QColor(c["accent"])
+                    if below:
+                        col.setAlpha(110)
+                    p.setBrush(col)
+                    p.setPen(QPen(QColor(c["text_muted"] if below else c["text"]), 1))
                     p.drawEllipse(pt, size, size)
                 elif m.kind == "moon":
-                    p.setBrush(QColor("#c8d0dc"))
+                    col = QColor("#c8d0dc")
+                    if below:
+                        col.setAlpha(110)
+                    p.setBrush(col)
                     p.setPen(QPen(QColor(c["text_muted"]), 1))
                     p.drawEllipse(pt, size - 1, size - 1)
                 else:
+                    if below:
+                        color.setAlpha(120)
                     p.setBrush(color)
-                    pen = QPen(QColor(c["text"]) if selected else color, 2 if selected else 1)
+                    pen = QPen(
+                        QColor(c["text"]) if selected else color,
+                        2 if selected else 1,
+                    )
                     p.setPen(pen)
                     p.drawEllipse(pt, size, size)
-                p.setPen(QColor(c["text"]))
-                p.drawText(int(pt.x() + 8), int(pt.y() - 4), m.label[:16])
+                p.setPen(QColor(c["text_muted"] if below else c["text"]))
+                p.drawText(int(pt.x() + 8), int(pt.y() - 4), m.label[:18])
 
-            # Caption
+            # Caption + hint
             p.setPen(QColor(c["text_muted"]))
             caption = f"Carta do plano · {self._model.utc_iso}"
             if self._model.site_name:
                 caption = f"{self._model.site_name} · {caption}"
             p.drawText(8, self.height() - 8, caption)
+            if self._model.n_targets == 0:
+                p.setPen(QColor(c["warn"]))
+                p.drawText(
+                    8,
+                    18,
+                    "Sem alvos no plano — Gerar plano (com alvos)",
+                )
             p.end()
 
         def mousePressEvent(self, event: Any) -> None:  # noqa: N802

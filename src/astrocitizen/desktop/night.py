@@ -578,6 +578,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                 return
             self.sky_chart.set_model(model)
             self.sky_time_label.setText(f"hora carta: {self._sky_utc}")
+            self.sky_detail.setText(model.status_line)
 
         def _init_sky_from_night(self, night: dict[str, str]) -> None:
             self._night_window = {

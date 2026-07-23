@@ -54,6 +54,20 @@ class SkyChartModel:
         """Raio normalizado do circulo de altitude minima (0=zenith, 1=horizonte)."""
         return altitude_to_radius(self.min_altitude_deg)
 
+    @property
+    def n_targets(self) -> int:
+        return sum(1 for m in self.markers if m.kind == "target")
+
+    @property
+    def status_line(self) -> str:
+        n = self.n_targets
+        if n == 0:
+            return (
+                "Sem alvos do plano — use Gerar plano (com programas/alvos activos). "
+                "Sol/Lua: ↓ = abaixo do horizonte."
+            )
+        return f"{n} alvo(s) do plano · ↓ = abaixo do horizonte"
+
 
 def altitude_to_radius(alt_deg: float) -> float:
     """Mapa linear: zenith (90) -> 0, horizonte (0) -> 1."""
@@ -61,15 +75,19 @@ def altitude_to_radius(alt_deg: float) -> float:
 
 
 def altaz_to_sky_xy(
-    alt_deg: float, az_deg: float
+    alt_deg: float, az_deg: float, *, clamp_horizon: bool = False
 ) -> tuple[float, float] | None:
     """Projecao azimutal equidistante centrada no zenith.
 
-    Norte = +y, Este = +x. Devolve None se abaixo do horizonte (alt < 0).
+    Norte = +y, Este = +x. Devolve None se abaixo do horizonte (alt < 0),
+    salvo `clamp_horizon=True` (projecta no bordo do horizonte).
     """
-    if alt_deg < 0.0:
-        return None
-    r = altitude_to_radius(alt_deg)
+    alt = float(alt_deg)
+    if alt < 0.0:
+        if not clamp_horizon:
+            return None
+        alt = 0.0
+    r = altitude_to_radius(alt)
     az = math.radians(float(az_deg) % 360.0)
     x = r * math.sin(az)
     y = r * math.cos(az)
@@ -142,15 +160,20 @@ def make_marker(
     target_id: UUID | None = None,
     status: str | None = None,
 ) -> SkyMarker:
-    xy = altaz_to_sky_xy(alt_deg, az_deg)
+    # Sempre projectar (abaixo do horizonte → bordo) para Sol/Lua/alvos serem visiveis.
+    xy = altaz_to_sky_xy(alt_deg, az_deg, clamp_horizon=True)
+    assert xy is not None
+    display = label
+    if alt_deg < 0.0 and kind in ("sun", "moon", "target"):
+        display = f"{label} ↓"
     return SkyMarker(
         kind=kind,
-        label=label,
+        label=display,
         alt_deg=alt_deg,
         az_deg=az_deg,
         state=state,
-        x=None if xy is None else xy[0],
-        y=None if xy is None else xy[1],
+        x=xy[0],
+        y=xy[1],
         block_id=block_id,
         target_id=target_id,
         status=status,
@@ -240,7 +263,7 @@ def build_sky_chart_model(
                     label=label,
                     alt_deg=alt,
                     az_deg=az,
-                    state="body",
+                    state="below_horizon" if alt < 0 else "body",
                 )
             )
 
