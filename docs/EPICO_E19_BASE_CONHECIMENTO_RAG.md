@@ -124,7 +124,7 @@ E  RetrieverPort + (opcional) MCP: kb_search / kb_get_chunk / kb_get_glossary
 | **KB-0** | Docs + scaffold | ✅ `knowledge-base/` + taxonomy (AC-190) |
 | **KB-1** | Conteudo inicial | ✅ ≥50 chunks T3 (AC-192) |
 | **KB-2** | Ingest + FTS | ✅ FTS5 + `knowledge search` (AC-193); gold-questions v0 placeholder |
-| **KB-3** | Retriever + MCP read-only | `kb_search` / get_chunk; citation rate alvo |
+| **KB-3** | Retriever + MCP read-only | ✅ RetrieverPort (AC-194); MCP AC-197; citation rate AC-199 |
 | **KB-4** | Hibrido vector | Embeddings locais + RRF |
 | **KB-5** | Produto | AC-107 + Ajuda GUI; sem regressao AC-106 |
 

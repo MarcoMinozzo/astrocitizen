@@ -16,7 +16,7 @@
 
 ## Fora deste slice
 
-- `RetrieverPort` hexagonal (AC-194)
+- `RetrieverPort` hexagonal (AC-194) — ver [SPRINT_AC194_KB_RETRIEVER.md](SPRINT_AC194_KB_RETRIEVER.md)
 - Embeddings / RRF (AC-195)
 - Eval citation rate gold-questions (AC-199)
 - MCP `kb_search` (AC-197)

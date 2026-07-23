@@ -1691,20 +1691,24 @@ def _cmd_knowledge_index(args: argparse.Namespace) -> int:
 
 
 def _cmd_knowledge_search(args: argparse.Namespace) -> int:
-    from astrocitizen.knowledge import search_knowledge
+    from astrocitizen.adapters.sqlite.fts_retriever import SqliteFtsRetriever
+    from astrocitizen.ports.retriever import RetrieveFilters
 
     archive = _open_archive(Path(args.db))
     archive.migrate()
     try:
-        hits = search_knowledge(
-            archive,
+        retriever = SqliteFtsRetriever(archive)
+        hits = retriever.search(
             str(args.query),
             limit=int(args.limit),
-            trust_tier=args.tier,
-            source_id=args.source_id,
-            lang=args.lang,
-            po_id=args.po_id,
-            network=args.network,
+            filters=RetrieveFilters(
+                trust_tier=args.tier,
+                source_id=args.source_id,
+                lang=args.lang,
+                po_id=args.po_id,
+                network=args.network,
+                topic=args.topic,
+            ),
         )
     finally:
         archive.close()
@@ -1715,11 +1719,58 @@ def _cmd_knowledge_search(args: argparse.Namespace) -> int:
     for h in hits:
         title = (h.title or "").replace("\t", " ")[:80]
         snip = (h.snippet or "").replace("\n", " ").replace("\t", " ")[:160]
+        score = f"{h.score:.4f}" if h.score is not None else "n/a"
         print(
             f"hit\t{h.chunk_id}\t{h.source_id}\t{h.trust_tier}\t"
-            f"score={h.score:.4f}\t{title}\t{snip}"
+            f"score={score}\t{title}\t{snip}"
         )
     return 0
+
+
+def _cmd_knowledge_get(args: argparse.Namespace) -> int:
+    from astrocitizen.adapters.sqlite.fts_retriever import SqliteFtsRetriever
+
+    archive = _open_archive(Path(args.db))
+    archive.migrate()
+    try:
+        cite = SqliteFtsRetriever(archive).get_chunk(str(args.chunk_id))
+    finally:
+        archive.close()
+    if cite is None:
+        print(f"error\tchunk_not_found\t{args.chunk_id}")
+        return 1
+    print(
+        f"chunk\t{cite.chunk_id}\t{cite.source_id}\t{cite.trust_tier}\t"
+        f"{cite.citation_label()}"
+    )
+    if cite.title:
+        print(f"title\t{cite.title}")
+    if cite.path:
+        print(f"path\t{cite.path}")
+    if cite.topics:
+        print(f"topics\t{','.join(cite.topics)}")
+    print("---")
+    print(cite.body or "")
+    return 0
+
+
+def _cmd_knowledge_sources(args: argparse.Namespace) -> int:
+    from astrocitizen.adapters.sqlite.fts_retriever import SqliteFtsRetriever
+
+    archive = _open_archive(Path(args.db))
+    archive.migrate()
+    try:
+        sources = SqliteFtsRetriever(archive).list_sources(trust_tier=args.tier)
+    finally:
+        archive.close()
+    print(f"sources\t{len(sources)}")
+    for s in sources:
+        topics = ",".join(s.get("topics") or [])
+        print(
+            f"source\t{s['source_id']}\t{s['trust_tier']}\t"
+            f"{s.get('title') or ''}\t{topics}"
+        )
+    return 0 if sources else 1
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -2456,7 +2507,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Nao actualizar knowledge-base/manifest.json",
     )
     p_kb_idx.set_defaults(func=_cmd_knowledge_index)
-    p_kb_se = kb_sub.add_parser("search", help="Pesquisa lexical FTS5 (AC-193)")
+    p_kb_se = kb_sub.add_parser("search", help="Pesquisa lexical via RetrieverPort (AC-193/194)")
     _add_db_arg(p_kb_se)
     p_kb_se.add_argument("query", help="Texto livre a pesquisar")
     p_kb_se.add_argument("--limit", type=int, default=10)
@@ -2465,7 +2516,16 @@ def build_parser() -> argparse.ArgumentParser:
     p_kb_se.add_argument("--lang", default=None)
     p_kb_se.add_argument("--po-id", default=None)
     p_kb_se.add_argument("--network", default=None)
+    p_kb_se.add_argument("--topic", default=None, help="Filtrar topic (JSON topics)")
     p_kb_se.set_defaults(func=_cmd_knowledge_search)
+    p_kb_get = kb_sub.add_parser("get", help="Obter chunk por id (citacao + body)")
+    _add_db_arg(p_kb_get)
+    p_kb_get.add_argument("chunk_id", help="ex. docs-workflows-002")
+    p_kb_get.set_defaults(func=_cmd_knowledge_get)
+    p_kb_src = kb_sub.add_parser("sources", help="Listar fontes ingeridas")
+    _add_db_arg(p_kb_src)
+    p_kb_src.add_argument("--tier", default=None)
+    p_kb_src.set_defaults(func=_cmd_knowledge_sources)
 
     return parser
 

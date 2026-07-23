@@ -144,6 +144,7 @@ def search_knowledge(
     lang: str | None = None,
     po_id: str | None = None,
     network: str | None = None,
+    topic: str | None = None,
 ) -> list[SearchHit]:
     rows = archive.search_knowledge_chunks(
         query,
@@ -153,6 +154,7 @@ def search_knowledge(
         lang=lang,
         po_id=po_id,
         network=network,
+        topic=topic,
     )
     hits: list[SearchHit] = []
     for r in rows:

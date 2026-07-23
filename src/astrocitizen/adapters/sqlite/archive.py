@@ -2109,6 +2109,7 @@ class SqliteArchive:
         lang: str | None = None,
         po_id: str | None = None,
         network: str | None = None,
+        topic: str | None = None,
     ) -> list[dict[str, Any]]:
         """Pesquisa lexical FTS5; devolve dicts com chunk + score + snippet."""
         from astrocitizen.knowledge.search import build_fts_query
@@ -2137,7 +2138,14 @@ class SqliteArchive:
         if network:
             clauses.append("c.network = ?")
             params.append(network)
+        if topic:
+            # topics e JSON array; json_each filtra valor exacto
+            clauses.append(
+                "EXISTS (SELECT 1 FROM json_each(c.topics) AS t WHERE t.value = ?)"
+            )
+            params.append(topic)
         where = " AND ".join(clauses)
+        # oversample se topic — json filter ja esta no SQL
         params.append(lim)
         try:
             rows = self._conn.execute(
