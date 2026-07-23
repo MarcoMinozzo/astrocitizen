@@ -212,7 +212,7 @@ def run_gui(db_path: str | None = None) -> int:
                 on_navigate=self._navigate_to,
                 on_changed=on_ch,
             )
-            self.help_panel = HelpPanel()
+            self.help_panel = HelpPanel(archive=archive)
             self.prefs_panel = PrefsPanel(on_language_changed=self._on_language_changed)
 
             self.pages: dict[str, QWidget] = {}

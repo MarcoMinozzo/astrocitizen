@@ -39,5 +39,11 @@
   "help.configure.title": "Configurar",
   "help.configure.body": "Sitios, equipo, programas (plantillas PO-*), objetivos, Preferencias (idioma) y Ayuda.",
   "help.language.title": "Idioma",
-  "help.language.body": "Idiomas soportados: portugues, espanol e ingles. Preferencia Auto detecta el SO; si no, elija pt / es / en. Idiomas desconocidos usan ingles (RN-120)."
+  "help.language.body": "Idiomas soportados: portugues, espanol e ingles. Preferencia Auto detecta el SO; si no, elija pt / es / en. Idiomas desconocidos usan ingles (RN-120).",
+  "help.ask_placeholder": "Preguntar a la base de conocimiento…",
+  "help.ask_button": "Preguntar KB",
+  "help.ask_hint": "Respuestas solo con citas del corpus (AC-196). Sin LLM en este modo.",
+  "help.ask_empty": "Escriba una pregunta.",
+  "help.ask_no_archive": "Archivo SQLite no disponible para la KB.",
+  "help.ask_error": "Fallo al consultar la KB:"
 }

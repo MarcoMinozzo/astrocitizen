@@ -39,5 +39,11 @@
   "help.configure.title": "Configurar",
   "help.configure.body": "Sites, equipamento, programas (templates PO-*), alvos, Preferencias (idioma) e Ajuda.",
   "help.language.title": "Idioma",
-  "help.language.body": "Linguas suportadas: portugues, espanhol e ingles. Preferencia Auto detecta o SO; senao escolha pt / es / en. Linguas desconhecidas usam ingles (RN-120)."
+  "help.language.body": "Linguas suportadas: portugues, espanhol e ingles. Preferencia Auto detecta o SO; senao escolha pt / es / en. Linguas desconhecidas usam ingles (RN-120).",
+  "help.ask_placeholder": "Perguntar a base de conhecimento…",
+  "help.ask_button": "Perguntar KB",
+  "help.ask_hint": "Respostas so com citacoes do corpus (AC-196). Sem LLM neste modo.",
+  "help.ask_empty": "Escreva uma pergunta.",
+  "help.ask_no_archive": "Arquivo SQLite indisponivel para pesquisa KB.",
+  "help.ask_error": "Falha ao consultar a KB:"
 }

@@ -39,5 +39,11 @@
   "help.configure.title": "Configure",
   "help.configure.body": "Sites, equipment, programs (from PO-* templates), targets, Preferences (language), and Help.",
   "help.language.title": "Language",
-  "help.language.body": "Supported UI languages: Portuguese, Spanish, English. Preference Auto detects the OS language; otherwise pick pt / es / en. Unknown languages use English (RN-120)."
+  "help.language.body": "Supported UI languages: Portuguese, Spanish, English. Preference Auto detects the OS language; otherwise pick pt / es / en. Unknown languages use English (RN-120).",
+  "help.ask_placeholder": "Ask the knowledge base…",
+  "help.ask_button": "Ask KB",
+  "help.ask_hint": "Answers only with corpus citations (AC-196). No LLM in this mode.",
+  "help.ask_empty": "Type a question.",
+  "help.ask_no_archive": "SQLite archive unavailable for KB search.",
+  "help.ask_error": "KB query failed:"
 }

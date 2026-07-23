@@ -1794,6 +1794,37 @@ def _cmd_knowledge_sources(args: argparse.Namespace) -> int:
     return 0 if sources else 1
 
 
+def _cmd_knowledge_ask(args: argparse.Namespace) -> int:
+    from astrocitizen.adapters.sqlite.hybrid_retriever import HybridRetriever
+    from astrocitizen.knowledge.assistant import answer_help
+    from astrocitizen.ports.retriever import RetrieveFilters
+
+    archive = _open_archive(Path(args.db))
+    try:
+        ans = answer_help(
+            HybridRetriever(archive),
+            str(args.question),
+            limit=int(args.limit),
+            mode=str(args.mode or "hybrid"),  # type: ignore[arg-type]
+            filters=RetrieveFilters(
+                trust_tier=args.tier,
+                source_id=args.source_id,
+                lang=args.lang,
+                po_id=args.po_id,
+                network=args.network,
+                topic=args.topic,
+            ),
+        )
+    finally:
+        archive.close()
+    print(f"grounded\t{ans.grounded}\tmode={ans.mode}\tcitations={len(ans.citations)}")
+    if ans.refusal_reason:
+        print(f"refusal\t{ans.refusal_reason}")
+    print("---")
+    print(ans.format_text(), end="")
+    return 0 if ans.grounded else 1
+
+
 def _cmd_knowledge_mcp_tools(args: argparse.Namespace) -> int:
     from astrocitizen.knowledge.mcp_tools import TOOL_DEFS
 
@@ -2649,6 +2680,24 @@ def build_parser() -> argparse.ArgumentParser:
     _add_db_arg(p_kb_src)
     p_kb_src.add_argument("--tier", default=None)
     p_kb_src.set_defaults(func=_cmd_knowledge_sources)
+    p_kb_ask = kb_sub.add_parser(
+        "ask", help="Ajuda grounded: pergunta + citacoes (AC-196, sem LLM)"
+    )
+    _add_db_arg(p_kb_ask)
+    p_kb_ask.add_argument("question", help="Pergunta em texto livre")
+    p_kb_ask.add_argument("--limit", type=int, default=5)
+    p_kb_ask.add_argument("--tier", default=None)
+    p_kb_ask.add_argument("--source-id", default=None)
+    p_kb_ask.add_argument("--lang", default=None)
+    p_kb_ask.add_argument("--po-id", default=None)
+    p_kb_ask.add_argument("--network", default=None)
+    p_kb_ask.add_argument("--topic", default=None)
+    p_kb_ask.add_argument(
+        "--mode",
+        default="hybrid",
+        choices=("fts", "vector", "hybrid"),
+    )
+    p_kb_ask.set_defaults(func=_cmd_knowledge_ask)
     p_kb_mt = kb_sub.add_parser("mcp-tools", help="Listar tools MCP KB (AC-197)")
     p_kb_mt.set_defaults(func=_cmd_knowledge_mcp_tools)
     p_kb_mc = kb_sub.add_parser("mcp-call", help="Invocar tool MCP KB uma vez")

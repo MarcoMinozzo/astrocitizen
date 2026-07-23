@@ -1,5 +1,6 @@
-"""E19 knowledge-base package (scaffold + ingest + FTS + embeddings)."""
+"""E19 knowledge-base package (scaffold + ingest + FTS + embeddings + help)."""
 
+from astrocitizen.knowledge.assistant import HelpAnswer, answer_help
 from astrocitizen.knowledge.embed_index import EmbedIndexReport, rebuild_embeddings
 from astrocitizen.knowledge.embeddings import HashingNgramEmbedder, default_embedder
 from astrocitizen.knowledge.ingest import IngestReport, ingest_sources
@@ -16,10 +17,12 @@ __all__ = [
     "EmbedIndexReport",
     "FtsIndexReport",
     "HashingNgramEmbedder",
+    "HelpAnswer",
     "IngestReport",
     "KnowledgeChunk",
     "KnowledgeDocument",
     "SearchHit",
+    "answer_help",
     "default_embedder",
     "default_kb_root",
     "ingest_sources",
