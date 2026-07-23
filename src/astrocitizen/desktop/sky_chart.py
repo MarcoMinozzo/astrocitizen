@@ -29,7 +29,7 @@ def build_sky_chart_widget(parent: Any | None = None) -> Any:
 
         def __init__(self) -> None:
             super().__init__(parent)
-            self.setMinimumSize(280, 280)
+            self.setMinimumSize(160, 160)
             self.setObjectName("skyChart")
             self._model: SkyChartModel | None = None
             self._selected_block_id: UUID | None = None

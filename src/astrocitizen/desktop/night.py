@@ -176,10 +176,12 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
     from PySide6.QtWidgets import (
         QComboBox,
         QDateEdit,
+        QFrame,
         QHBoxLayout,
         QLabel,
         QMessageBox,
         QPushButton,
+        QScrollArea,
         QSlider,
         QSplitter,
         QTableWidget,
@@ -314,7 +316,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             self.radar_label = QLabel("Radar: clique Atualizar")
             self.radar_label.setObjectName("radarPane")
             self.radar_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.radar_label.setMinimumSize(200, 140)
+            self.radar_label.setMinimumSize(160, 100)
             self.radar_attr = QLabel("")
             self.radar_attr.setWordWrap(True)
             self.radar_attr.setTextFormat(Qt.TextFormat.RichText)
@@ -329,7 +331,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             left_l.addWidget(self.plan_label)
 
             sky_pane = QWidget()
-            sky_pane.setMinimumHeight(320)
+            sky_pane.setMinimumHeight(200)
             sky_l = QVBoxLayout(sky_pane)
             sky_l.setContentsMargins(0, 0, 0, 0)
             sky_l.addWidget(QLabel("Carta do plano"))
@@ -350,7 +352,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             right.addWidget(radar_pane)
             right.setStretchFactor(0, 4)
             right.setStretchFactor(1, 1)
-            right.setSizes([420, 160])
+            right.setSizes([360, 140])
             self._right_split = right
 
             split = QSplitter()
@@ -358,13 +360,27 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             split.addWidget(right)
             split.setStretchFactor(0, 2)
             split.setStretchFactor(1, 3)
-            split.setSizes([420, 560])
+            split.setSizes([400, 520])
             self._main_split = split
+
+            content = QWidget()
+            content_l = QVBoxLayout(content)
+            content_l.setContentsMargins(0, 0, 0, 0)
+            content_l.addWidget(split, 1)
+
+            scroll = QScrollArea()
+            scroll.setWidgetResizable(True)
+            scroll.setFrameShape(QFrame.Shape.NoFrame)
+            scroll.setHorizontalScrollBarPolicy(
+                Qt.ScrollBarPolicy.ScrollBarAsNeeded
+            )
+            scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+            scroll.setWidget(content)
 
             root = QVBoxLayout(self)
             root.setContentsMargins(16, 12, 16, 12)
             root.addLayout(top)
-            root.addWidget(split, 1)
+            root.addWidget(scroll, 1)
 
             self.site_combo.currentIndexChanged.connect(self._on_site_combo_changed)
             self._syncing_shell = False

@@ -106,7 +106,8 @@ def run_gui(db_path: str | None = None) -> int:
             self.archive = archive
             self.db_path = db
             self.setWindowTitle("AstroCitizen")
-            self.resize(1180, 760)
+            self.setMinimumSize(720, 520)
+            self._fit_to_available_screen()
 
             outer = QWidget()
             outer_l = QVBoxLayout(outer)
@@ -339,6 +340,36 @@ def run_gui(db_path: str | None = None) -> int:
                     self.configurar.tabs.setCurrentIndex(i)
                     break
             self.help_panel.select_topic(topic)
+
+        def _fit_to_available_screen(self) -> None:
+            """Ajusta a janela a availableGeometry (evita cortar barra de tarefas)."""
+            app = QApplication.instance()
+            screen = app.primaryScreen() if app is not None else None
+            if screen is None:
+                self.resize(1100, 700)
+                return
+            ag = screen.availableGeometry()
+            margin = 32
+            target_w = min(1180, ag.width() - margin)
+            target_h = min(760, ag.height() - margin)
+            # Em monitores baixos, usar quase toda a altura util
+            if ag.height() < 800:
+                target_h = max(520, ag.height() - margin)
+            if ag.width() < 1280:
+                target_w = max(720, ag.width() - margin)
+            target_w = max(self.minimumWidth(), min(target_w, ag.width() - 8))
+            target_h = max(self.minimumHeight(), min(target_h, ag.height() - 8))
+            self.resize(target_w, target_h)
+            frame = self.frameGeometry()
+            frame.moveCenter(ag.center())
+            self.move(frame.topLeft())
+
+        def showEvent(self, event: Any) -> None:  # noqa: N802
+            super().showEvent(event)
+            # Re-centrar na primeira exibicao se ainda sair do ecra
+            if not getattr(self, "_fitted_once", False):
+                self._fitted_once = True
+                self._fit_to_available_screen()
 
         def _on_night_vision(self, enabled: bool) -> None:
             self._apply_night_vision(bool(enabled))
