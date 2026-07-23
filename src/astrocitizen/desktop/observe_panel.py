@@ -1,4 +1,4 @@
-"""Painel Observar: Solar (PO-E03) + Log visual (PO-F03)."""
+"""Painel Observar: Solar (PO-E03) + Log visual (PO-F03) + Duplas (PO-G01)."""
 
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ def build_observe_dashboard() -> type:
     from astrocitizen.adapters.fs import LocalArtifactStore
     from astrocitizen.analysis import CountSunspots
     from astrocitizen.contribution.solar import ExportSolarReport
-    from astrocitizen.observatory import LogVisualObservation
+    from astrocitizen.observatory import LogDoubleMeasure, LogVisualObservation
     from astrocitizen.shared.errors import DomainError
     from astrocitizen.shared.paths import default_artifacts_root
 
@@ -49,7 +49,7 @@ def build_observe_dashboard() -> type:
 
             root = QVBoxLayout(self)
             root.setContentsMargins(16, 12, 16, 12)
-            title = QLabel("Observar — Solar / Visual")
+            title = QLabel("Observar — Solar / Visual / Duplas")
             title.setObjectName("pageTitle")
             root.addWidget(title)
 
@@ -64,12 +64,19 @@ def build_observe_dashboard() -> type:
             self.tabs = QTabWidget()
             self.tabs.addTab(self._tab_solar(), "Solar (PO-E03)")
             self.tabs.addTab(self._tab_visual(), "Log visual (PO-F03)")
+            self.tabs.addTab(self._tab_double(), "Duplas (PO-G01)")
             root.addWidget(self.tabs)
 
             self.log = QTextEdit()
             self.log.setReadOnly(True)
             self.log.setMaximumHeight(140)
             root.addWidget(self.log)
+
+        def focus_tab(self, name: str) -> None:
+            for i in range(self.tabs.count()):
+                if self.tabs.tabText(i) == name:
+                    self.tabs.setCurrentIndex(i)
+                    return
 
         def _workspace(self):
             ws = self.archive.list_workspaces()
@@ -103,15 +110,18 @@ def build_observe_dashboard() -> type:
             refill(self.v_site, sites, lambda s: s.name)
             refill(self.v_prog, progs, lambda p: f"{p.template_id} · {p.name}")
             refill(self.v_target, targets, lambda t: t.designation)
+            refill(self.d_site, sites, lambda s: s.name)
+            refill(self.d_prog, progs, lambda p: f"{p.template_id} · {p.name}")
+            refill(self.d_target, targets, lambda t: t.designation)
 
         def set_shell_context(
             self, *, site_id: object = None, program_id: object = None
         ) -> None:
             from astrocitizen.desktop.widgets import select_combo_data
 
-            for combo in (self.s_site, self.v_site):
+            for combo in (self.s_site, self.v_site, self.d_site):
                 select_combo_data(combo, site_id)
-            for combo in (self.s_prog, self.v_prog):
+            for combo in (self.s_prog, self.v_prog, self.d_prog):
                 select_combo_data(combo, program_id)
 
         def _tab_solar(self) -> QWidget:
@@ -206,6 +216,74 @@ def build_observe_dashboard() -> type:
             form.addRow("Alvo (opcional)", self.v_target)
             btn = QPushButton("Guardar log visual")
             btn.clicked.connect(self._run_visual)
+            form.addRow(btn)
+            return w
+
+        def _tab_double(self) -> QWidget:
+            w = QWidget()
+            form = QFormLayout(w)
+            hint = QLabel(
+                "PA (graus) e separacao (arcsec) manuais — micrometro ou "
+                "medida em imagem. Imagem opcional (sem auto-medida)."
+            )
+            hint.setObjectName("emptyState")
+            hint.setWordWrap(True)
+            form.addRow(hint)
+            self.d_object = QLineEdit()
+            self.d_object.setPlaceholderText("ex.: WDS 04184+2135 / Castor")
+            self.d_pa = QDoubleSpinBox()
+            self.d_pa.setRange(0.0, 359.999)
+            self.d_pa.setDecimals(2)
+            self.d_pa.setValue(0.0)
+            self.d_sep = QDoubleSpinBox()
+            self.d_sep.setRange(0.001, 1e4)
+            self.d_sep.setDecimals(3)
+            self.d_sep.setValue(1.0)
+            self.d_method = QComboBox()
+            self.d_method.addItem("Micrometro", "micrometer")
+            self.d_method.addItem("Imagem (manual)", "imaging_manual")
+            self.d_method.addItem("Outro", "other")
+            self.d_mag1 = QDoubleSpinBox()
+            self.d_mag1.setRange(-5.0, 25.0)
+            self.d_mag1.setDecimals(2)
+            self.d_mag1.setSpecialValueText("(sem)")
+            self.d_mag1.setValue(-5.0)
+            self.d_mag2 = QDoubleSpinBox()
+            self.d_mag2.setRange(-5.0, 25.0)
+            self.d_mag2.setDecimals(2)
+            self.d_mag2.setSpecialValueText("(sem)")
+            self.d_mag2.setValue(-5.0)
+            self.d_notes = QLineEdit()
+            self.d_image = QLineEdit()
+            browse = QPushButton("Ficheiro...")
+            browse.setObjectName("secondaryBtn")
+            browse.clicked.connect(self._browse_double)
+            irow = QHBoxLayout()
+            irow.addWidget(self.d_image, 1)
+            irow.addWidget(browse)
+            iwrap = QWidget()
+            iwrap.setLayout(irow)
+            self.d_observer = QLineEdit("AstroCitizen")
+            self.d_when = QLineEdit()
+            self.d_when.setPlaceholderText("UTC ISO (vazio = agora)")
+            self.d_site = QComboBox()
+            self.d_prog = QComboBox()
+            self.d_target = QComboBox()
+            form.addRow("Objecto / WDS", self.d_object)
+            form.addRow("PA deg", self.d_pa)
+            form.addRow("Sep arcsec", self.d_sep)
+            form.addRow("Metodo", self.d_method)
+            form.addRow("Mag 1", self.d_mag1)
+            form.addRow("Mag 2", self.d_mag2)
+            form.addRow("Notes", self.d_notes)
+            form.addRow("Imagem", iwrap)
+            form.addRow("Observador", self.d_observer)
+            form.addRow("Epoch UTC", self.d_when)
+            form.addRow("Site", self.d_site)
+            form.addRow("Programa", self.d_prog)
+            form.addRow("Alvo (opcional)", self.d_target)
+            btn = QPushButton("Guardar medida dupla")
+            btn.clicked.connect(self._run_double)
             form.addRow(btn)
             return w
 
@@ -323,6 +401,60 @@ def build_observe_dashboard() -> type:
                 f"at={product.summary.get('observed_at_utc')}"
             )
             self.v_desc.clear()
+            if self.on_changed:
+                self.on_changed()
+
+        def _browse_double(self) -> None:
+            path, _ = QFileDialog.getOpenFileName(
+                self,
+                "Imagem dupla",
+                "",
+                "FITS/Image (*.fits *.fit *.fts *.png *.jpg *.jpeg);;All (*)",
+            )
+            if path:
+                self.d_image.setText(path)
+
+        def _run_double(self) -> None:
+            ws = self._workspace()
+            if ws is None:
+                return
+            obj = self.d_object.text().strip()
+            tgt = self.d_target.currentData()
+            if not obj and tgt is not None:
+                t = self.archive.get_target(tgt)
+                obj = t.designation if t else ""
+            m1 = float(self.d_mag1.value())
+            m2 = float(self.d_mag2.value())
+            image_txt = self.d_image.text().strip()
+            image_path = Path(image_txt) if image_txt else None
+            store = LocalArtifactStore(self.artifacts_root)
+            try:
+                product = LogDoubleMeasure(self.archive, store).execute(
+                    workspace_id=ws.id,
+                    object_name=obj,
+                    pa_deg=float(self.d_pa.value()),
+                    sep_arcsec=float(self.d_sep.value()),
+                    epoch_utc=self.d_when.text().strip() or None,
+                    method=str(self.d_method.currentData() or "micrometer"),
+                    mag_primary=None if m1 <= -5.0 else m1,
+                    mag_secondary=None if m2 <= -5.0 else m2,
+                    notes=self.d_notes.text().strip(),
+                    image_path=image_path,
+                    site_id=self.d_site.currentData(),
+                    program_id=self.d_prog.currentData(),
+                    target_id=tgt,
+                    observer=self.d_observer.text().strip() or "AstroCitizen",
+                )
+            except DomainError as exc:
+                QMessageBox.critical(self, "Duplas", str(exc))
+                return
+            self._append(
+                f"double_measure product={product.id}  "
+                f"object={product.summary.get('object')}  "
+                f"pa={product.summary.get('pa_deg')}  "
+                f"sep={product.summary.get('sep_arcsec')}  "
+                f"at={product.summary.get('epoch_utc')}"
+            )
             if self.on_changed:
                 self.on_changed()
 

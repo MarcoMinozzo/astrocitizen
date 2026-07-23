@@ -44,6 +44,7 @@ from astrocitizen.observatory import (
     ImportRadioSpectrum,
     ImportRadioTimeseries,
     ImportSpeckleCube,
+    LogDoubleMeasure,
     LogVisualObservation,
     RegisterOccultationTiming,
 )
@@ -689,6 +690,36 @@ def _cmd_observe_log_visual(args: argparse.Namespace) -> int:
     print(
         f"product={product.id}\tobject={product.summary.get('object')}\t"
         f"at={product.summary.get('observed_at_utc')}"
+    )
+    archive.close()
+    return 0
+
+
+def _cmd_observe_log_double(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    store = LocalArtifactStore(Path(args.artifacts))
+    image = Path(args.image) if args.image else None
+    product = LogDoubleMeasure(archive, store).execute(
+        workspace_id=ws.id,
+        object_name=args.object,
+        pa_deg=args.pa,
+        sep_arcsec=args.sep,
+        epoch_utc=args.when,
+        method=args.method,
+        mag_primary=args.mag1,
+        mag_secondary=args.mag2,
+        notes=args.notes or "",
+        image_path=image,
+        site_id=UUID(args.site) if args.site else None,
+        program_id=UUID(args.program) if args.program else None,
+        target_id=UUID(args.target) if args.target else None,
+        observer=args.observer,
+    )
+    print(
+        f"product={product.id}\tobject={product.summary.get('object')}\t"
+        f"pa={product.summary.get('pa_deg')}\tsep={product.summary.get('sep_arcsec')}\t"
+        f"at={product.summary.get('epoch_utc')}"
     )
     archive.close()
     return 0
@@ -1551,6 +1582,27 @@ def build_parser() -> argparse.ArgumentParser:
     p_ov.add_argument("--program", default=None, help="UUID programa")
     p_ov.add_argument("--target", default=None, help="UUID alvo")
     p_ov.set_defaults(func=_cmd_observe_log_visual)
+    p_od = obs_sub.add_parser("log-double", help="Medida dupla PO-G01 (PA/sep)")
+    _add_db_arg(p_od)
+    p_od.add_argument("--object", required=True, help="WDS / designacao")
+    p_od.add_argument("--pa", type=float, required=True, help="PA degrees [0,360)")
+    p_od.add_argument("--sep", type=float, required=True, help="sep arcsec > 0")
+    p_od.add_argument(
+        "--method",
+        default="micrometer",
+        choices=("micrometer", "imaging_manual", "other"),
+    )
+    p_od.add_argument("--mag1", type=float, default=None, help="mag primaria")
+    p_od.add_argument("--mag2", type=float, default=None, help="mag secundaria")
+    p_od.add_argument("--notes", default="")
+    p_od.add_argument("--image", default=None, help="FITS/imagem opcional")
+    p_od.add_argument("--observer", default="AstroCitizen")
+    p_od.add_argument("--when", default=None, help="UTC ISO epoch")
+    p_od.add_argument("--site", default=None)
+    p_od.add_argument("--program", default=None)
+    p_od.add_argument("--target", default=None)
+    p_od.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_od.set_defaults(func=_cmd_observe_log_double)
     p_oo = obs_sub.add_parser("occultation", help="Contactos D/R IOTA (PO-D01)")
     _add_db_arg(p_oo)
     p_oo.add_argument("--event", required=True, help="EventID")

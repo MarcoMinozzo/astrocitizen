@@ -133,7 +133,7 @@ Legenda **Estado**: `feito` / `parcial` / `desenho` (ainda não na UI).
 
 | PO | Como o utilizador fornece | Canais | Payload mínimo | Produto | Estado |
 |----|---------------------------|--------|----------------|---------|--------|
-| **G01** Duplas | Imagem **ou** micrómetro (ângulo/separação manual) | IN-IMP, IN-LOG | PA, sep, epoch | double_measure | desenho |
+| **G01** Duplas | Imagem **ou** micrómetro (ângulo/separação manual) | IN-IMP, IN-LOG | PA, sep, epoch | double_measure | ✅ `observe log-double` |
 | **G02** Speckle | Cubo/speckle frames | IN-IMP | cube | speckle product | ✅ `import speckle` |
 | **H01** Polarimetria | Frames em ângulos de polarizador | IN-CAP, IN-IMP | set polar | Stokes table | ✅ `import polar` |
 
@@ -228,7 +228,7 @@ Em vez de 50 apps, **7 superfícies**:
 2. **PO-* escolhe canais**, não inventa formato de BD novo — reutiliza Observation / Artifact / AnalysisProduct.  
 3. **Produto mínimo** (RN-043) valida se a entrada foi suficiente antes do export.  
 4. **Safety solar** é entrada obrigatória (já no CLI sunspots); GUI deve espelhar.  
-5. Epic de canais prioritários (§7) fechado; AC-161 (rádio I02–I04) entrada ✅; próximo: reduções/exports e AC-152 Duplas.
+5. Epic de canais prioritários (§7) fechado; AC-161 e AC-152 (Duplas) entrada ✅; próximo: AC-190 KB / polish ContextBar.
 
 ---
 

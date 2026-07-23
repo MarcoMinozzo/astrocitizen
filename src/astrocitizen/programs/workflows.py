@@ -228,6 +228,17 @@ P1_WORKFLOWS: dict[str, dict] = {
         "analysis": "echelle",
         "export": "echelle_orders",
     },
+    "PO-G01": {
+        "name": "Medicao de estrelas duplas",
+        "steps": [
+            "plan_targets",
+            "log_double_measure",
+            "review_notes",
+        ],
+        "networks": ["WDS"],
+        "analysis": "double_measure",
+        "export": "double_measure",
+    },
     "PO-G02": {
         "name": "Speckle interferometry",
         "steps": [

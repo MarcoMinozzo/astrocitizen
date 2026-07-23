@@ -259,7 +259,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 |----|------|-----|-----|-----|-------|
 | AC-150 | Onda P2 completa (ver PROGRAMAS_OBSERVACIONAIS) | P2 | XL | E8–E14 | |
 | AC-151 | Microlensing PO-A06 | P2 | L | E9 | |
-| AC-152 | Duplas PO-G01 | P2 | M | E6 | |
+| AC-152 | Duplas PO-G01 | P2 | M | E6 | ✅ `observe log-double` · produto double_measure · GUI Observar |
 | AC-153 | Onda P3 (rápido, asteroseis, visual, rádio prep) | P3 | XL | | |
 | AC-154 | Onda P4 (echelle, speckle, polarimetria) | P4 | XL | | ✅ entrada ENTRADA#7; redução profunda aberta |
 

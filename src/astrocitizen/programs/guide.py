@@ -185,6 +185,12 @@ STEP_NAV: dict[str, dict[str, str]] = {
         "hub_tab": "Observar",
         "label": "Log visual",
     },
+    "log_double_measure": {
+        "area": "Observatorio",
+        "hub_tab": "Observar",
+        "analyze_tab": "Duplas (PO-G01)",
+        "label": "Medida dupla",
+    },
     "review_notes": {
         "area": "Arquivo",
         "label": "Arquivo",

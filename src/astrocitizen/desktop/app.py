@@ -393,6 +393,10 @@ def run_gui(db_path: str | None = None) -> int:
                 self._select_tab_by_name(self.observatorio.tabs, hub_tab)
                 if hub_tab == "Importar" and "radio" in (analyze_tab or "").lower():
                     self._select_tab_by_name(self.import_hub.tabs, "Radio")
+                if hub_tab == "Observar" and analyze_tab:
+                    fn = getattr(self.observe_panel, "focus_tab", None)
+                    if callable(fn):
+                        fn(analyze_tab)
             elif area == "Noite":
                 self._select_tab_by_name(self.noite_hub.tabs, hub_tab)
             elif area == "Configurar":

@@ -28,6 +28,7 @@ from astrocitizen.observatory.specialties import (
     ImportPolarimetrySet,
     ImportSpeckleCube,
 )
+from astrocitizen.observatory.double_log import LogDoubleMeasure
 from astrocitizen.observatory.visual_log import LogVisualObservation
 
 __all__ = [
@@ -41,6 +42,7 @@ __all__ = [
     "ImportRadioSpectrum",
     "ImportRadioTimeseries",
     "ImportSpeckleCube",
+    "LogDoubleMeasure",
     "LogVisualObservation",
     "ObservationRecord",
     "RegisterOccultationTiming",
