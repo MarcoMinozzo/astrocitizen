@@ -49,6 +49,7 @@
 | [SPRINT_AC193_KB_FTS.md](SPRINT_AC193_KB_FTS.md) | E19 AC-193 FTS5 + `knowledge search` |
 | [SPRINT_AC194_KB_RETRIEVER.md](SPRINT_AC194_KB_RETRIEVER.md) | E19 AC-194 RetrieverPort + filtros |
 | [SPRINT_AC195_KB_EMBED.md](SPRINT_AC195_KB_EMBED.md) | E19 AC-195 embeddings locais + RRF |
+| [SPRINT_AC197_KB_MCP.md](SPRINT_AC197_KB_MCP.md) | E19 AC-197 MCP kb_search/get/list |
 | [SPRINT_AC141_D011.md](SPRINT_AC141_D011.md) | AC-141 validacao redes + D-011 ferramentas imagem |
 | [SPRINT_R2_REVISAR_CAMPOS.md](SPRINT_R2_REVISAR_CAMPOS.md) | R2: Revisar campos atlas (AAVSO/MPC) |
 | [SPRINT_EXP_WDS.md](SPRINT_EXP_WDS.md) | EXP-WDS: export + Revisar campos (PO-G01) |

@@ -17,7 +17,7 @@
 ## Fora deste slice
 
 - `multilingual-e5-small` / sentence-transformers (extra opcional futuro)
-- MCP (AC-197)
+- MCP (AC-197) — ver [SPRINT_AC197_KB_MCP.md](SPRINT_AC197_KB_MCP.md)
 - Gold citation eval (AC-199)
 
 ## DoD

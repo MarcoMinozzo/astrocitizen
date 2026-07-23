@@ -1794,6 +1794,89 @@ def _cmd_knowledge_sources(args: argparse.Namespace) -> int:
     return 0 if sources else 1
 
 
+def _cmd_knowledge_mcp_tools(args: argparse.Namespace) -> int:
+    from astrocitizen.knowledge.mcp_tools import TOOL_DEFS
+
+    print(f"tools\t{len(TOOL_DEFS)}")
+    for t in TOOL_DEFS:
+        print(f"tool\t{t['name']}\t{t['description'][:80]}")
+    return 0
+
+
+def _cmd_knowledge_mcp_call(args: argparse.Namespace) -> int:
+    import json
+
+    from astrocitizen.adapters.sqlite.hybrid_retriever import HybridRetriever
+    from astrocitizen.knowledge.mcp_tools import KbMcpServer, RateLimiter
+
+    raw = args.arguments or "{}"
+    try:
+        arguments = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        print(f"error\tinvalid_json\t{exc}")
+        return 1
+    if not isinstance(arguments, dict):
+        print("error\targuments_must_be_object")
+        return 1
+    archive = _open_archive(Path(args.db))
+    archive.migrate()
+    try:
+        server = KbMcpServer(
+            HybridRetriever(archive),
+            rate_limiter=RateLimiter(
+                max_calls=int(args.rate_limit), window_s=float(args.rate_window)
+            ),
+        )
+        result = server.call_tool(str(args.tool), arguments)
+    finally:
+        archive.close()
+    print(json.dumps(result, ensure_ascii=False, indent=2))
+    return 0 if result.get("ok") else 1
+
+
+def _cmd_knowledge_mcp_serve(args: argparse.Namespace) -> int:
+    """Servidor MCP stdio minimo (JSON-RPC linha a linha)."""
+    import json
+    import sys
+
+    from astrocitizen.adapters.sqlite.hybrid_retriever import HybridRetriever
+    from astrocitizen.knowledge.mcp_tools import (
+        KbMcpServer,
+        RateLimiter,
+        handle_mcp_jsonrpc,
+    )
+
+    archive = _open_archive(Path(args.db))
+    archive.migrate()
+    server = KbMcpServer(
+        HybridRetriever(archive),
+        rate_limiter=RateLimiter(
+            max_calls=int(args.rate_limit), window_s=float(args.rate_window)
+        ),
+    )
+    try:
+        for line in sys.stdin:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                message = json.loads(line)
+            except json.JSONDecodeError:
+                err = {
+                    "jsonrpc": "2.0",
+                    "id": None,
+                    "error": {"code": -32700, "message": "Parse error"},
+                }
+                print(json.dumps(err), flush=True)
+                continue
+            response = handle_mcp_jsonrpc(server, message)
+            if response is not None:
+                print(json.dumps(response, ensure_ascii=False), flush=True)
+    finally:
+        archive.close()
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="astrocitizen",
@@ -2566,6 +2649,26 @@ def build_parser() -> argparse.ArgumentParser:
     _add_db_arg(p_kb_src)
     p_kb_src.add_argument("--tier", default=None)
     p_kb_src.set_defaults(func=_cmd_knowledge_sources)
+    p_kb_mt = kb_sub.add_parser("mcp-tools", help="Listar tools MCP KB (AC-197)")
+    p_kb_mt.set_defaults(func=_cmd_knowledge_mcp_tools)
+    p_kb_mc = kb_sub.add_parser("mcp-call", help="Invocar tool MCP KB uma vez")
+    _add_db_arg(p_kb_mc)
+    p_kb_mc.add_argument("tool", help="kb_search | kb_get_chunk | kb_list_sources")
+    p_kb_mc.add_argument(
+        "--arguments",
+        default="{}",
+        help='JSON object, ex. \'{"query":"AC-106","limit":3}\'',
+    )
+    p_kb_mc.add_argument("--rate-limit", type=int, default=60)
+    p_kb_mc.add_argument("--rate-window", type=float, default=60.0)
+    p_kb_mc.set_defaults(func=_cmd_knowledge_mcp_call)
+    p_kb_ms = kb_sub.add_parser(
+        "mcp-serve", help="Servidor MCP stdio (JSON-RPC linha a linha)"
+    )
+    _add_db_arg(p_kb_ms)
+    p_kb_ms.add_argument("--rate-limit", type=int, default=60)
+    p_kb_ms.add_argument("--rate-window", type=float, default=60.0)
+    p_kb_ms.set_defaults(func=_cmd_knowledge_mcp_serve)
 
     return parser
 

@@ -2,7 +2,7 @@
 
 Scaffold interno para RAG futuro. **Nao** e indice de FITS nem dados do observador.
 
-**Estado:** KB-0…KB-4 ✅ (FTS + RetrieverPort + embeddings RRF) · MCP AC-197 / Ajuda AC-196 pendentes.
+**Estado:** KB-0…KB-4 ✅ · **AC-197** MCP read-only ✅ · Ajuda AC-196 / gold QA AC-199 pendentes.
 
 ## Layout
 
@@ -27,7 +27,7 @@ knowledge-base/
 | KB-0 scaffold | ✅ AC-190 |
 | KB-1 conteudo T3 | ✅ AC-192 (51 chunks) |
 | KB-2 FTS | ✅ AC-193 |
-| KB-3 Retriever/MCP | ✅ RetrieverPort AC-194 · MCP AC-197 aberto |
+| KB-3 Retriever/MCP | ✅ AC-194 + AC-197 |
 | KB-4 embeddings | ✅ AC-195 (hashing-ngram + RRF) |
 | KB-5 produto | aberto |
 
