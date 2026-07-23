@@ -17,7 +17,7 @@ A shell cresceu por sprint de entrada; U0–U4 reorganizaram IA, hubs e Analisar
 
 | Nav (6 areas) | Conteudo | Nota |
 |---------------|----------|------|
-| Noite | Meteo/radar + tab Planos | Hub |
+| Noite | Meteo/radar + **carta do plano L0** (AC-079) + tab Planos | Hub |
 | Observatorio | Programa activo \| Sessao \| Importar \| Observar \| Timing | Guia PO-* |
 | Analisar | Fotometria \| Espectro \| Blink/Astrom (+ plate-solve + medida) \| Viewer \| Curvas | Bridges AC-110/111 GUI |
 | Contribuir | Redes | |
@@ -65,3 +65,4 @@ Mantidos: 4 modos WORKFLOWS, 7 superficies ENTRADA, ops first, CLI=espelho, tema
 | 1.7 | 2026-07-22 | RN-120/121 i18n pt/es/en + Ajuda in-app |
 | 1.8 | 2026-07-22 | Medida astrometria GUI (x,y → RA/Dec) |
 | 1.9 | 2026-07-22 | Arquivo: abrir artefacto + export directo |
+| 2.0 | 2026-07-23 | Noite: carta do plano L0 (AC-079; nao planetario) |

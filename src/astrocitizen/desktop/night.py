@@ -180,6 +180,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
         QLabel,
         QMessageBox,
         QPushButton,
+        QSlider,
         QSplitter,
         QTableWidget,
         QTableWidgetItem,
@@ -190,8 +191,16 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
 
     from astrocitizen.adapters.meteo import ManualMeteo, OpenMeteo
     from astrocitizen.adapters.sky import AstropyEphemeris
+    from astrocitizen.desktop.sky_chart import build_sky_chart_widget
     from astrocitizen.desktop.theme import viability_badge
     from astrocitizen.planning import GenerateDailyPlan
+    from astrocitizen.planning.sky_projection import (
+        clamp_utc_to_night,
+        interpolate_night_utc,
+        load_sky_chart_from_archive,
+        night_fraction_for_utc,
+        now_utc_iso,
+    )
     from astrocitizen.shared.paths import default_artifacts_root
 
     class _NightWorker(QObject):
@@ -233,6 +242,10 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             self._workspace_id: UUID | None = None
             self._thread: QThread | None = None
             self._worker: _NightWorker | None = None
+            self._night_window: dict[str, str] | None = None
+            self._sky_utc: str | None = None
+            self._updating_slider = False
+            self._eph = AstropyEphemeris()
 
             top = QHBoxLayout()
             self.site_combo = QComboBox()
@@ -277,10 +290,31 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             self.plan_label = QLabel("plano: -")
             self.plan_label.setWordWrap(True)
 
+            SkyChartWidget = build_sky_chart_widget()
+            self.sky_chart = SkyChartWidget()
+            self.sky_chart.markerSelected.connect(self._on_sky_marker)
+            self.sky_detail = QLabel(
+                "Carta do plano (L0): alvos do diario + Sol/Lua — nao e planetario."
+            )
+            self.sky_detail.setObjectName("emptyState")
+            self.sky_detail.setWordWrap(True)
+            self.sky_time_label = QLabel("hora carta: -")
+            self.sky_slider = QSlider(Qt.Orientation.Horizontal)
+            self.sky_slider.setRange(0, 1000)
+            self.sky_slider.setValue(0)
+            self.sky_slider.setEnabled(False)
+            self.sky_slider.valueChanged.connect(self._on_sky_slider)
+            self.sky_now_btn = QPushButton("Agora")
+            self.sky_now_btn.setObjectName("secondaryBtn")
+            self.sky_now_btn.clicked.connect(self._sky_now)
+            sky_time_row = QHBoxLayout()
+            sky_time_row.addWidget(self.sky_time_label, 1)
+            sky_time_row.addWidget(self.sky_now_btn)
+
             self.radar_label = QLabel("Radar: clique Atualizar")
             self.radar_label.setObjectName("radarPane")
             self.radar_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.radar_label.setMinimumSize(320, 320)
+            self.radar_label.setMinimumSize(280, 220)
             self.radar_attr = QLabel("")
             self.radar_attr.setWordWrap(True)
             self.radar_attr.setTextFormat(Qt.TextFormat.RichText)
@@ -294,11 +328,27 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             left_l.addWidget(self.hours, 1)
             left_l.addWidget(self.plan_label)
 
-            right = QWidget()
-            right_l = QVBoxLayout(right)
-            right_l.addWidget(QLabel("Radar (RainViewer)"))
-            right_l.addWidget(self.radar_label, 1)
-            right_l.addWidget(self.radar_attr)
+            sky_pane = QWidget()
+            sky_l = QVBoxLayout(sky_pane)
+            sky_l.setContentsMargins(0, 0, 0, 0)
+            sky_l.addWidget(QLabel("Carta do plano"))
+            sky_l.addWidget(self.sky_chart, 1)
+            sky_l.addLayout(sky_time_row)
+            sky_l.addWidget(self.sky_slider)
+            sky_l.addWidget(self.sky_detail)
+
+            radar_pane = QWidget()
+            radar_l = QVBoxLayout(radar_pane)
+            radar_l.setContentsMargins(0, 0, 0, 0)
+            radar_l.addWidget(QLabel("Radar (RainViewer)"))
+            radar_l.addWidget(self.radar_label, 1)
+            radar_l.addWidget(self.radar_attr)
+
+            right = QSplitter(Qt.Orientation.Vertical)
+            right.addWidget(sky_pane)
+            right.addWidget(radar_pane)
+            right.setStretchFactor(0, 3)
+            right.setStretchFactor(1, 2)
 
             split = QSplitter()
             split.addWidget(left)
@@ -427,6 +477,100 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                 fetch_plan_status(self.archive, self._workspace_id, site.id, night_date)
             )
 
+        def _on_sky_marker(self, marker: Any) -> None:
+            if marker is None:
+                self.sky_detail.setText(
+                    "Carta do plano (L0): clique num alvo para detalhe."
+                )
+                return
+            self.sky_detail.setText(
+                f"{marker.label}  alt={marker.alt_deg:.1f}°  az={marker.az_deg:.1f}°  "
+                f"estado={marker.state}"
+                + (f"  status={marker.status}" if marker.status else "")
+            )
+            if marker.block_id is not None:
+                self.plan_label.setText(
+                    f"{self.plan_label.text()}  ·  seleccionado={marker.label}"
+                )
+
+        def _on_sky_slider(self, value: int) -> None:
+            if self._updating_slider or not self._night_window:
+                return
+            frac = value / 1000.0
+            self._sky_utc = interpolate_night_utc(
+                self._night_window["start_utc"],
+                self._night_window["end_utc"],
+                frac,
+            )
+            self._refresh_sky_chart()
+
+        def _sky_now(self) -> None:
+            if not self._night_window:
+                return
+            utc = clamp_utc_to_night(
+                now_utc_iso(),
+                self._night_window["start_utc"],
+                self._night_window["end_utc"],
+            )
+            self._sky_utc = utc
+            frac = night_fraction_for_utc(
+                self._night_window["start_utc"],
+                self._night_window["end_utc"],
+                utc,
+            )
+            self._updating_slider = True
+            self.sky_slider.setValue(int(round(frac * 1000)))
+            self._updating_slider = False
+            self._refresh_sky_chart()
+
+        def _refresh_sky_chart(self) -> None:
+            site = self._current_site()
+            if (
+                site is None
+                or self._workspace_id is None
+                or not self._sky_utc
+                or not self._night_window
+            ):
+                self.sky_chart.set_model(None)
+                self.sky_time_label.setText("hora carta: -")
+                return
+            night_date = self.date_edit.date().toString("yyyy-MM-dd")
+            try:
+                model = load_sky_chart_from_archive(
+                    self.archive,
+                    workspace_id=self._workspace_id,
+                    site=site,
+                    night_date=night_date,
+                    utc_iso=self._sky_utc,
+                    ephemeris=self._eph,
+                    night_window=self._night_window,
+                )
+            except Exception as exc:  # noqa: BLE001 - UI boundary
+                self.sky_detail.setText(f"erro carta: {exc}")
+                return
+            self.sky_chart.set_model(model)
+            self.sky_time_label.setText(f"hora carta: {self._sky_utc}")
+
+        def _init_sky_from_night(self, night: dict[str, str]) -> None:
+            self._night_window = {
+                "start_utc": night["start_utc"],
+                "end_utc": night["end_utc"],
+            }
+            self.sky_slider.setEnabled(True)
+            utc = clamp_utc_to_night(
+                now_utc_iso(),
+                night["start_utc"],
+                night["end_utc"],
+            )
+            self._sky_utc = utc
+            frac = night_fraction_for_utc(
+                night["start_utc"], night["end_utc"], utc
+            )
+            self._updating_slider = True
+            self.sky_slider.setValue(int(round(frac * 1000)))
+            self._updating_slider = False
+            self._refresh_sky_chart()
+
         def _set_busy(self, busy: bool) -> None:
             self.refresh_btn.setEnabled(not busy)
             self.plan_btn.setEnabled(not busy)
@@ -490,6 +634,9 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                 self._update_plan_label(site, night_date)
             else:
                 self.plan_label.setText("plano: -")
+            night = payload.get("night") or {}
+            if night.get("start_utc") and night.get("end_utc"):
+                self._init_sky_from_night(night)
             meta = payload.get("radar_meta") or {}
             pix = QPixmap(str(meta.get("image_path") or ""))
             if pix.isNull():
@@ -529,6 +676,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                     night_date=night_date,
                 )
                 self._update_plan_label(site, night_date)
+                self._refresh_sky_chart()
                 QMessageBox.information(
                     self,
                     "Plano",

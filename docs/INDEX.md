@@ -54,7 +54,7 @@
 | [SPRINT_AC198_KB_GLOSSARY.md](SPRINT_AC198_KB_GLOSSARY.md) | E19 AC-198 glossario → chunks + MCP |
 | [SPRINT_AC199_KB_GOLD.md](SPRINT_AC199_KB_GOLD.md) | E19 AC-199 gold QA citation rate |
 | [SPRINT_AC200_SPECTRUM_RAG.md](SPRINT_AC200_SPECTRUM_RAG.md) | E19 AC-200 spectrum explain + RAG |
-| [SPRINT_AC079_SKY_MAP_L0.md](SPRINT_AC079_SKY_MAP_L0.md) | AC-079 carta do céu L0 (proposto; painel Noite) |
+| [SPRINT_AC079_SKY_MAP_L0.md](SPRINT_AC079_SKY_MAP_L0.md) | AC-079 carta do céu L0 no painel Noite |
 | [SPRINT_AC141_D011.md](SPRINT_AC141_D011.md) | AC-141 validacao redes + D-011 ferramentas imagem |
 | [SPRINT_R2_REVISAR_CAMPOS.md](SPRINT_R2_REVISAR_CAMPOS.md) | R2: Revisar campos atlas (AAVSO/MPC) |
 | [SPRINT_EXP_WDS.md](SPRINT_EXP_WDS.md) | EXP-WDS: export + Revisar campos (PO-G01) |

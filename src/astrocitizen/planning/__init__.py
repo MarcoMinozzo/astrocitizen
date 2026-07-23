@@ -9,6 +9,11 @@ from astrocitizen.planning.models import (
     ObservationBlock,
     Target,
 )
+from astrocitizen.planning.sky_projection import (
+    SkyChartModel,
+    altaz_to_sky_xy,
+    build_sky_chart_model,
+)
 
 __all__ = [
     "DailyPlan",
@@ -17,5 +22,8 @@ __all__ = [
     "GenerateDailyPlan",
     "MeteoSnapshot",
     "ObservationBlock",
+    "SkyChartModel",
     "Target",
+    "altaz_to_sky_xy",
+    "build_sky_chart_model",
 ]

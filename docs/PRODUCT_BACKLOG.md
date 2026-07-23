@@ -100,7 +100,7 @@
 | AC-035 | Edição manual do diário + motivos inviável | P1 | M | AC-034 | ✅ S2 — `EditDailyPlan` + CLI |
 | AC-036 | Validação de equipamento no plano (RN-030…035) | P1 | M | AC-021, AC-034 | ✅ S2 |
 | AC-037 | Resolução de conflitos multi-programa (prioridade) | P1 | M | AC-034 | ✅ S2 |
-| AC-038 | Projecção AltAz → carta zenith/polar (API pura; UI em AC-079) | P2 | S | AC-030 | Proposto · partilhado com carta L0 |
+| AC-038 | Projecção AltAz → carta zenith/polar (API pura; UI em AC-079) | P2 | S | AC-030 | ✅ `planning/sky_projection.py` |
 
 ---
 
@@ -151,7 +151,7 @@
 | AC-072 | Telas: Sites, Equipamento, Programas | P1 | M | AC-071, E2 | ✅ CRUD Sites/Programas/Alvos + **Equipamento/Setup** |
 | AC-073 | Telas: Programa diário, Sessão, Arquivo | P1 | L | AC-071, E3, E5 | ✅ Sessao wizard IN-CAP · plano/arquivo listas |
 | AC-073a | Painel **Noite**: forecast hourly + radar + estado do plano | P1 | M | AC-071, AC-032 | ✅ + **Gerar plano** · badge VIABLE · fetch async |
-| AC-079 | Carta do céu **L0** no painel Noite (alvos do plano + Sol/Lua + limiar alt) | P2 | M | AC-030, AC-034, AC-038, AC-073a | Proposto · [SPRINT_AC079_SKY_MAP_L0.md](SPRINT_AC079_SKY_MAP_L0.md) · sem planetário/catálogo |
+| AC-079 | Carta do céu **L0** no painel Noite (alvos do plano + Sol/Lua + limiar alt) | P2 | M | AC-030, AC-034, AC-038, AC-073a | ✅ [SPRINT_AC079_SKY_MAP_L0.md](SPRINT_AC079_SKY_MAP_L0.md) · sem planetário/catálogo |
 | AC-079b | Carta L1: catálogo leve (estrelas/constelações) opt-in | P3 | M | AC-079 | Depois; cuidado D-010 / tamanho `.exe` |
 | AC-079c | Launcher L3: abrir Stellarium/KStars com site+hora+alvo | P3 | S | AC-079 | Externo (espírito D-011) |
 | AC-074 | Painel gestão multi-programa | P2 | M | AC-071, AC-022 | |

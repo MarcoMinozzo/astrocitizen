@@ -53,6 +53,39 @@ class AstropyEphemeris:
                 airmass = None
         return {"alt_deg": alt, "az_deg": az, "airmass": airmass}
 
+    def body_altitude_azimuth(
+        self,
+        *,
+        body: str,
+        latitude_deg: float,
+        longitude_deg: float,
+        elevation_m: float,
+        utc_iso: str,
+    ) -> dict[str, float | None]:
+        """AltAz de corpo solar-system (sun, moon, ...)."""
+        name = body.strip().lower()
+        if name not in {"sun", "moon", "mercury", "venus", "mars", "jupiter", "saturn"}:
+            raise DomainError(f"body desconhecido: {body}")
+        loc = EarthLocation(
+            lat=latitude_deg * u.deg,
+            lon=longitude_deg * u.deg,
+            height=elevation_m * u.m,
+        )
+        t = _parse_utc(utc_iso)
+        frame = AltAz(obstime=t, location=loc)
+        coord = get_body(name, t, location=loc)
+        altaz = coord.transform_to(frame)
+        alt = float(altaz.alt.deg)
+        az = float(altaz.az.deg)
+        airmass: float | None
+        if alt <= 0:
+            airmass = None
+        else:
+            airmass = float(altaz.secz) if alt > 5 else None
+            if airmass is not None and (airmass < 1 or airmass > 40):
+                airmass = None
+        return {"alt_deg": alt, "az_deg": az, "airmass": airmass}
+
     def night_window(
         self,
         *,
