@@ -81,7 +81,7 @@ Legenda **Estado**: `feito` / `parcial` / `desenho` (ainda não na UI).
 
 | PO | Como o utilizador fornece | Canais | Payload mínimo | Produto | Estado |
 |----|---------------------------|--------|----------------|---------|--------|
-| **B01** Slit geral | Captura/import 2D; marca trace; calib λ (linhas / lâmpada) | IN-SPEC, IN-CAP | FITS 2D + λ | `spectrum_1d` | ✅ extração AC-100; λ linear parcial |
+| **B01** Slit geral | Captura/import 2D; marca trace; calib λ (linhas / lâmpada) | IN-SPEC, IN-CAP | FITS 2D + λ | `spectrum_1d` | ✅ AC-100+101 |
 | **B02** Be/BeSS | Igual B01 + object Be + keywords BeSS | IN-SPEC | FITS 1D BSS_* | spectrum → BeSS | parcial (export) |
 | **B03** Novae/ARAS | Série de espectros no tempo | IN-SPEC | vários 1D | série espectral | desenho |
 | **B04** Class. MK | Espectro 1D + escolha de templates | IN-SPEC, IN-LOG | 1D + tipo | classificação | desenho |

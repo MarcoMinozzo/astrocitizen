@@ -41,6 +41,7 @@ def build_analyze_dashboard() -> type:
     from astrocitizen.analysis import (
         AperturePhotometry,
         BlinkDiff,
+        CalibrateWavelength,
         ExtractSpectrum1D,
         MeasureAstrometry,
         PlateSolve,
@@ -173,13 +174,20 @@ def build_analyze_dashboard() -> type:
             self.sp_auto.setChecked(True)
             self.sp_sky = QCheckBox("Subtrair ceu")
             self.sp_sky.setChecked(True)
+            self.sp_pairs = QLineEdit()
+            self.sp_pairs.setPlaceholderText("AC-101 pix:nm,pix:nm,... (opcional)")
             form.addRow("Trace Y", self.sp_trace)
             form.addRow("Half-width", self.sp_hw)
             form.addRow(self.sp_auto)
             form.addRow(self.sp_sky)
+            form.addRow("Wave pairs", self.sp_pairs)
             btn = QPushButton("Extrair espectro 1D")
             btn.clicked.connect(self._run_spectrum)
             form.addRow(btn)
+            cal_btn = QPushButton("Calibrar λ (produto em Curvas UUID)")
+            cal_btn.setObjectName("secondaryBtn")
+            cal_btn.clicked.connect(self._run_spectrum_calibrate)
+            form.addRow(cal_btn)
             return w
 
         def _tab_blink(self) -> QWidget:
@@ -432,6 +440,7 @@ def build_analyze_dashboard() -> type:
                 return
             store = LocalArtifactStore(self.artifacts_root)
             auto = bool(self.sp_auto.isChecked())
+            pairs = self.sp_pairs.text().strip() or None
             try:
                 uri = self._put_fits(path)
                 product = ExtractSpectrum1D(self.archive, store).execute(
@@ -441,6 +450,7 @@ def build_analyze_dashboard() -> type:
                     half_width=int(self.sp_hw.value()),
                     auto_trace=auto,
                     subtract_sky=bool(self.sp_sky.isChecked()),
+                    wave_pairs=pairs,
                     program_id=self._shell_program_id,
                 )
             except (DomainError, ValueError, OSError) as exc:
@@ -450,6 +460,43 @@ def build_analyze_dashboard() -> type:
                 f"spectrum={product.id}  "
                 f"trace={product.summary.get('trace_y')}  "
                 f"snr={product.summary.get('snr_est')}  "
+                f"rms_nm={product.summary.get('rms_nm')}  "
+                f"wave={product.summary.get('wave0_nm')}-{product.summary.get('wave1_nm')}nm"
+            )
+            self.cu_product.setText(str(product.id))
+            if self.on_changed:
+                self.on_changed()
+
+        def _run_spectrum_calibrate(self) -> None:
+            ws = self._workspace()
+            if ws is None:
+                return
+            pairs = self.sp_pairs.text().strip()
+            pid = self.cu_product.text().strip()
+            if not pairs:
+                QMessageBox.warning(
+                    self, "Calibrar λ", "Indique Wave pairs (pix:nm,...)."
+                )
+                return
+            if not pid:
+                QMessageBox.warning(
+                    self, "Calibrar λ", "Indique UUID do spectrum_1d (campo Curvas)."
+                )
+                return
+            store = LocalArtifactStore(self.artifacts_root)
+            try:
+                product = CalibrateWavelength(self.archive, store).execute(
+                    workspace_id=ws.id,
+                    product_id=UUID(pid),
+                    wave_pairs=pairs,
+                    program_id=self._shell_program_id,
+                )
+            except (DomainError, ValueError, OSError) as exc:
+                QMessageBox.critical(self, "Calibrar λ", str(exc))
+                return
+            self._append(
+                f"wcal={product.id}  degree={product.summary.get('degree')}  "
+                f"rms_nm={product.summary.get('rms_nm')}  "
                 f"wave={product.summary.get('wave0_nm')}-{product.summary.get('wave1_nm')}nm"
             )
             self.cu_product.setText(str(product.id))

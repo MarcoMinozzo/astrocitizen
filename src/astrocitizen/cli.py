@@ -16,6 +16,7 @@ from astrocitizen.adapters.sqlite import SqliteArchive
 from astrocitizen.analysis import (
     AperturePhotometry,
     BlinkDiff,
+    CalibrateWavelength,
     CountSunspots,
     ExtractSpectrum1D,
     InterpretSpectrum,
@@ -535,6 +536,8 @@ def _cmd_analyze_spectrum(args: argparse.Namespace) -> int:
         wave_a_nm=args.wave_a,
         pix_b=args.pix_b,
         wave_b_nm=args.wave_b,
+        wave_pairs=args.wave_pairs,
+        wave_degree=args.wave_degree,
         program_id=UUID(args.program) if args.program else None,
         objname=args.objname,
     )
@@ -543,6 +546,36 @@ def _cmd_analyze_spectrum(args: argparse.Namespace) -> int:
         f"trace={product.summary.get('trace_y')}\t"
         f"snr={product.summary.get('snr_est')}\t"
         f"sky={product.summary.get('subtract_sky')}\t"
+        f"rms_nm={product.summary.get('rms_nm')}\t"
+        f"wave={product.summary.get('wave0_nm')}-{product.summary.get('wave1_nm')}nm\t"
+        f"uri={product.parameters.get('spectrum_uri')}"
+    )
+    archive.close()
+    return 0
+
+
+def _cmd_analyze_spectrum_calibrate(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    store = LocalArtifactStore(Path(args.artifacts))
+    product = CalibrateWavelength(archive, store).execute(
+        workspace_id=ws.id,
+        fits_uri=args.fits_uri,
+        product_id=UUID(args.product) if args.product else None,
+        wave_pairs=args.wave_pairs,
+        degree=args.degree,
+        lamp_uri=args.lamp_uri,
+        catalog=args.catalog,
+        wave0_nm=args.wave0,
+        wave1_nm=args.wave1,
+        program_id=UUID(args.program) if args.program else None,
+    )
+    print(
+        f"product={product.id}\ttype={product.product_type}\t"
+        f"method={product.summary.get('method')}\t"
+        f"degree={product.summary.get('degree')}\t"
+        f"rms_nm={product.summary.get('rms_nm')}\t"
+        f"anchors={product.summary.get('n_anchors')}\t"
         f"wave={product.summary.get('wave0_nm')}-{product.summary.get('wave1_nm')}nm\t"
         f"uri={product.parameters.get('spectrum_uri')}"
     )
@@ -2395,10 +2428,45 @@ def build_parser() -> argparse.ArgumentParser:
     p_sp.add_argument("--wave-a", type=float, default=None, help="nm")
     p_sp.add_argument("--pix-b", type=float, default=None)
     p_sp.add_argument("--wave-b", type=float, default=None, help="nm")
+    p_sp.add_argument(
+        "--wave-pairs",
+        default=None,
+        help="AC-101 pares pix:nm,pix:nm,... (polinomio)",
+    )
+    p_sp.add_argument(
+        "--wave-degree",
+        type=int,
+        default=None,
+        help="grau 1..3 para --wave-pairs (default auto)",
+    )
     p_sp.add_argument("--objname", default=None)
     p_sp.add_argument("--program", default=None)
     p_sp.add_argument("--artifacts", default=str(default_artifacts_root()))
     p_sp.set_defaults(func=_cmd_analyze_spectrum)
+    p_sc = an_sub.add_parser(
+        "spectrum-calibrate",
+        help="Calibracao λ de espectro 1D (AC-101)",
+    )
+    _add_db_arg(p_sc)
+    p_sc.add_argument("--fits-uri", default=None, help="FITS 1D ciencia")
+    p_sc.add_argument("--product", default=None, help="Produto spectrum_1d")
+    p_sc.add_argument(
+        "--wave-pairs",
+        default=None,
+        help="pix:nm,pix:nm,...",
+    )
+    p_sc.add_argument("--degree", type=int, default=None, help="1..3")
+    p_sc.add_argument("--lamp-uri", default=None, help="FITS 1D lamp (mesmo n_pix)")
+    p_sc.add_argument(
+        "--catalog",
+        default="neon",
+        choices=("neon", "ne", "hg", "mercury"),
+    )
+    p_sc.add_argument("--wave0", type=float, default=None, help="seed nm (lamp)")
+    p_sc.add_argument("--wave1", type=float, default=None, help="seed nm (lamp)")
+    p_sc.add_argument("--program", default=None)
+    p_sc.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_sc.set_defaults(func=_cmd_analyze_spectrum_calibrate)
     p_sr = an_sub.add_parser(
         "spectrum-report",
         help="Interpretacao espectral (linhas / SN-ARAS / multi-epoca)",

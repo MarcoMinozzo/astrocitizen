@@ -1,7 +1,7 @@
 """Extracao espectro 1D a partir de FITS 2D (AC-100 / PO-B01).
 
 Metodo: soma espacial ao longo do trace (+ sky opcional).
-Calibracao lambda linear continua esqueleto (AC-101).
+Calibracao lambda: linear legado ou pares/polinomio (AC-101).
 """
 
 from __future__ import annotations
@@ -13,12 +13,30 @@ import numpy as np
 from astropy.io import fits
 
 from astrocitizen.adapters.fs import LocalArtifactStore
+from astrocitizen.analysis.wavelength_calib import (
+    fit_wavelength_poly,
+    parse_wave_pairs,
+    wavelength_linear,
+    write_calibrated_spectrum,
+)
 from astrocitizen.reduction.models import AnalysisProduct
 from astrocitizen.shared.errors import DomainError
 from astrocitizen.shared.ids import new_id
 from astrocitizen.shared.timeutil import utc_now_iso
 
 METHOD_ID = "slit_sum_v1"
+
+# Re-export for callers that imported from spectroscopy
+__all__ = [
+    "ExtractSpectrum1D",
+    "METHOD_ID",
+    "estimate_extraction_snr",
+    "extract_trace",
+    "find_trace_peak",
+    "spatial_profile",
+    "wavelength_linear",
+]
+
 
 
 def spatial_profile(data: np.ndarray, *, axis: str = "x") -> np.ndarray:
@@ -192,32 +210,6 @@ def estimate_extraction_snr(flux: np.ndarray) -> float | None:
     return peak / noise
 
 
-def wavelength_linear(
-    n_pix: int,
-    *,
-    wave0_nm: float | None = None,
-    wave1_nm: float | None = None,
-    pix_a: float | None = None,
-    wave_a_nm: float | None = None,
-    pix_b: float | None = None,
-    wave_b_nm: float | None = None,
-) -> np.ndarray:
-    """Solucao linear simples (esqueleto AC-101)."""
-    if n_pix < 2:
-        raise DomainError("espectro demasiado curto")
-    if wave0_nm is not None and wave1_nm is not None:
-        return np.linspace(float(wave0_nm), float(wave1_nm), n_pix)
-    if None not in (pix_a, wave_a_nm, pix_b, wave_b_nm):
-        pa, pb = float(pix_a), float(pix_b)
-        if abs(pb - pa) < 1e-9:
-            raise DomainError("pix_a e pix_b iguais")
-        cdelt = (float(wave_b_nm) - float(wave_a_nm)) / (pb - pa)
-        crval = float(wave_a_nm) - pa * cdelt
-        return crval + np.arange(n_pix, dtype=float) * cdelt
-    # fallback: indices como nm proxy
-    return np.arange(n_pix, dtype=float)
-
-
 class ExtractSpectrum1D:
     """Produto spectrum_1d a partir de frame 2D (slit) — AC-100."""
 
@@ -243,6 +235,8 @@ class ExtractSpectrum1D:
         wave_a_nm: float | None = None,
         pix_b: float | None = None,
         wave_b_nm: float | None = None,
+        wave_pairs: str | None = None,
+        wave_degree: int | None = None,
         program_id: UUID | None = None,
         observation_id: UUID | None = None,
         objname: str | None = None,
@@ -270,38 +264,56 @@ class ExtractSpectrum1D:
             sky_offset=sky_offset,
             sky_half_width=sky_half_width,
         )
-        wave = wavelength_linear(
-            len(flux),
-            wave0_nm=wave0_nm,
-            wave1_nm=wave1_nm,
-            pix_a=pix_a,
-            wave_a_nm=wave_a_nm,
-            pix_b=pix_b,
-            wave_b_nm=wave_b_nm,
-        )
+        sol = None
+        if wave_pairs:
+            pairs = parse_wave_pairs(wave_pairs)
+            sol = fit_wavelength_poly(
+                [p for p, _ in pairs],
+                [w for _, w in pairs],
+                degree=wave_degree,
+                method="pairs",
+            )
+            wave = sol.wave_array(len(flux))
+        else:
+            wave = wavelength_linear(
+                len(flux),
+                wave0_nm=wave0_nm,
+                wave1_nm=wave1_nm,
+                pix_a=pix_a,
+                wave_a_nm=wave_a_nm,
+                pix_b=pix_b,
+                wave_b_nm=wave_b_nm,
+            )
         snr = estimate_extraction_snr(flux)
         when = hdr.get("DATE-OBS") or utc_now_iso()
         name = objname or hdr.get("OBJECT") or hdr.get("OBJNAME") or "SPEC"
         out_key = f"analysis/spectrum/{new_id()}.fits"
         out_path = self.store.root / out_key
-        out_path.parent.mkdir(parents=True, exist_ok=True)
-        hdu = fits.PrimaryHDU(data=flux.astype(np.float32))
-        hdu.header["OBJECT"] = str(name)[:68]
-        hdu.header["DATE-OBS"] = when
-        hdu.header["CRVAL1"] = float(wave[0])
-        hdu.header["CDELT1"] = float(wave[1] - wave[0])
-        hdu.header["CRPIX1"] = 1.0
-        hdu.header["CTYPE1"] = "WAVE"
-        hdu.header["CUNIT1"] = "nm"
-        hdu.header["ORIGIN"] = "AstroCitizen/0.0.1"
-        hdu.header["ACMETHOD"] = METHOD_ID
-        hdu.header["TRACE_Y"] = float(trace_pos)
-        hdu.header["HALFWID"] = int(half_width)
-        hdu.header["AXISDIS"] = str(axis)
-        hdu.header["SKYSUB"] = bool(subtract_sky)
+        meta_hdr = {
+            "OBJECT": str(name)[:68],
+            "DATE-OBS": when,
+            "ACMETHOD": METHOD_ID,
+            "TRACE_Y": float(trace_pos),
+            "HALFWID": int(half_width),
+            "AXISDIS": str(axis),
+            "SKYSUB": bool(subtract_sky),
+        }
         if snr is not None:
-            hdu.header["AC_SNR"] = float(snr)
-        hdu.writeto(out_path, overwrite=True)
+            meta_hdr["AC_SNR"] = float(snr)
+        if sol is not None:
+            write_calibrated_spectrum(flux, sol, out_path, meta_header=meta_hdr)
+        else:
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            hdu = fits.PrimaryHDU(data=flux.astype(np.float32))
+            for k, v in meta_hdr.items():
+                hdu.header[k] = v
+            hdu.header["CRVAL1"] = float(wave[0])
+            hdu.header["CDELT1"] = float(wave[1] - wave[0])
+            hdu.header["CRPIX1"] = 1.0
+            hdu.header["CTYPE1"] = "WAVE"
+            hdu.header["CUNIT1"] = "nm"
+            hdu.header["ORIGIN"] = "AstroCitizen/0.0.1"
+            hdu.writeto(out_path, overwrite=True)
         uri = out_path.as_uri()
 
         # downsample points for BD (cap)
@@ -318,11 +330,10 @@ class ExtractSpectrum1D:
             }
             for i in range(0, len(wave), step)
         ]
-        calibrated = wave0_nm is not None or None not in (
-            pix_a,
-            wave_a_nm,
-            pix_b,
-            wave_b_nm,
+        calibrated = bool(
+            sol is not None
+            or wave0_nm is not None
+            or None not in (pix_a, wave_a_nm, pix_b, wave_b_nm)
         )
         product = AnalysisProduct(
             id=new_id(),
@@ -346,6 +357,9 @@ class ExtractSpectrum1D:
                 "wave0_nm": float(wave[0]),
                 "wave1_nm": float(wave[-1]),
                 "wavelength_calibrated": calibrated,
+                "wavelength_degree": sol.degree if sol else (1 if calibrated else None),
+                "wavelength_rms_nm": sol.rms_nm if sol else None,
+                "wavelength_method": sol.method if sol else ("linear" if calibrated else None),
                 "objname": name,
                 "extraction": {
                     k: v
@@ -364,6 +378,7 @@ class ExtractSpectrum1D:
                 "sky_level": ext_meta.get("sky_level"),
                 "auto_trace": used_auto,
                 "subtract_sky": bool(subtract_sky),
+                "rms_nm": sol.rms_nm if sol else None,
             },
             state="ready",
         )

@@ -7,9 +7,11 @@ from astrocitizen.analysis.platesolve import PlateSolve
 from astrocitizen.analysis.solar import CountSunspots
 from astrocitizen.analysis.spectroscopy import ExtractSpectrum1D
 from astrocitizen.analysis.spectrum_report import InterpretSpectrum
+from astrocitizen.analysis.wavelength_calib import CalibrateWavelength
 
 __all__ = [
     "AperturePhotometry",
+    "CalibrateWavelength",
     "ExtractSpectrum1D",
     "InterpretSpectrum",
     "MeasureAstrometry",

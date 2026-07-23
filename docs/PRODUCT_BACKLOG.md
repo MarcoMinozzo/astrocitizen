@@ -197,7 +197,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
 | AC-100 | Extração espectro 1D | P2 | L | E6 | ✅ `slit_sum_v1` auto-trace+sky · [SPRINT_AC100_SPECTRUM_EXTRACT.md](SPRINT_AC100_SPECTRUM_EXTRACT.md) |
-| AC-101 | Calibração λ | P2 | L | AC-100 | |
+| AC-101 | Calibração λ | P2 | L | AC-100 | ✅ poly + lamp Neon/Hg · [SPRINT_AC101_WAVELENGTH.md](SPRINT_AC101_WAVELENGTH.md) |
 | AC-102 | Medidas de linha / EW | P2 | M | AC-101 | inicio via `spectrum-report` (extrema) |
 | AC-103 | Persistência espectro + produto no BD | P2 | M | AC-101 | |
 | AC-104 | Export ARAS/BeSS | P2 | M | E14 | ✅ BeSS FITS 1D · `contribute bess` |

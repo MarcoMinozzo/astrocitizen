@@ -45,18 +45,27 @@ def load_spectrum_arrays(
     if data.ndim != 1:
         raise DomainError("espectro_report requer FITS 1D")
     n = len(data)
-    crval = float(hdr.get("CRVAL1", 1.0))
-    cdelt = float(hdr.get("CDELT1", 1.0))
-    crpix = float(hdr.get("CRPIX1", 1.0))
-    wave = crval + (np.arange(n, dtype=float) + 1.0 - crpix) * cdelt
-    unit = str(hdr.get("CUNIT1") or "").lower()
-    ctype = str(hdr.get("CTYPE1") or "").upper()
-    # nm -> Angstrom
-    if "nm" in unit or (cdelt < 2.0 and crval < 2000 and "ANG" not in ctype):
-        # heuristic: if CRVAL looks like nm (400-800), convert
-        if 200.0 < crval < 2000.0 and "ang" not in unit:
-            wave = wave * 10.0
-            unit = "Angstrom"
+    # AC-101: solucao polinomial pix→nm nos headers
+    if hdr.get("AC_WDEG") is not None:
+        from astrocitizen.analysis.wavelength_calib import solution_from_header
+
+        sol = solution_from_header(hdr)
+        assert sol is not None
+        wave_nm = sol.wave_array(n)
+        wave = wave_nm * 10.0  # nm → Angstrom
+        unit = "Angstrom"
+    else:
+        crval = float(hdr.get("CRVAL1", 1.0))
+        cdelt = float(hdr.get("CDELT1", 1.0))
+        crpix = float(hdr.get("CRPIX1", 1.0))
+        wave = crval + (np.arange(n, dtype=float) + 1.0 - crpix) * cdelt
+        unit = str(hdr.get("CUNIT1") or "").lower()
+        ctype = str(hdr.get("CTYPE1") or "").upper()
+        # nm -> Angstrom
+        if "nm" in unit or (cdelt < 2.0 and crval < 2000 and "ANG" not in ctype):
+            if 200.0 < crval < 2000.0 and "ang" not in unit:
+                wave = wave * 10.0
+                unit = "Angstrom"
     meta = {
         "object": hdr.get("OBJECT") or hdr.get("OBJNAME") or hdr.get("BSS_OBJ") or "",
         "date_obs": hdr.get("DATE-OBS") or "",
