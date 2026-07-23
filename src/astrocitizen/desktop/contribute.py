@@ -336,6 +336,23 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                 QMessageBox.warning(self, "AAVSO", "Falta OBSCODE.")
                 return
             star = self.a_star.text().strip() or "UNKNOWN"
+            from astrocitizen.contribution.validate_minimum import (
+                validate_product_for_network,
+            )
+
+            check = validate_product_for_network(
+                self.archive,
+                network="aavso",
+                product_id=pid,
+                payload={"obscode": obscode, "star": star},
+            )
+            if not check.ok:
+                QMessageBox.warning(
+                    self,
+                    "Validacao AAVSO",
+                    "\n".join(check.error_messages()) or "Produto incompleto.",
+                )
+                return
             out = self.artifacts_root / "export" / "aavso" / f"{pid}.txt"
             try:
                 ExportAavso(self.archive).execute(
@@ -351,7 +368,7 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                     id=new_id(),
                     workspace_id=self._workspace_id,
                     network="aavso",
-                    status="draft",
+                    status="validated",
                     artifact_uri=uri,
                     product_id=pid,
                     payload_summary={"star": star, "note": "WebObs manual"},
@@ -371,6 +388,28 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             )
             if not code or not self.m_desig.text().strip():
                 QMessageBox.warning(self, "MPC", "Designation e obs code obrigatorios.")
+                return
+            from astrocitizen.contribution.validate_minimum import (
+                validate_product_for_network,
+            )
+
+            check = validate_product_for_network(
+                self.archive,
+                network="mpc",
+                payload={
+                    "observatory_code": code,
+                    "designation": self.m_desig.text().strip(),
+                    "ra_deg": float(self.m_ra.value()),
+                    "dec_deg": float(self.m_dec.value()),
+                    "epoch_utc": self.m_epoch.text().strip(),
+                },
+            )
+            if not check.ok:
+                QMessageBox.warning(
+                    self,
+                    "Validacao MPC",
+                    "\n".join(check.error_messages()) or "Campos incompletos.",
+                )
                 return
             out = self.artifacts_root / "export" / "mpc" / "gui.psv"
             try:

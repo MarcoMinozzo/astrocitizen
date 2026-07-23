@@ -237,6 +237,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | AC-131 | Deep-sky sequence LRGB básica | P2 | L | E6 | |
 | AC-132 | Modo solar + avisos de segurança | P2 | M | E5 | ✅ inicio — checklist obrigatorio em `analyze sunspots` |
 | AC-133 | Templates E/F restantes | P3 | M | AC-130 | |
+| AC-134 | ImageToolPort — abrir FITS em Siril/DS9/ASTAP (D-011) | P2 | S | AC-062 | ✅ launcher + prefs; sem suite interna |
 
 ---
 
@@ -245,7 +246,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
 | AC-140 | Modelo ContribuicaoRede + status | P2 | S | E1 | ✅ `network_submissions` schema v5 |
-| AC-141 | Validação produto mínimo por PO-* | P2 | M | AC-140 | |
+| AC-141 | Validação produto mínimo por PO-* | P2 | M | AC-140 | ✅ `validate_product_for_network` + CLI `contribute validate` |
 | AC-142 | Segredos locais (credenciais) | P2 | S | AC-140 | ✅ `credentials.json` local |
 | AC-143 | Painel de envios pendentes | P2 | M | E7 | ✅ GUI **Contribute** + CLI list |
 | AC-144 | TNS Bulk API AT-rep | P1 | M | AC-140 | ✅ sandbox + dry-run · `contribute tns` |

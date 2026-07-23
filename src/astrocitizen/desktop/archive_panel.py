@@ -47,8 +47,8 @@ def product_full_ids(products: list[Any], *, limit: int = 200) -> list[str]:
 
 
 def build_archive_dashboard() -> type:
-    from PySide6.QtCore import Qt, QUrl
-    from PySide6.QtGui import QDesktopServices, QGuiApplication
+    from PySide6.QtCore import Qt
+    from PySide6.QtGui import QGuiApplication
     from PySide6.QtWidgets import (
         QCheckBox,
         QComboBox,
@@ -181,8 +181,16 @@ def build_archive_dashboard() -> type:
             self.btn_copy = QPushButton("Copiar UUID")
             self.btn_copy.setObjectName("secondaryBtn")
             self.btn_copy.clicked.connect(self._copy_product_id)
-            self.btn_open = QPushButton("Abrir artefacto")
+            self.btn_open = QToolButton()
+            self.btn_open.setText("Abrir artefacto")
+            self.btn_open.setPopupMode(QToolButton.ToolButtonPopupMode.MenuButtonPopup)
             self.btn_open.clicked.connect(self._open_artifact)
+            open_menu = QMenu(self)
+            open_menu.addAction("SO / default", lambda: self._open_artifact_tool("system"))
+            open_menu.addAction("DS9", lambda: self._open_artifact_tool("ds9"))
+            open_menu.addAction("Siril", lambda: self._open_artifact_tool("siril"))
+            open_menu.addAction("ASTAP", lambda: self._open_artifact_tool("astap"))
+            self.btn_open.setMenu(open_menu)
             self.btn_export = QToolButton()
             self.btn_export.setText("Exportar")
             self.btn_export.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
@@ -341,6 +349,12 @@ def build_archive_dashboard() -> type:
             self.status.setText(f"UUID copiado: {pid}")
 
         def _open_artifact(self) -> None:
+            self._open_artifact_tool("system")
+
+        def _open_artifact_tool(self, tool_id: str) -> None:
+            from astrocitizen.adapters.image_tools import ExternalImageToolLauncher
+            from astrocitizen.shared.errors import DomainError
+
             product = self._selected_product()
             if product is None:
                 QMessageBox.information(self, "Arquivo", "Selecione um produto.")
@@ -351,25 +365,27 @@ def build_archive_dashboard() -> type:
                     self, "Arquivo", "Produto sem URI/path de artefacto."
                 )
                 return
-            opened = False
+            launcher = ExternalImageToolLauncher()
             last_err = ""
             for label, ref in refs:
                 path = resolve_openable_path(ref, store_root=self.artifacts_root)
                 if path is None:
                     last_err = f"{label}: nao resolvido ({ref})"
                     continue
-                ok = QDesktopServices.openUrl(QUrl.fromLocalFile(str(path)))
+                try:
+                    ok = launcher.launch(path, tool_id=tool_id)
+                except DomainError as exc:
+                    last_err = str(exc)
+                    continue
                 if ok:
-                    self.status.setText(f"Aberto: {label} → {path.name}")
-                    opened = True
-                    break
-                last_err = f"{label}: SO recusou abrir {path}"
-            if not opened:
-                QMessageBox.warning(
-                    self,
-                    "Abrir artefacto",
-                    last_err or "Nenhum artefacto abrivel.",
-                )
+                    self.status.setText(f"Aberto ({tool_id}): {label} → {path.name}")
+                    return
+                last_err = f"{label}: falha ao abrir {path}"
+            QMessageBox.warning(
+                self,
+                "Abrir artefacto",
+                last_err or "Nenhum artefacto abrivel.",
+            )
 
         def _goto_contribute(self, network: str | None) -> None:
             pid = self._selected_product_id()

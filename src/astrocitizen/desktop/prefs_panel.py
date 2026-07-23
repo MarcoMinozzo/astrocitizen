@@ -1,4 +1,4 @@
-"""Preferencias desktop: idioma UI (RN-120)."""
+"""Preferencias desktop: idioma UI (RN-120) + ferramentas imagem (D-011)."""
 
 from __future__ import annotations
 
@@ -10,10 +10,16 @@ def build_prefs_panel() -> type:
         QComboBox,
         QFormLayout,
         QLabel,
+        QLineEdit,
         QVBoxLayout,
         QWidget,
     )
 
+    from astrocitizen.adapters.image_tools import (
+        DEFAULT_TOOL_COMMANDS,
+        load_image_tool_commands,
+        save_image_tool_command,
+    )
     from astrocitizen.desktop.theme import load_ui_lang_pref, save_ui_lang_pref
     from astrocitizen.shared.i18n import (
         detect_system_lang,
@@ -51,6 +57,32 @@ def build_prefs_panel() -> type:
             self.effective = QLabel()
             self.effective.setObjectName("emptyState")
             root.addWidget(self.effective)
+
+            tools_title = QLabel("Ferramentas de imagem (D-011)")
+            tools_title.setObjectName("pageTitle")
+            root.addWidget(tools_title)
+            tools_hint = QLabel(
+                "Comandos externos (%f = caminho do FITS). Vazio = SO. "
+                "Nao embutimos Siril/DS9 — so lancamos."
+            )
+            tools_hint.setObjectName("emptyState")
+            tools_hint.setWordWrap(True)
+            root.addWidget(tools_hint)
+            tform = QFormLayout()
+            self.tool_edits: dict[str, QLineEdit] = {}
+            cmds = load_image_tool_commands()
+            for tool_id in ("ds9", "siril", "astap"):
+                edit = QLineEdit()
+                edit.setPlaceholderText(DEFAULT_TOOL_COMMANDS.get(tool_id, "%f"))
+                edit.setText(cmds.get(tool_id) or DEFAULT_TOOL_COMMANDS.get(tool_id, ""))
+                edit.editingFinished.connect(
+                    lambda tid=tool_id, e=edit: save_image_tool_command(
+                        tid, e.text().strip()
+                    )
+                )
+                self.tool_edits[tool_id] = edit
+                tform.addRow(tool_id.upper(), edit)
+            root.addLayout(tform)
             root.addStretch(1)
 
             self._filling = False

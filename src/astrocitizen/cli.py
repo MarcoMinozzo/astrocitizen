@@ -31,6 +31,7 @@ from astrocitizen.contribution.models import NetworkSubmission
 from astrocitizen.contribution.mpc import MpcAdesSubmitter, write_ades_psv
 from astrocitizen.contribution.solar import ExportSolarReport
 from astrocitizen.contribution.tns import TnsClient, format_tns_at_report, write_tns_report
+from astrocitizen.contribution.validate_minimum import validate_product_for_network
 from astrocitizen.desktop import run_gui
 from astrocitizen.inventory.models import Equipment, Site
 from astrocitizen.observatory import (
@@ -954,6 +955,36 @@ def json_dumps_safe(obj: object) -> str:
     return json.dumps(obj, indent=2, ensure_ascii=True)
 
 
+def _cmd_contribute_validate(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    pid = UUID(args.product) if args.product else None
+    payload = {}
+    if args.obscode:
+        payload["obscode"] = args.obscode
+    if args.star:
+        payload["star"] = args.star
+    if args.designation:
+        payload["designation"] = args.designation
+    if args.obs_code:
+        payload["observatory_code"] = args.obs_code
+    if args.ra is not None:
+        payload["ra_deg"] = args.ra
+    if args.dec is not None:
+        payload["dec_deg"] = args.dec
+    if args.epoch:
+        payload["epoch_utc"] = args.epoch
+    if args.target:
+        payload["target"] = args.target
+    result = validate_product_for_network(
+        archive, network=args.network, product_id=pid, payload=payload
+    )
+    for issue in result.issues:
+        print(f"{issue.severity}\t{issue.code}\t{issue.message}")
+    print(f"ok={result.ok}\tnetwork={args.network}")
+    archive.close()
+    return 0 if result.ok else 1
+
+
 def _cmd_contribute_aavso(args: argparse.Namespace) -> int:
     archive = _open_archive(Path(args.db))
     ws = _ensure_default_workspace(archive)
@@ -961,6 +992,17 @@ def _cmd_contribute_aavso(args: argparse.Namespace) -> int:
     obscode = args.obscode or cred.get_network("aavso").get("obscode")
     if not obscode:
         print("falta --obscode ou credentials aavso.obscode")
+        archive.close()
+        return 1
+    check = validate_product_for_network(
+        archive,
+        network="aavso",
+        product_id=UUID(args.product),
+        payload={"obscode": obscode, "star": args.star},
+    )
+    for issue in check.issues:
+        print(f"{issue.severity}\t{issue.code}\t{issue.message}")
+    if not check.ok:
         archive.close()
         return 1
     out = Path(args.out)
@@ -977,7 +1019,7 @@ def _cmd_contribute_aavso(args: argparse.Namespace) -> int:
         id=new_id(),
         workspace_id=ws.id,
         network="aavso",
-        status="draft",
+        status="validated",
         artifact_uri=uri,
         product_id=UUID(args.product),
         payload_summary={"star": args.star, "obscode": obscode, "note": "upload via WebObs"},
@@ -1025,6 +1067,23 @@ def _cmd_contribute_mpc(args: argparse.Namespace) -> int:
         return 1
     if not designation:
         print("falta --designation")
+        archive.close()
+        return 1
+    check = validate_product_for_network(
+        archive,
+        network="mpc",
+        product_id=product_id,
+        payload={
+            "observatory_code": code,
+            "designation": designation,
+            "ra_deg": ra,
+            "dec_deg": dec,
+            "epoch_utc": epoch,
+        },
+    )
+    for issue in check.issues:
+        print(f"{issue.severity}\t{issue.code}\t{issue.message}")
+    if not check.ok:
         archive.close()
         return 1
     out = Path(args.out)
@@ -1937,6 +1996,26 @@ def build_parser() -> argparse.ArgumentParser:
     p_cg.add_argument("--credentials", default=None)
     p_cg.add_argument("--network", default=None)
     p_cg.set_defaults(func=_cmd_contribute_cred_show)
+
+    p_cv = c_sub.add_parser(
+        "validate", help="Validar produto minimo (AC-141) antes de export"
+    )
+    _add_db_arg(p_cv)
+    p_cv.add_argument(
+        "--network",
+        required=True,
+        choices=("aavso", "mpc", "exoclock", "bess", "tns", "iota", "solar", "wds"),
+    )
+    p_cv.add_argument("--product", default=None)
+    p_cv.add_argument("--obscode", default=None)
+    p_cv.add_argument("--star", default=None)
+    p_cv.add_argument("--designation", default=None)
+    p_cv.add_argument("--obs-code", default=None)
+    p_cv.add_argument("--ra", type=float, default=None)
+    p_cv.add_argument("--dec", type=float, default=None)
+    p_cv.add_argument("--epoch", default=None)
+    p_cv.add_argument("--target", default=None)
+    p_cv.set_defaults(func=_cmd_contribute_validate)
 
     p_ca = c_sub.add_parser("aavso", help="Export AAVSO Extended (WebObs manual)")
     _add_db_arg(p_ca)

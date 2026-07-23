@@ -9,6 +9,10 @@ from astrocitizen.contribution.models import NetworkSubmission
 from astrocitizen.contribution.mpc import MpcAdesSubmitter, format_ades_psv, write_ades_psv
 from astrocitizen.contribution.solar import ExportSolarReport, format_solar_report
 from astrocitizen.contribution.tns import TnsClient, format_tns_at_report, write_tns_report
+from astrocitizen.contribution.validate_minimum import (
+    ValidationResult,
+    validate_product_for_network,
+)
 
 __all__ = [
     "ExportAavso",
@@ -18,6 +22,7 @@ __all__ = [
     "MpcAdesSubmitter",
     "NetworkSubmission",
     "TnsClient",
+    "ValidationResult",
     "annotate_existing_fits",
     "format_aavso_extended",
     "format_ades_psv",
@@ -25,6 +30,7 @@ __all__ = [
     "format_iota_es_txt",
     "format_solar_report",
     "format_tns_at_report",
+    "validate_product_for_network",
     "write_ades_psv",
     "write_bess_fits",
     "write_iota_pack",
