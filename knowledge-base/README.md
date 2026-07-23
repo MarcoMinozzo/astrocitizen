@@ -1,0 +1,39 @@
+# Knowledge base (E19 / KB-0)
+
+Scaffold interno para RAG futuro. **Nao** e indice de FITS nem dados do observador.
+
+## Layout
+
+```text
+knowledge-base/
+  README.md                 # este ficheiro
+  catalog.json              # fontes registadas (path + trust + license)
+  taxonomy.json             # topics, networks, po_id, trust tiers
+  manifest.json             # versao do corpus / ingest (vazio ate KB-1)
+  conflict-policy.md        # T1..T5 e resolucao de conflitos
+  licenses/                 # textos / notas de licenca
+  templates/chunk.md        # frontmatter de chunk
+  qa/gold-questions.v0.json # gold set (placeholder ate AC-199)
+  processed/                # markdown processado (offline ingest)
+  chunks/v1/                # chunks versionados (offline ingest)
+```
+
+## Fases
+
+| Fase | Estado |
+|------|--------|
+| KB-0 scaffold | ✅ AC-190 |
+| KB-1 conteudo T3 | aberto (AC-192) |
+| KB-2 FTS | aberto (AC-193) |
+| KB-3 Retriever/MCP | aberto |
+| KB-4 embeddings | aberto |
+| KB-5 produto | aberto |
+
+Ver [docs/EPICO_E19_BASE_CONHECIMENTO_RAG.md](../docs/EPICO_E19_BASE_CONHECIMENTO_RAG.md).
+
+## Regras
+
+- Sem PDF de livros no git.
+- Sem credenciais / FITS / dados pessoais no corpus.
+- Ingestao e offline; runtime so le chunks/indice.
+- Cite sempre `source_id` / `chunk_id` / `trust_tier` nas respostas RAG.

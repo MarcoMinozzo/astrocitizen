@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "licenses": [
+    {
+      "license_id": "project-docs",
+      "name": "AstroCitizen project documentation",
+      "scope": "docs/ authored for this repository",
+      "redistribution": "same license as repository unless noted",
+      "notes": "OK to chunk and cite in-app help / RAG"
+    },
+    {
+      "license_id": "external-cite-only",
+      "name": "External literature — citation / short fair paraphrase only",
+      "scope": "books, papers, network portal pages",
+      "redistribution": "do not store full PDF/book text in git",
+      "notes": "Prefer pointers + short notes; respect copyright"
+    },
+    {
+      "license_id": "network-official-summary",
+      "name": "Official network docs (summary)",
+      "scope": "AAVSO, BeSS, MPC, ExoClock, IOTA, TNS help pages",
+      "redistribution": "summarize + link; do not mirror entire sites",
+      "notes": "Trust T4 when source is the network itself"
+    }
+  ]
+}

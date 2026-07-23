@@ -228,7 +228,7 @@ Em vez de 50 apps, **7 superfícies**:
 2. **PO-* escolhe canais**, não inventa formato de BD novo — reutiliza Observation / Artifact / AnalysisProduct.  
 3. **Produto mínimo** (RN-043) valida se a entrada foi suficiente antes do export.  
 4. **Safety solar** é entrada obrigatória (já no CLI sunspots); GUI deve espelhar.  
-5. Epic de canais prioritários (§7) fechado; AC-161 e AC-152 (Duplas) entrada ✅; próximo: AC-190 KB / polish ContextBar.
+5. Epic de canais prioritários (§7) fechado; fila pós-UX (astrometria→Arquivo→AC-161→AC-152→AC-190) ✅; polish ContextBar opcional.
 
 ---
 

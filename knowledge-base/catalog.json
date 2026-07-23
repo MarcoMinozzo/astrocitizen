@@ -1,0 +1,80 @@
+{
+  "schema_version": 1,
+  "name": "astrocitizen-kb",
+  "description": "Catalogo de fontes para RAG interno (E19 KB-0)",
+  "updated_utc": "2026-07-23",
+  "sources": [
+    {
+      "source_id": "docs-workflows",
+      "path": "docs/WORKFLOWS.md",
+      "title": "Workflows do utilizador",
+      "trust_tier": "T3",
+      "license_id": "project-docs",
+      "lang": "pt",
+      "topics": ["workflows", "ux"],
+      "status": "planned_ingest"
+    },
+    {
+      "source_id": "docs-programas",
+      "path": "docs/PROGRAMAS_OBSERVACIONAIS.md",
+      "title": "Programas observacionais PO-*",
+      "trust_tier": "T3",
+      "license_id": "project-docs",
+      "lang": "pt",
+      "topics": ["programs", "po"],
+      "status": "planned_ingest"
+    },
+    {
+      "source_id": "docs-entrada",
+      "path": "docs/ENTRADA_OBSERVACOES_POR_PO.md",
+      "title": "Entrada de observacoes por PO",
+      "trust_tier": "T3",
+      "license_id": "project-docs",
+      "lang": "pt",
+      "topics": ["entrada", "channels"],
+      "status": "planned_ingest"
+    },
+    {
+      "source_id": "docs-rn",
+      "path": "docs/ESCOPO_GERAL_E_REGRAS_DE_NEGOCIO.md",
+      "title": "Regras de negocio RN-*",
+      "trust_tier": "T3",
+      "license_id": "project-docs",
+      "lang": "pt",
+      "topics": ["rules", "product"],
+      "status": "planned_ingest"
+    },
+    {
+      "source_id": "atlas-reporte",
+      "path": "docs/atlas/ATLAS_REPORTE_OBSERVACOES.md",
+      "title": "Atlas de reporte as redes",
+      "trust_tier": "T3",
+      "license_id": "project-docs",
+      "lang": "pt",
+      "topics": ["networks", "export"],
+      "networks": ["aavso", "mpc", "bess", "exoclock", "iota", "tns"],
+      "status": "planned_ingest"
+    },
+    {
+      "source_id": "docs-analise-espectral",
+      "path": "docs/ANALISE_ESPECTRAL_ASSISTIDA.md",
+      "title": "Analise espectral assistida (AC-106)",
+      "trust_tier": "T3",
+      "license_id": "project-docs",
+      "lang": "pt",
+      "topics": ["spectrum", "analysis"],
+      "status": "planned_ingest"
+    },
+    {
+      "source_id": "docs-literatura-indice",
+      "path": "docs/LITERATURA_INDICE.md",
+      "title": "Indice de literatura",
+      "trust_tier": "T5",
+      "license_id": "project-docs",
+      "lang": "pt",
+      "topics": ["literature", "index"],
+      "status": "planned_ingest",
+      "notes": "Pointers only; not full books"
+    }
+  ]
+}

@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "trust_tiers": {
+    "T1": {
+      "label": "Literatura cientifica primaria",
+      "examples": ["papers peer-reviewed", "IAU resolutions"]
+    },
+    "T2": {
+      "label": "Livros / manuais estabelecidos",
+      "examples": ["textbooks", "observing handbooks"]
+    },
+    "T3": {
+      "label": "Documentacao da plataforma AstroCitizen",
+      "examples": ["docs/", "PO templates", "RN-*", "atlas interno"]
+    },
+    "T4": {
+      "label": "Fontes oficiais de redes (resumo/citacao)",
+      "examples": ["AAVSO WebObs docs", "BeSS portal help"]
+    },
+    "T5": {
+      "label": "Notas praticas / abstracts / indices",
+      "examples": ["lab notes", "literature index pointers"]
+    }
+  },
+  "topics": [
+    "workflows",
+    "ux",
+    "programs",
+    "po",
+    "entrada",
+    "channels",
+    "rules",
+    "product",
+    "networks",
+    "export",
+    "spectrum",
+    "analysis",
+    "photometry",
+    "astrometry",
+    "radio",
+    "solar",
+    "occultation",
+    "literature",
+    "index",
+    "safety"
+  ],
+  "pipeline_stages": [
+    "plan",
+    "observe",
+    "import",
+    "calibrate",
+    "analyze",
+    "contribute",
+    "archive",
+    "help"
+  ],
+  "networks": [
+    "aavso",
+    "mpc",
+    "bess",
+    "exoclock",
+    "iota",
+    "tns",
+    "wds",
+    "clubes-radio"
+  ],
+  "langs": ["pt", "es", "en"],
+  "filters": {
+    "po_id": "PO-* template id when chunk is program-specific",
+    "network": "contribution network key",
+    "topic": "taxonomy.topics",
+    "trust_tier": "T1..T5",
+    "lang": "pt|es|en"
+  }
+}

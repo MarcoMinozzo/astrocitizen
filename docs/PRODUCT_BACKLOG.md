@@ -300,7 +300,7 @@ Doc: [EPICO_E19_BASE_CONHECIMENTO_RAG.md](EPICO_E19_BASE_CONHECIMENTO_RAG.md)
 
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
-| AC-190 | Scaffold `knowledge-base/` (catalog, taxonomy, manifest, licenses, chunk template) | P2 | S | — | Espelho KB-0 Vectron |
+| AC-190 | Scaffold `knowledge-base/` (catalog, taxonomy, manifest, licenses, chunk template) | P2 | S | — | ✅ KB-0 `knowledge-base/` + validate_kb_scaffold |
 | AC-191 | Modelo `knowledge_documents` / `knowledge_chunks` (+ trust_tier, hash, source_id) | P2 | M | E1, AC-190 | Schema dedicado (nao misturar com FITS) |
 | AC-192 | Pipeline de ingestao T3: `docs/` + atlas (offline; sem PDF em runtime) | P2 | L | AC-191 | Chunk 300–800 tokens |
 | AC-193 | Retriever lexical FTS (SQLite FTS5 Desktop) + CLI `knowledge search` | P2 | M | AC-192 | Util sem embeddings |

@@ -1,7 +1,7 @@
 # Epico E19 — Base de conhecimento interna para RAG
 
 **Prioridade:** P2–P3  
-**Estado:** aberto (backlog) · alinhado ao processo Vectron KB/MCP (2026-07)  
+**Estado:** aberto (backlog) · **KB-0 scaffold ✅** (AC-190, 2026-07-23) · alinhado ao processo Vectron KB/MCP (2026-07)  
 **Dependencias:** E1 (persistencia), corpus documental existente (`docs/`, atlas, literatura indexada)  
 **Consumidores previstos:** assistente de ajuda, narrativa LLM sobre produtos (ex.: AC-107 spectrum), labs (E18), futuro modulo SaaS  
 **Referencia cruzada:** motorsport-agent — *Pre-projeto Knowledge Base MCP Coaching (2026-07)* e *Sprint BL-KB*
@@ -121,7 +121,7 @@ E  RetrieverPort + (opcional) MCP: kb_search / kb_get_chunk / kb_get_glossary
 
 | Fase | Nome | DoD resumido |
 |------|------|--------------|
-| **KB-0** | Docs + scaffold | Este epico + pasta `knowledge-base/` + taxonomy |
+| **KB-0** | Docs + scaffold | ✅ `knowledge-base/` + taxonomy (AC-190) |
 | **KB-1** | Conteudo inicial | ≥50 chunks T3 docs + atlas; manifest |
 | **KB-2** | Ingest + FTS | Script ingest; FTS5; gold-questions v0 |
 | **KB-3** | Retriever + MCP read-only | `kb_search` / get_chunk; citation rate alvo |
