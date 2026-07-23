@@ -56,6 +56,10 @@ class SkyChartModel:
         return altitude_to_radius(self.min_altitude_deg)
 
     @property
+    def n_targets(self) -> int:
+        return sum(1 for m in self.markers if m.kind == "target")
+
+    @property
     def n_stars(self) -> int:
         return sum(1 for m in self.markers if m.kind == "star")
 
