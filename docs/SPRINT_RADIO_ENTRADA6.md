@@ -37,4 +37,4 @@ astrocitizen import radio --path sun.csv --freq 1420.4
 
 ## Seguinte
 
-ENTRADA #7 especialidades P4 fechado (`SPRINT_ESPECIALIDADES_ENTRADA7`). I02–I04 (espectro RF / drift) ficam em AC-161.
+AC-161 concluido (`SPRINT_RADIO_AC161.md`): espectro / scan / lab notes.

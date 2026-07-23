@@ -40,6 +40,8 @@ from astrocitizen.observatory import (
     ImportFits,
     ImportIotaPrediction,
     ImportPolarimetrySet,
+    ImportRadioScan,
+    ImportRadioSpectrum,
     ImportRadioTimeseries,
     ImportSpeckleCube,
     LogVisualObservation,
@@ -746,7 +748,8 @@ def _cmd_import_radio(args: argparse.Namespace) -> int:
     archive = _open_archive(Path(args.db))
     ws = _ensure_default_workspace(archive)
     store = LocalArtifactStore(Path(args.artifacts))
-    product = ImportRadioTimeseries(archive, store).execute(
+    kind = str(getattr(args, "kind", None) or "series").lower()
+    common = dict(
         workspace_id=ws.id,
         path=Path(args.path),
         site_id=UUID(args.site) if args.site else None,
@@ -754,9 +757,21 @@ def _cmd_import_radio(args: argparse.Namespace) -> int:
         observer=args.observer,
         frequency_mhz=args.freq,
         notes=args.notes or "",
+        lab_notes=getattr(args, "lab_notes", "") or "",
     )
+    if kind in ("series", "timeseries", "i01"):
+        product = ImportRadioTimeseries(archive, store).execute(**common)
+    elif kind in ("spectrum", "i02"):
+        product = ImportRadioSpectrum(archive, store).execute(**common)
+    elif kind in ("scan", "drift", "i03"):
+        product = ImportRadioScan(archive, store).execute(**common)
+    else:
+        print(f"kind invalido: {kind} (series|spectrum|scan)")
+        archive.close()
+        return 1
     print(
-        f"product={product.id}\tn={product.summary.get('n_points')}\t"
+        f"product={product.id}\ttype={product.product_type}\t"
+        f"n={product.summary.get('n_points')}\t"
         f"fmt={product.summary.get('format')}\t"
         f"pmin={product.summary.get('power_min')}\t"
         f"pmax={product.summary.get('power_max')}"
@@ -1596,14 +1611,27 @@ def build_parser() -> argparse.ArgumentParser:
     p_ip.add_argument("--program", default=None)
     p_ip.add_argument("--artifacts", default=str(default_artifacts_root()))
     p_ip.set_defaults(func=_cmd_import_prediction)
-    p_ir = imp_sub.add_parser("radio", help="Importar serie radio CSV/HDF5 (IN-RAD)")
+    p_ir = imp_sub.add_parser(
+        "radio", help="Importar radio CSV/HDF5 (IN-RAD / PO-I01..I04)"
+    )
     _add_db_arg(p_ir)
-    p_ir.add_argument("--path", required=True, help=".csv/.txt ou .h5/.hdf5")
+    p_ir.add_argument("--path", required=True, help=".csv/.txt ou .h5/.hdf5 (series)")
+    p_ir.add_argument(
+        "--kind",
+        default="series",
+        choices=("series", "spectrum", "scan"),
+        help="series=PO-I01 | spectrum=PO-I02 | scan=PO-I03",
+    )
     p_ir.add_argument("--site", default=None)
     p_ir.add_argument("--program", default=None)
     p_ir.add_argument("--observer", default="AstroCitizen")
     p_ir.add_argument("--freq", type=float, default=None, help="MHz")
     p_ir.add_argument("--notes", default="")
+    p_ir.add_argument(
+        "--lab-notes",
+        default="",
+        help="Notas de construcao / lab (PO-I04)",
+    )
     p_ir.add_argument("--artifacts", default=str(default_artifacts_root()))
     p_ir.set_defaults(func=_cmd_import_radio)
     p_ie = imp_sub.add_parser("echelle", help="Importar ordens echelle FITS (PO-B07)")

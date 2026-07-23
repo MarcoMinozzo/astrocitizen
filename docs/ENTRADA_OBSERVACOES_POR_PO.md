@@ -142,9 +142,9 @@ Legenda **Estado**: `feito` / `parcial` / `desenho` (ainda não na UI).
 | PO | Como o utilizador fornece | Canais | Payload mínimo | Produto | Estado |
 |----|---------------------------|--------|----------------|---------|--------|
 | **I01** Sol rádio | Série potência vs tempo (SDR/CSV) | IN-RAD | CSV/HDF5 | radio_timeseries | ✅ `import radio` |
-| **I02** 21 cm | Espectro RF / waterfall | IN-RAD | espectro | radio_spectrum | desenho |
-| **I03** Contínuo | Drift scan / pointing logs | IN-RAD, IN-LOG | scan | radio_scan | desenho |
-| **I04** Lab VHF | Igual I01–I03 + notas de construção | IN-RAD, IN-LOG | série + lab notes | radio + report | desenho |
+| **I02** 21 cm | Espectro RF / waterfall | IN-RAD | espectro CSV | radio_spectrum | ✅ `import radio --kind spectrum` |
+| **I03** Contínuo | Drift scan / pointing logs | IN-RAD, IN-LOG | scan CSV | radio_scan | ✅ `import radio --kind scan` |
+| **I04** Lab VHF | Igual I01–I03 + notas de construção | IN-RAD, IN-LOG | série + lab notes | radio + lab_notes | ✅ `--lab-notes` |
 
 ### J — Calibração / site
 
@@ -228,7 +228,7 @@ Em vez de 50 apps, **7 superfícies**:
 2. **PO-* escolhe canais**, não inventa formato de BD novo — reutiliza Observation / Artifact / AnalysisProduct.  
 3. **Produto mínimo** (RN-043) valida se a entrada foi suficiente antes do export.  
 4. **Safety solar** é entrada obrigatória (já no CLI sunspots); GUI deve espelhar.  
-5. Epic de canais prioritários (§7) fechado; próximo foco: reduções/exports por rede e AC-161 (rádio I02–I04).
+5. Epic de canais prioritários (§7) fechado; AC-161 (rádio I02–I04) entrada ✅; próximo: reduções/exports e AC-152 Duplas.
 
 ---
 

@@ -79,7 +79,26 @@ STEP_NAV: dict[str, dict[str, str]] = {
     "import_radio_series": {
         "area": "Observatorio",
         "hub_tab": "Importar",
-        "label": "Importar radio",
+        "analyze_tab": "Radio",
+        "label": "Importar radio (serie)",
+    },
+    "import_radio_spectrum": {
+        "area": "Observatorio",
+        "hub_tab": "Importar",
+        "analyze_tab": "Radio",
+        "label": "Importar radio (espectro)",
+    },
+    "import_radio_scan": {
+        "area": "Observatorio",
+        "hub_tab": "Importar",
+        "analyze_tab": "Radio",
+        "label": "Importar radio (scan)",
+    },
+    "log_radio_lab": {
+        "area": "Observatorio",
+        "hub_tab": "Importar",
+        "analyze_tab": "Radio",
+        "label": "Lab notes radio",
     },
     "import_echelle_orders": {
         "area": "Observatorio",

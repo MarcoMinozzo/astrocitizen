@@ -1,4 +1,4 @@
-"""Painel Radio: import potencia vs tempo (PO-I01 / ENTRADA #6)."""
+"""Painel Radio: import serie / espectro / scan (PO-I01..I04 / AC-161)."""
 
 from __future__ import annotations
 
@@ -22,7 +22,11 @@ def build_radio_dashboard() -> type:
     )
 
     from astrocitizen.adapters.fs import LocalArtifactStore
-    from astrocitizen.observatory import ImportRadioTimeseries
+    from astrocitizen.observatory import (
+        ImportRadioScan,
+        ImportRadioSpectrum,
+        ImportRadioTimeseries,
+    )
     from astrocitizen.shared.errors import DomainError
     from astrocitizen.shared.paths import default_artifacts_root
 
@@ -42,19 +46,23 @@ def build_radio_dashboard() -> type:
 
             root = QVBoxLayout(self)
             root.setContentsMargins(16, 12, 16, 12)
-            title = QLabel("Radio — serie potencia (PO-I01)")
+            title = QLabel("Radio — IN-RAD (PO-I01..I04)")
             title.setObjectName("pageTitle")
             root.addWidget(title)
 
-            hint = QLabel(
-                "Importar CSV (t_utc,power) ou HDF5 (h5py). "
-                "Cria Observation + radio_timeseries + measurement_points."
-            )
-            hint.setObjectName("emptyState")
-            hint.setWordWrap(True)
-            root.addWidget(hint)
+            self.hint = QLabel("")
+            self.hint.setObjectName("emptyState")
+            self.hint.setWordWrap(True)
+            root.addWidget(self.hint)
 
             form = QFormLayout()
+            self.kind = QComboBox()
+            self.kind.addItem("Serie potencia (I01/I04)", "series")
+            self.kind.addItem("Espectro RF (I02)", "spectrum")
+            self.kind.addItem("Drift / scan (I03)", "scan")
+            self.kind.currentIndexChanged.connect(self._update_hint)
+            form.addRow("Modo", self.kind)
+
             self.path = QLineEdit()
             browse = QPushButton("Ficheiro...")
             browse.setObjectName("secondaryBtn")
@@ -64,7 +72,7 @@ def build_radio_dashboard() -> type:
             prow.addWidget(browse)
             pwrap = QWidget()
             pwrap.setLayout(prow)
-            form.addRow("Serie", pwrap)
+            form.addRow("Ficheiro", pwrap)
 
             self.site = QComboBox()
             self.program = QComboBox()
@@ -72,11 +80,14 @@ def build_radio_dashboard() -> type:
             self.freq = QLineEdit()
             self.freq.setPlaceholderText("MHz (opcional)")
             self.notes = QLineEdit()
+            self.lab_notes = QLineEdit()
+            self.lab_notes.setPlaceholderText("Construcao / lab (PO-I04)")
             form.addRow("Site", self.site)
             form.addRow("Programa", self.program)
             form.addRow("Observer", self.observer)
             form.addRow("Freq MHz", self.freq)
             form.addRow("Notes", self.notes)
+            form.addRow("Lab notes", self.lab_notes)
 
             btn = QPushButton("Importar radio")
             btn.clicked.connect(self._import)
@@ -86,6 +97,23 @@ def build_radio_dashboard() -> type:
             self.log = QTextEdit()
             self.log.setReadOnly(True)
             root.addWidget(self.log, 1)
+            self._update_hint()
+
+        def _update_hint(self) -> None:
+            kind = str(self.kind.currentData() or "series")
+            tips = {
+                "series": (
+                    "CSV t_utc,power[,power_err] ou HDF5 (h5py). "
+                    "Produto radio_timeseries. Lab notes opcionais (I04)."
+                ),
+                "spectrum": (
+                    "CSV freq_mhz,power[,power_err]. Produto radio_spectrum (HI 21 cm)."
+                ),
+                "scan": (
+                    "CSV t_utc,power[,az_deg|el_deg|ha_deg]. Produto radio_scan (drift)."
+                ),
+            }
+            self.hint.setText(tips.get(kind, tips["series"]))
 
         def _append(self, msg: str) -> None:
             self.log.append(msg)
@@ -126,10 +154,17 @@ def build_radio_dashboard() -> type:
             select_combo_data(self.site, site_id)
             select_combo_data(self.program, program_id)
 
+        def focus_kind(self, kind: str | None) -> None:
+            if not kind:
+                return
+            i = self.kind.findData(str(kind).lower())
+            if i >= 0:
+                self.kind.setCurrentIndex(i)
+
         def _browse(self) -> None:
             path, _ = QFileDialog.getOpenFileName(
                 self,
-                "Serie radio",
+                "Ficheiro radio",
                 "",
                 "Radio (*.csv *.txt *.h5 *.hdf5);;All (*)",
             )
@@ -152,26 +187,43 @@ def build_radio_dashboard() -> type:
                 except ValueError:
                     QMessageBox.warning(self, "Radio", "Freq MHz invalida.")
                     return
+            kind = str(self.kind.currentData() or "series")
             store = LocalArtifactStore(self.artifacts_root)
+            common = dict(
+                workspace_id=ws.id,
+                path=path,
+                site_id=self.site.currentData(),
+                program_id=self.program.currentData(),
+                observer=self.observer.text().strip() or "AstroCitizen",
+                frequency_mhz=freq,
+                notes=self.notes.text().strip(),
+                lab_notes=self.lab_notes.text().strip(),
+            )
             try:
-                product = ImportRadioTimeseries(self.archive, store).execute(
-                    workspace_id=ws.id,
-                    path=path,
-                    site_id=self.site.currentData(),
-                    program_id=self.program.currentData(),
-                    observer=self.observer.text().strip() or "AstroCitizen",
-                    frequency_mhz=freq,
-                    notes=self.notes.text().strip(),
-                )
+                if kind == "spectrum":
+                    product = ImportRadioSpectrum(self.archive, store).execute(**common)
+                elif kind == "scan":
+                    product = ImportRadioScan(self.archive, store).execute(**common)
+                else:
+                    product = ImportRadioTimeseries(self.archive, store).execute(
+                        **common
+                    )
             except DomainError as exc:
                 QMessageBox.critical(self, "Radio", str(exc))
                 return
             self._product_id = product.id
+            extra = ""
+            if product.product_type == "radio_spectrum":
+                extra = (
+                    f"  f={product.summary.get('freq0_mhz')}-"
+                    f"{product.summary.get('freq1_mhz')}MHz"
+                )
             self._append(
-                f"product={product.id}  n={product.summary.get('n_points')}  "
+                f"product={product.id}  type={product.product_type}  "
+                f"n={product.summary.get('n_points')}  "
                 f"fmt={product.summary.get('format')}  "
                 f"pmin={product.summary.get('power_min')}  "
-                f"pmax={product.summary.get('power_max')}"
+                f"pmax={product.summary.get('power_max')}{extra}"
             )
             if self.on_changed:
                 self.on_changed()

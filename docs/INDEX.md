@@ -41,6 +41,7 @@
 | [SPRINT_PLATESOLVE_AC110.md](SPRINT_PLATESOLVE_AC110.md) | Plate-solve + bridge GUI |
 | [SPRINT_MEASURE_ASTROMETRY_GUI.md](SPRINT_MEASURE_ASTROMETRY_GUI.md) | Medida astrometria GUI (x,y → RA/Dec) |
 | [SPRINT_ARQUIVO_OPEN_EXPORT.md](SPRINT_ARQUIVO_OPEN_EXPORT.md) | Arquivo: abrir artefacto + export directo |
+| [SPRINT_RADIO_AC161.md](SPRINT_RADIO_AC161.md) | Radio I02–I04 (espectro / scan / lab notes) |
 | [ANALISE_ESPECTRAL_ASSISTIDA.md](ANALISE_ESPECTRAL_ASSISTIDA.md) | AC-106: como funciona a interpretacao espectral (sem LLM) |
 | [EPICO_E19_BASE_CONHECIMENTO_RAG.md](EPICO_E19_BASE_CONHECIMENTO_RAG.md) | Epico E19: base interna de conhecimento para RAG |
 | [AAVSO_WEBOBS_CHECKLIST.md](AAVSO_WEBOBS_CHECKLIST.md) | Validar export Extended no WebObs |

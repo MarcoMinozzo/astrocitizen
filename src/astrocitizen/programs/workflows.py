@@ -183,6 +183,40 @@ P1_WORKFLOWS: dict[str, dict] = {
         "analysis": "radio",
         "export": "radio_timeseries",
     },
+    "PO-I02": {
+        "name": "HI 21 cm (espectro RF)",
+        "steps": [
+            "import_radio_spectrum",
+            "review_timeseries",
+            "export_radio_csv",
+        ],
+        "networks": ["clubes-radio"],
+        "analysis": "radio",
+        "export": "radio_spectrum",
+    },
+    "PO-I03": {
+        "name": "Continuo / drift scan",
+        "steps": [
+            "import_radio_scan",
+            "review_timeseries",
+            "export_radio_csv",
+        ],
+        "networks": ["clubes-radio"],
+        "analysis": "radio",
+        "export": "radio_scan",
+    },
+    "PO-I04": {
+        "name": "Radiotelescopio educacional",
+        "steps": [
+            "import_radio_series",
+            "log_radio_lab",
+            "review_timeseries",
+            "export_radio_csv",
+        ],
+        "networks": ["clubes-radio", "diario"],
+        "analysis": "radio",
+        "export": "radio_timeseries",
+    },
     "PO-B07": {
         "name": "Echelle amador (ordens)",
         "steps": [

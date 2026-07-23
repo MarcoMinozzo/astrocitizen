@@ -17,7 +17,11 @@ from astrocitizen.observatory.quick_session import (
     prepare_wizard_session,
     reset_block_for_capture,
 )
-from astrocitizen.observatory.radio import ImportRadioTimeseries
+from astrocitizen.observatory.radio import (
+    ImportRadioScan,
+    ImportRadioSpectrum,
+    ImportRadioTimeseries,
+)
 from astrocitizen.observatory.session import ExecuteSession
 from astrocitizen.observatory.specialties import (
     ImportEchelleOrders,
@@ -33,6 +37,8 @@ __all__ = [
     "ImportFits",
     "ImportIotaPrediction",
     "ImportPolarimetrySet",
+    "ImportRadioScan",
+    "ImportRadioSpectrum",
     "ImportRadioTimeseries",
     "ImportSpeckleCube",
     "LogVisualObservation",

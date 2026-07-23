@@ -270,7 +270,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
 | AC-160 | Backend rádio (potência / série temporal) | P3 | L | E1 | ✅ `import radio` · produto radio_timeseries · GUI Radio |
-| AC-161 | Templates PO-I01…I04 | P3 | L | AC-160 | |
+| AC-161 | Templates PO-I01…I04 | P3 | L | AC-160 | ✅ spectrum/scan CSV + workflows + GUI modos + lab_notes |
 
 ---
 
