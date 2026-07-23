@@ -2,7 +2,7 @@
 
 Scaffold interno para RAG futuro. **Nao** e indice de FITS nem dados do observador.
 
-**Estado:** KB-0 scaffold ✅ · **AC-191** schema SQLite `knowledge_documents` / `knowledge_chunks` ✅ · ingest AC-192 pendente.
+**Estado:** KB-0 scaffold ✅ · AC-191 schema ✅ · **AC-192** ingest T3 ✅ (`processed/` + `chunks/v1/`) · FTS AC-193 pendente.
 
 ## Layout
 
@@ -11,7 +11,7 @@ knowledge-base/
   README.md                 # este ficheiro
   catalog.json              # fontes registadas (path + trust + license)
   taxonomy.json             # topics, networks, po_id, trust tiers
-  manifest.json             # versao do corpus / ingest (vazio ate KB-1)
+  manifest.json             # versao do corpus / ingest (KB-1: 51 chunks)
   conflict-policy.md        # T1..T5 e resolucao de conflitos
   licenses/                 # textos / notas de licenca
   templates/chunk.md        # frontmatter de chunk
@@ -25,7 +25,7 @@ knowledge-base/
 | Fase | Estado |
 |------|--------|
 | KB-0 scaffold | ✅ AC-190 |
-| KB-1 conteudo T3 | aberto (AC-192) |
+| KB-1 conteudo T3 | ✅ AC-192 (51 chunks) |
 | KB-2 FTS | aberto (AC-193) |
 | KB-3 Retriever/MCP | aberto |
 | KB-4 embeddings | aberto |

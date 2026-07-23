@@ -1621,6 +1621,56 @@ def _add_db_arg(p: argparse.ArgumentParser) -> None:
     )
 
 
+def _cmd_knowledge_validate(args: argparse.Namespace) -> int:
+    from astrocitizen.knowledge import default_kb_root, validate_kb_scaffold
+
+    root = Path(args.kb_root) if args.kb_root else default_kb_root()
+    errors = validate_kb_scaffold(root)
+    if errors:
+        for err in errors:
+            print(f"error\t{err}")
+        return 1
+    print(f"ok\tkb_root={root}")
+    return 0
+
+
+def _cmd_knowledge_ingest(args: argparse.Namespace) -> int:
+    from astrocitizen.knowledge import default_kb_root, ingest_sources
+
+    root = Path(args.kb_root) if args.kb_root else default_kb_root()
+    archive = None
+    write_db = not args.no_db and not args.dry_run
+    if write_db:
+        archive = _open_archive(Path(args.db))
+        archive.migrate()
+    try:
+        report = ingest_sources(
+            archive=archive,
+            kb_root=root,
+            trust_tiers=(str(args.tier),),
+            source_id=args.source_id,
+            write_files=not args.no_files,
+            write_db=write_db,
+            dry_run=bool(args.dry_run),
+            corpus_version=str(args.corpus_version),
+        )
+    finally:
+        if archive is not None:
+            archive.close()
+    for src in report.sources:
+        print(
+            f"source\t{src['source_id']}\tchunks={src['n_chunks']}\t"
+            f"hash={src['content_hash']}"
+        )
+    for err in report.errors:
+        print(f"error\t{err}")
+    print(
+        f"summary\tsources={report.n_sources}\tchunks={report.n_chunks}\t"
+        f"corpus={report.corpus_version}\tok={report.ok}"
+    )
+    return 0 if report.ok or (args.dry_run and report.n_chunks > 0) else 1
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="astrocitizen",
@@ -2328,6 +2378,24 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     p_cl.set_defaults(func=_cmd_contribute_list)
+
+    p_kb = sub.add_parser("knowledge", help="Base de conhecimento E19 (ingest offline)")
+    kb_sub = p_kb.add_subparsers(dest="knowledge_cmd", required=True)
+    p_kb_val = kb_sub.add_parser("validate", help="Validar scaffold knowledge-base/")
+    p_kb_val.add_argument("--kb-root", default=None)
+    p_kb_val.set_defaults(func=_cmd_knowledge_validate)
+    p_kb_ing = kb_sub.add_parser(
+        "ingest", help="Ingerir fontes T3 (docs/atlas) → chunks + BD"
+    )
+    _add_db_arg(p_kb_ing)
+    p_kb_ing.add_argument("--kb-root", default=None)
+    p_kb_ing.add_argument("--source-id", default=None)
+    p_kb_ing.add_argument("--tier", default="T3", help="Trust tier (default T3)")
+    p_kb_ing.add_argument("--dry-run", action="store_true")
+    p_kb_ing.add_argument("--no-db", action="store_true", help="So ficheiros KB")
+    p_kb_ing.add_argument("--no-files", action="store_true", help="So SQLite")
+    p_kb_ing.add_argument("--corpus-version", default="0.1.0-kb1")
+    p_kb_ing.set_defaults(func=_cmd_knowledge_ingest)
 
     return parser
 

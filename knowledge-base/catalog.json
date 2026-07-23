@@ -11,8 +11,11 @@
       "trust_tier": "T3",
       "license_id": "project-docs",
       "lang": "pt",
-      "topics": ["workflows", "ux"],
-      "status": "planned_ingest"
+      "topics": [
+        "workflows",
+        "ux"
+      ],
+      "status": "ingested"
     },
     {
       "source_id": "docs-programas",
@@ -21,8 +24,11 @@
       "trust_tier": "T3",
       "license_id": "project-docs",
       "lang": "pt",
-      "topics": ["programs", "po"],
-      "status": "planned_ingest"
+      "topics": [
+        "programs",
+        "po"
+      ],
+      "status": "ingested"
     },
     {
       "source_id": "docs-entrada",
@@ -31,8 +37,11 @@
       "trust_tier": "T3",
       "license_id": "project-docs",
       "lang": "pt",
-      "topics": ["entrada", "channels"],
-      "status": "planned_ingest"
+      "topics": [
+        "entrada",
+        "channels"
+      ],
+      "status": "ingested"
     },
     {
       "source_id": "docs-rn",
@@ -41,8 +50,11 @@
       "trust_tier": "T3",
       "license_id": "project-docs",
       "lang": "pt",
-      "topics": ["rules", "product"],
-      "status": "planned_ingest"
+      "topics": [
+        "rules",
+        "product"
+      ],
+      "status": "ingested"
     },
     {
       "source_id": "atlas-reporte",
@@ -51,9 +63,19 @@
       "trust_tier": "T3",
       "license_id": "project-docs",
       "lang": "pt",
-      "topics": ["networks", "export"],
-      "networks": ["aavso", "mpc", "bess", "exoclock", "iota", "tns"],
-      "status": "planned_ingest"
+      "topics": [
+        "networks",
+        "export"
+      ],
+      "networks": [
+        "aavso",
+        "mpc",
+        "bess",
+        "exoclock",
+        "iota",
+        "tns"
+      ],
+      "status": "ingested"
     },
     {
       "source_id": "docs-analise-espectral",
@@ -62,8 +84,11 @@
       "trust_tier": "T3",
       "license_id": "project-docs",
       "lang": "pt",
-      "topics": ["spectrum", "analysis"],
-      "status": "planned_ingest"
+      "topics": [
+        "spectrum",
+        "analysis"
+      ],
+      "status": "ingested"
     },
     {
       "source_id": "docs-literatura-indice",
@@ -72,7 +97,10 @@
       "trust_tier": "T5",
       "license_id": "project-docs",
       "lang": "pt",
-      "topics": ["literature", "index"],
+      "topics": [
+        "literature",
+        "index"
+      ],
       "status": "planned_ingest",
       "notes": "Pointers only; not full books"
     }

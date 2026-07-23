@@ -1688,9 +1688,9 @@ class SqliteArchive:
         source_id = (doc.source_id or doc_id).strip()
         if not doc_id or not source_id:
             raise ValueError("knowledge document exige id/source_id")
-        existing = self.get_knowledge_document(doc_id)
+        existing = self._get_knowledge_document_any(doc_id)
         if existing is None and source_id != doc_id:
-            existing = self.get_knowledge_document(source_id)
+            existing = self._get_knowledge_document_any(source_id)
         if existing is None:
             self._conn.execute(
                 """
@@ -1728,8 +1728,8 @@ class SqliteArchive:
                     source_id = ?, path = ?, title = ?, trust_tier = ?,
                     license_id = ?, lang = ?, topics = ?, networks = ?,
                     content_hash = ?, corpus_version = ?, status = ?,
-                    updated_at = ?, version = version + 1
-                WHERE id = ? AND deleted_at IS NULL
+                    deleted_at = NULL, updated_at = ?, version = version + 1
+                WHERE id = ?
                 """,
                 (
                     source_id,
@@ -1766,6 +1766,37 @@ class SqliteArchive:
             SELECT * FROM knowledge_documents
             WHERE (id = ? OR source_id = ?) AND deleted_at IS NULL
             """,
+            (key, key),
+        ).fetchone()
+        if row is None:
+            return None
+        return KnowledgeDocument(
+            id=row["id"],
+            source_id=row["source_id"],
+            path=row["path"],
+            title=row["title"],
+            trust_tier=row["trust_tier"],
+            license_id=row["license_id"],
+            lang=row["lang"],
+            topics=list(_loads(row["topics"], [])),
+            networks=list(_loads(row["networks"], [])),
+            content_hash=row["content_hash"],
+            corpus_version=row["corpus_version"],
+            status=row["status"],
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+            version=int(row["version"]),
+        )
+
+    def _get_knowledge_document_any(self, document_id: str) -> Any | None:
+        """Inclui soft-deleted (para re-ingest)."""
+        from astrocitizen.knowledge.models import KnowledgeDocument
+
+        key = (document_id or "").strip()
+        if not key:
+            return None
+        row = self._conn.execute(
+            "SELECT * FROM knowledge_documents WHERE id = ? OR source_id = ?",
             (key, key),
         ).fetchone()
         if row is None:
@@ -1861,10 +1892,13 @@ class SqliteArchive:
             raise NotFoundError(
                 f"documento KB nao encontrado para chunk: {chunk.document_id}"
             )
-        existing = self.get_knowledge_chunk(chunk_id)
+        existing_row = self._conn.execute(
+            "SELECT * FROM knowledge_chunks WHERE id = ?",
+            (chunk_id,),
+        ).fetchone()
         source_id = (chunk.source_id or doc.source_id).strip()
         trust = (chunk.trust_tier or doc.trust_tier).strip()
-        if existing is None:
+        if existing_row is None:
             self._conn.execute(
                 """
                 INSERT INTO knowledge_chunks(
@@ -1905,8 +1939,8 @@ class SqliteArchive:
                     trust_tier = ?, lang = ?, topics = ?, po_id = ?, network = ?,
                     pipeline_stage = ?, token_estimate = ?, chunk_hash = ?,
                     corpus_version = ?, body = ?, sort_order = ?,
-                    updated_at = ?, version = version + 1
-                WHERE id = ? AND deleted_at IS NULL
+                    deleted_at = NULL, updated_at = ?, version = version + 1
+                WHERE id = ?
                 """,
                 (
                     doc.id,
@@ -1928,8 +1962,8 @@ class SqliteArchive:
                     chunk_id,
                 ),
             )
-            chunk.created_at = existing.created_at
-            chunk.version = int(existing.version) + 1
+            chunk.created_at = existing_row["created_at"]
+            chunk.version = int(existing_row["version"]) + 1
         chunk.id = chunk_id
         chunk.document_id = doc.id
         chunk.source_id = source_id

@@ -1,14 +1,14 @@
 {
   "schema_version": 1,
-  "corpus_version": "0.0.0-kb0",
-  "phase": "KB-0",
+  "corpus_version": "0.1.0-kb1",
+  "phase": "KB-1",
   "created_utc": "2026-07-23",
   "updated_utc": "2026-07-23",
-  "n_sources": 0,
-  "n_chunks": 0,
+  "n_sources": 6,
+  "n_chunks": 51,
   "ingest": {
-    "status": "not_started",
-    "notes": "Populate after AC-192 offline ingest of T3 docs"
+    "status": "completed",
+    "notes": "AC-192 offline ingest 2026-07-23T18:21:10Z"
   },
   "index": {
     "fts": null,

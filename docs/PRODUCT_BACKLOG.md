@@ -305,7 +305,7 @@ Doc: [EPICO_E19_BASE_CONHECIMENTO_RAG.md](EPICO_E19_BASE_CONHECIMENTO_RAG.md)
 |----|------|-----|-----|-----|-------|
 | AC-190 | Scaffold `knowledge-base/` (catalog, taxonomy, manifest, licenses, chunk template) | P2 | S | — | ✅ KB-0 `knowledge-base/` + validate_kb_scaffold |
 | AC-191 | Modelo `knowledge_documents` / `knowledge_chunks` (+ trust_tier, hash, source_id) | P2 | M | E1, AC-190 | ✅ schema v6 + CRUD SqliteArchive |
-| AC-192 | Pipeline de ingestao T3: `docs/` + atlas (offline; sem PDF em runtime) | P2 | L | AC-191 | Chunk 300–800 tokens |
+| AC-192 | Pipeline de ingestao T3: `docs/` + atlas (offline; sem PDF em runtime) | P2 | L | AC-191 | ✅ `knowledge ingest` · chunks/v1 + SQLite · KB-1 |
 | AC-193 | Retriever lexical FTS (SQLite FTS5 Desktop) + CLI `knowledge search` | P2 | M | AC-192 | Util sem embeddings |
 | AC-194 | `RetrieverPort` + filtros (PO-*, rede, topic, lang) | P2 | M | AC-193 | Porta hexagonal |
 | AC-195 | Embeddings locais + indice hibrido (RRF lexical/vector) | P2 | L | AC-193 | Preferir on-device; D-010 |

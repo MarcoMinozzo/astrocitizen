@@ -13,7 +13,7 @@
 
 ## Fora deste slice
 
-- Ingest T3 docs/atlas (AC-192)
+- Ingest T3 docs/atlas — feito em [SPRINT_AC192_KB_INGEST.md](SPRINT_AC192_KB_INGEST.md)
 - FTS / `knowledge search` (AC-193)
 - RetrieverPort / embeddings
 
