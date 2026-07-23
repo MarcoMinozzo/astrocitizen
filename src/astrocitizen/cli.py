@@ -538,6 +538,30 @@ def _cmd_analyze_spectrum(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_analyze_spectrum_explain(args: argparse.Namespace) -> int:
+    """AC-200: explicar spectrum_report com RAG (narrativa extractiva, sem LLM)."""
+    from astrocitizen.adapters.sqlite.hybrid_retriever import HybridRetriever
+    from astrocitizen.knowledge.spectrum_explain import explain_spectrum_report_file
+
+    archive = _open_archive(Path(args.db))
+    try:
+        result = explain_spectrum_report_file(
+            HybridRetriever(archive),
+            Path(args.report),
+            limit=int(args.limit),
+            mode=str(args.mode or "hybrid"),
+        )
+    finally:
+        archive.close()
+    print(
+        f"explain\tgrounded={result.grounded}\tfeatures={len(result.features_used)}\t"
+        f"citations={len(result.citations)}\tmode={result.mode}"
+    )
+    print("---")
+    print(result.format_text(), end="")
+    return 0 if result.grounded else 1
+
+
 def _cmd_analyze_spectrum_report(args: argparse.Namespace) -> int:
     archive = _open_archive(Path(args.db))
     ws = _ensure_default_workspace(archive)
@@ -2364,6 +2388,21 @@ def build_parser() -> argparse.ArgumentParser:
     p_sr.add_argument("--program", default=None)
     p_sr.add_argument("--artifacts", default=str(default_artifacts_root()))
     p_sr.set_defaults(func=_cmd_analyze_spectrum_report)
+    p_sx = an_sub.add_parser(
+        "spectrum-explain",
+        help="Explicar spectrum_report com RAG KB (AC-200; sem LLM)",
+    )
+    _add_db_arg(p_sx)
+    p_sx.add_argument(
+        "--report",
+        required=True,
+        help="Ficheiro .txt do spectrum_report (AC-106)",
+    )
+    p_sx.add_argument("--limit", type=int, default=5)
+    p_sx.add_argument(
+        "--mode", default="hybrid", choices=("fts", "vector", "hybrid")
+    )
+    p_sx.set_defaults(func=_cmd_analyze_spectrum_explain)
     p_as = an_sub.add_parser("astrometry", help="Medida astrometrica (PO-C01/C02)")
     _add_db_arg(p_as)
     p_as.add_argument("--fits-uri", required=True)

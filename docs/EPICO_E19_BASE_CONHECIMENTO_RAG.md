@@ -126,7 +126,7 @@ E  RetrieverPort + (opcional) MCP: kb_search / kb_get_chunk / kb_get_glossary
 | **KB-2** | Ingest + FTS | ✅ FTS5 + `knowledge search` (AC-193); gold-questions v0 placeholder |
 | **KB-3** | Retriever + MCP read-only | ✅ RetrieverPort (AC-194) + MCP (AC-197) + citation eval (AC-199) |
 | **KB-4** | Hibrido vector | ✅ hashing embeddings + RRF (AC-195); e5 opcional futuro |
-| **KB-5** | Produto | ✅ Ajuda grounded AC-196; AC-107 LLM opcional; sem regressao AC-106 |
+| **KB-5** | Produto | ✅ Ajuda AC-196 + spectrum-explain AC-200; AC-106 intacto; LLM → AC-108 |
 
 ---
 

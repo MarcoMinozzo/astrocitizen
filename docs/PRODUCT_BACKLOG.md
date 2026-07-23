@@ -199,7 +199,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | AC-104 | Export ARAS/BeSS | P2 | M | E14 | ✅ BeSS FITS 1D · `contribute bess` |
 | AC-105 | Templates B04–B06 | P2–P3 | M | AC-102 | |
 | AC-106 | Interpretacao espectral assistida (linhas / multi-epoca / pista classe) | P1 | M | AC-100 | ✅ deterministico · [ANALISE_ESPECTRAL_ASSISTIDA.md](ANALISE_ESPECTRAL_ASSISTIDA.md) · CLI `spectrum-report` |
-| AC-107 | Narrativa LLM sobre `spectrum_report` (opt-in) | P2 | M | AC-106 | Pos-medidas; citar FEATURES; sem inventar linhas |
+| AC-107 | Narrativa LLM sobre `spectrum_report` (opt-in) | P2 | M | AC-106 | ✅ stub extractivo offline via AC-200; LLM → AC-108 |
 | AC-108 | Provider LLM pluggable + modo offline (desligado = AC-106 sozinho) | P2 | M | AC-107 | Local e/ou API; credenciais fora do BD |
 | AC-109 | Guardrails + testes de grounding (spectrum + passagens RAG) | P2 | M | AC-107, AC-194 | Rejeitar claims fora do relatorio/corpus |
 
@@ -313,7 +313,7 @@ Doc: [EPICO_E19_BASE_CONHECIMENTO_RAG.md](EPICO_E19_BASE_CONHECIMENTO_RAG.md)
 | AC-197 | MCP read-only (`kb_search`, `kb_get_chunk`, `kb_list_sources`) | P2 | M | AC-194 | ✅ mcp-call / mcp-serve · rate limit |
 | AC-198 | Glossario astro/redes/PO sync → chunks + UI | P2 | M | AC-192 | ✅ glossary.json + sync + kb_get_glossary |
 | AC-199 | Gold questions + eval citation rate (≥80% factuais) | P2 | M | AC-193 | ✅ `eval-gold` · gold-v0 ≥80% |
-| AC-200 | Ligacao spectrum: RAG + AC-107 (explicar relatorio com corpus ARAS/BeSS) | P2 | M | AC-107, AC-194 | Caso de uso piloto KB-5 |
+| AC-200 | Ligacao spectrum: RAG + AC-107 (explicar relatorio com corpus ARAS/BeSS) | P2 | M | AC-107, AC-194 | ✅ `spectrum-explain` extractivo + RAG |
 
 ---
 
