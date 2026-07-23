@@ -80,6 +80,8 @@ def validate_product_for_network(
 def _validate_aavso(
     product: Any | None, points: list[dict], payload: dict[str, Any]
 ) -> list[ValidationIssue]:
+    from astrocitizen.contribution.aavso import _to_jd
+
     issues: list[ValidationIssue] = []
     if product is None:
         issues.append(_issue("aavso_product", "AAVSO Extended exige product_id"))
@@ -93,6 +95,45 @@ def _validate_aavso(
     if not star or star.upper() == "UNKNOWN":
         issues.append(
             _issue("aavso_star", "nome da estrela obrigatorio (nao use UNKNOWN)")
+        )
+    usable = 0
+    missing_err = 0
+    for pt in points:
+        mag = pt.get("y")
+        if mag is None:
+            continue
+        try:
+            float(mag)
+        except (TypeError, ValueError):
+            continue
+        if _to_jd(pt.get("t_utc")) is None:
+            continue
+        usable += 1
+        if pt.get("y_err") is None:
+            missing_err += 1
+    if points and usable == 0:
+        issues.append(
+            _issue(
+                "aavso_jd",
+                "nenhum ponto com t_utc parseavel a JD e magnitude numerica",
+            )
+        )
+    if usable and missing_err:
+        issues.append(
+            _issue(
+                "aavso_merr",
+                f"{missing_err} ponto(s) sem y_err (AEF usara na)",
+                severity="warning",
+            )
+        )
+    chart = str(payload.get("chart") or "NA").strip() or "NA"
+    if chart.upper() == "NA":
+        issues.append(
+            _issue(
+                "aavso_chart",
+                "CHART=NA — preferivel ID VSP quando disponivel",
+                severity="warning",
+            )
         )
     return issues
 

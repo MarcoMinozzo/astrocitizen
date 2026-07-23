@@ -66,7 +66,7 @@ def _parse_uuid(raw: Any) -> UUID | None:
 def _star_from_product(archive: Any, product: Any) -> str | None:
     params = dict(getattr(product, "parameters", None) or {})
     summary = dict(getattr(product, "summary", None) or {})
-    for key in ("star", "star_name", "target_name", "target", "object"):
+    for key in ("auid", "star", "star_name", "target_name", "target", "object"):
         val = params.get(key) or summary.get(key)
         if val and str(val).strip().upper() not in ("", "UNKNOWN", "TARGET"):
             return str(val).strip()
@@ -75,6 +75,11 @@ def _star_from_product(archive: Any, product: Any) -> str | None:
     if uid is not None and hasattr(archive, "get_target"):
         target = archive.get_target(uid)
         if target is not None:
+            ids = dict(getattr(target, "external_ids", None) or {})
+            for key in ("auid", "vsx"):
+                val = ids.get(key)
+                if val and str(val).strip():
+                    return str(val).strip()
             desig = getattr(target, "designation", None)
             if desig:
                 return str(desig).strip()
@@ -1120,6 +1125,12 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             root.addWidget(self.log)
 
         def _tab_aavso(self) -> QWidget:
+            from PySide6.QtCore import QUrl
+            from PySide6.QtGui import QDesktopServices
+            from PySide6.QtWidgets import QLabel
+
+            from astrocitizen.adapters.aavso_portal import WEBOBS_URL
+
             w = QWidget()
             form = QFormLayout(w)
             self.a_product = QLineEdit()
@@ -1130,10 +1141,28 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             self.a_band.setText("V")
             self.a_chart = QLineEdit()
             self.a_chart.setText("NA")
+            hint = QLabel(
+                "Upload manual no WebObs — metodo oficial AAVSO "
+                "(AEF validado; sem API de submissao)."
+            )
+            hint.setObjectName("emptyState")
+            hint.setWordWrap(True)
             review = QPushButton("Revisar campos")
             review.clicked.connect(lambda: self._review_fields("aavso"))
-            btn = QPushButton("Export Extended (WebObs)")
+            btn = QPushButton("Gerar AEF e preparar WebObs")
             btn.clicked.connect(self._run_aavso)
+            self.a_open_webobs = QPushButton("Abrir WebObs")
+            self.a_open_webobs.setObjectName("secondaryBtn")
+            self.a_open_webobs.setEnabled(False)
+            self.a_open_webobs.clicked.connect(
+                lambda: QDesktopServices.openUrl(QUrl(WEBOBS_URL))
+            )
+            self.a_open_aef = QPushButton("Abrir ficheiro AEF")
+            self.a_open_aef.setObjectName("secondaryBtn")
+            self.a_open_aef.setEnabled(False)
+            self.a_open_aef.clicked.connect(self._open_last_aef)
+            self._last_aef_path: Path | None = None
+            form.addRow(hint)
             form.addRow("Product UUID", self.a_product)
             form.addRow("Star", self.a_star)
             form.addRow("OBSCODE", self.a_obscode)
@@ -1143,7 +1172,22 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             row.addWidget(review)
             row.addWidget(btn)
             form.addRow(row)
+            row2 = QHBoxLayout()
+            row2.addWidget(self.a_open_webobs)
+            row2.addWidget(self.a_open_aef)
+            form.addRow(row2)
             return w
+
+        def _open_last_aef(self) -> None:
+            from PySide6.QtCore import QUrl
+            from PySide6.QtGui import QDesktopServices
+
+            if self._last_aef_path is None or not self._last_aef_path.is_file():
+                QMessageBox.information(
+                    self, "AAVSO", "Gere o AEF primeiro (Gerar AEF e preparar WebObs)."
+                )
+                return
+            QDesktopServices.openUrl(QUrl.fromLocalFile(str(self._last_aef_path)))
 
         def _tab_mpc(self) -> QWidget:
             w = QWidget()
@@ -1711,6 +1755,8 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             )
 
         def _run_aavso(self) -> None:
+            from astrocitizen.adapters.aavso_portal import WEBOBS_URL
+
             if self._workspace_id is None:
                 QMessageBox.warning(self, "Contribute", "Sem workspace.")
                 return
@@ -1726,12 +1772,16 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                 QMessageBox.warning(self, "AAVSO", "Falta OBSCODE.")
                 return
             star = self.a_star.text().strip() or "UNKNOWN"
+            chart = self.a_chart.text().strip() or "NA"
             check = validate_product_for_network(
                 self.archive,
                 network="aavso",
                 product_id=pid,
-                payload={"obscode": obscode, "star": star},
+                payload={"obscode": obscode, "star": star, "chart": chart},
             )
+            for issue in check.issues:
+                if issue.severity == "warning":
+                    self._log(f"aviso AAVSO: {issue.message}")
             if not check.ok:
                 QMessageBox.warning(
                     self,
@@ -1747,7 +1797,7 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                     observer_code=str(obscode),
                     out_path=out,
                     band=self.a_band.text().strip() or "V",
-                    chart=self.a_chart.text().strip() or "NA",
+                    chart=chart,
                 )
                 store = LocalArtifactStore(self.artifacts_root)
                 uri = store.put(out, key=f"export/aavso/{out.name}")
@@ -1760,12 +1810,17 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                     product_id=pid,
                     payload_summary={
                         "star": star,
-                        "chart": self.a_chart.text().strip() or "NA",
-                        "note": "WebObs manual",
+                        "chart": chart,
+                        "note": "WebObs manual (oficial)",
                     },
                 )
                 self.archive.save_network_submission(sub)
-                self._log(f"AAVSO wrote {out} - upload https://www.aavso.org/webobs/")
+                self._last_aef_path = out
+                self.a_open_webobs.setEnabled(True)
+                self.a_open_aef.setEnabled(True)
+                self._log(
+                    f"AAVSO AEF pronto: {out} — upload manual em {WEBOBS_URL}"
+                )
                 self.refresh()
             except Exception as exc:  # noqa: BLE001
                 QMessageBox.critical(self, "AAVSO", str(exc))

@@ -11,7 +11,7 @@ from astrocitizen.adapters.fs import LocalArtifactStore
 from astrocitizen.adapters.hardware import create_camera
 from astrocitizen.adapters.meteo import ManualMeteo, OpenMeteo, RainViewerRadar
 from astrocitizen.adapters.platesolve import create_plate_solver
-from astrocitizen.adapters.sky import AstropyEphemeris, SimbadResolver
+from astrocitizen.adapters.sky import AstropyEphemeris, SimbadResolver, VsxResolver
 from astrocitizen.adapters.sqlite import SqliteArchive
 from astrocitizen.analysis import (
     AperturePhotometry,
@@ -245,26 +245,38 @@ def _cmd_target_add(args: argparse.Namespace) -> int:
     ws = _ensure_default_workspace(archive)
     ra, dec = args.ra, args.dec
     external_ids: dict = {}
-    if (ra is None or dec is None) and args.resolve:
+    designation = args.name
+    if (ra is None or dec is None) and getattr(args, "resolve_vsx", False):
+        resolved = VsxResolver().resolve(args.name)
+        ra = resolved["ra_deg"]
+        dec = resolved["dec_deg"]
+        external_ids = dict(resolved.get("external_ids") or {})
+        designation = str(resolved.get("designation") or args.name)
+    elif (ra is None or dec is None) and args.resolve:
         resolved = SimbadResolver().resolve(args.name)
         ra = resolved["ra_deg"]
         dec = resolved["dec_deg"]
         external_ids = dict(resolved.get("external_ids") or {})
     if ra is None or dec is None:
-        print("indique --ra/--dec ou --resolve (requer astroquery)")
+        print("indique --ra/--dec, --resolve (SIMBAD) ou --resolve-vsx")
         archive.close()
         return 1
     target = Target(
         id=new_id(),
         workspace_id=ws.id,
-        designation=args.name,
+        designation=designation,
         ra_deg=ra,
         dec_deg=dec,
         target_type=args.type,
         external_ids=external_ids,
     )
     archive.upsert_target(target)
-    print(f"{target.id}\t{target.designation}\t{target.ra_deg},{target.dec_deg}")
+    extras = ""
+    if external_ids.get("auid"):
+        extras = f"\tauid={external_ids['auid']}"
+    if external_ids.get("variability_type"):
+        extras += f"\ttype={external_ids['variability_type']}"
+    print(f"{target.id}\t{target.designation}\t{target.ra_deg},{target.dec_deg}{extras}")
     archive.close()
     return 0
 
@@ -1057,6 +1069,8 @@ def _cmd_contribute_validate(args: argparse.Namespace) -> int:
 
 
 def _cmd_contribute_aavso(args: argparse.Namespace) -> int:
+    from astrocitizen.adapters.aavso_portal import WEBOBS_URL
+
     archive = _open_archive(Path(args.db))
     ws = _ensure_default_workspace(archive)
     cred = LocalCredentialsStore(Path(args.credentials) if args.credentials else None)
@@ -1065,11 +1079,12 @@ def _cmd_contribute_aavso(args: argparse.Namespace) -> int:
         print("falta --obscode ou credentials aavso.obscode")
         archive.close()
         return 1
+    chart = getattr(args, "chart", None) or "NA"
     check = validate_product_for_network(
         archive,
         network="aavso",
         product_id=UUID(args.product),
-        payload={"obscode": obscode, "star": args.star},
+        payload={"obscode": obscode, "star": args.star, "chart": chart},
     )
     for issue in check.issues:
         print(f"{issue.severity}\t{issue.code}\t{issue.message}")
@@ -1083,6 +1098,7 @@ def _cmd_contribute_aavso(args: argparse.Namespace) -> int:
         observer_code=str(obscode),
         out_path=out,
         band=args.band,
+        chart=chart,
     )
     store = LocalArtifactStore(Path(args.artifacts))
     uri = store.put(out, key=f"export/aavso/{out.name}")
@@ -1093,10 +1109,20 @@ def _cmd_contribute_aavso(args: argparse.Namespace) -> int:
         status="validated",
         artifact_uri=uri,
         product_id=UUID(args.product),
-        payload_summary={"star": args.star, "obscode": obscode, "note": "upload via WebObs"},
+        payload_summary={
+            "star": args.star,
+            "obscode": obscode,
+            "chart": chart,
+            "note": "upload via WebObs (oficial)",
+        },
     )
     archive.save_network_submission(sub)
-    print(f"wrote={out}\turi={uri}\tsubmission={sub.id}\twebobs=https://www.aavso.org/webobs/")
+    print(f"wrote={out}\turi={uri}\tsubmission={sub.id}\twebobs={WEBOBS_URL}")
+    if getattr(args, "open_webobs", False):
+        import webbrowser
+
+        webbrowser.open(WEBOBS_URL)
+        print(f"opened={WEBOBS_URL}")
     archive.close()
     return 0
 
@@ -2149,6 +2175,11 @@ def build_parser() -> argparse.ArgumentParser:
     p_tadd.add_argument("--dec", type=float, default=None)
     p_tadd.add_argument("--type", default="star")
     p_tadd.add_argument("--resolve", action="store_true", help="Resolver via SIMBAD")
+    p_tadd.add_argument(
+        "--resolve-vsx",
+        action="store_true",
+        help="Resolver via VSX (AAVSO; AUID/tipo/periodo)",
+    )
     p_tadd.set_defaults(func=_cmd_target_add)
     p_tlist = tgt_sub.add_parser("list", help="Listar alvos")
     _add_db_arg(p_tlist)
@@ -2667,15 +2698,23 @@ def build_parser() -> argparse.ArgumentParser:
     p_cv.add_argument("--target", default=None)
     p_cv.set_defaults(func=_cmd_contribute_validate)
 
-    p_ca = c_sub.add_parser("aavso", help="Export AAVSO Extended (WebObs manual)")
+    p_ca = c_sub.add_parser(
+        "aavso", help="Export AAVSO Extended + preparar WebObs (oficial)"
+    )
     _add_db_arg(p_ca)
     p_ca.add_argument("--product", required=True)
     p_ca.add_argument("--star", required=True)
     p_ca.add_argument("--obscode", default=None)
     p_ca.add_argument("--band", default="V")
+    p_ca.add_argument("--chart", default="NA", help="ID carta VSP (default NA)")
     p_ca.add_argument("--out", required=True)
     p_ca.add_argument("--artifacts", default=str(default_artifacts_root()))
     p_ca.add_argument("--credentials", default=None)
+    p_ca.add_argument(
+        "--open-webobs",
+        action="store_true",
+        help="Abrir WebObs no browser apos gerar AEF",
+    )
     p_ca.set_defaults(func=_cmd_contribute_aavso)
 
     p_cm = c_sub.add_parser("mpc", help="ADES PSV + submit MPC (default dry-run)")

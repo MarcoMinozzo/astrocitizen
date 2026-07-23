@@ -1,4 +1,4 @@
-"""Export AAVSO Extended Format (AC-093) — JD via Astropy."""
+"""Export AAVSO Extended Format (AC-093 / AC-096) — JD via Astropy."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from uuid import UUID
 
 from astropy.time import Time
 
-from astrocitizen.shared.errors import NotFoundError
+from astrocitizen.shared.errors import DomainError, NotFoundError
 
 
 def _to_jd(t_utc: str | None) -> float | None:
@@ -41,9 +41,14 @@ def format_aavso_extended(
         "#OBSTYPE=CCD",
         "#",
     ]
+    n_data = 0
     for pt in points:
         mag = pt.get("y")
         if mag is None:
+            continue
+        try:
+            mag_f = float(mag)
+        except (TypeError, ValueError):
             continue
         jd = _to_jd(pt.get("t_utc"))
         if jd is None:
@@ -52,8 +57,14 @@ def format_aavso_extended(
         merr_s = f"{float(merr):.4f}" if merr is not None else "na"
         notes = str(pt.get("t_utc") or "")
         lines.append(
-            f"{star_name},{jd:.6f},{float(mag):.4f},{merr_s},{band},"
+            f"{star_name},{jd:.6f},{mag_f:.4f},{merr_s},{band},"
             f"NO,STD,ENSEMBLE,na,na,na,na,{chart},{notes}"
+        )
+        n_data += 1
+    if n_data == 0:
+        raise DomainError(
+            "nenhum ponto com t_utc parseavel e magnitude numerica para AEF",
+            rule_id="AC-096",
         )
     return "\n".join(lines) + "\n"
 

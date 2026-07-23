@@ -190,6 +190,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | AC-093 | Export AAVSO | P2 | M | AC-092, E14 | ✅ Extended com JD · `contribute aavso` · WebObs manual |
 | AC-094 | Templates A02–A04, A09 | P2 | M | AC-091 | |
 | AC-095 | Browser embutido Observing Campaigns (Qt WebEngine opt-in) | P2 | M | AC-071, CS-F14 | ✅ portal `apps.aavso.org` · extra `gui-web` · fallback browser SO |
+| AC-096 | Fluxo oficial AEF→WebObs + VSX resolve + validacao AEF | P1 | M | AC-093, AC-141 | ✅ Submit assistido · `target --resolve-vsx` · sem Selenium |
 
 ---
 

@@ -1,6 +1,6 @@
-"""AAVSO Observing Campaigns portal — URLs e allowlist (AC-095).
+"""AAVSO portal URLs e allowlist (AC-095 / AC-096).
 
-Sem API publica de campanhas: o portal web e a fonte.
+Campanhas: sem API publica (browser). Submissao: AEF + WebObs oficial.
 """
 
 from __future__ import annotations
@@ -10,6 +10,10 @@ from urllib.parse import urlparse
 
 AAVSO_CAMPAIGNS_HOME = "https://apps.aavso.org/v2/campaigns/search"
 AAVSO_CAMPAIGN_DETAIL_TMPL = "https://apps.aavso.org/v2/campaigns/{campaign_id}"
+WEBOBS_URL = "https://www.aavso.org/webobs/"
+VSX_OBJECT_API = (
+    "https://www.aavso.org/vsx/index.php?view=api.object&ident={ident}&format=json"
+)
 
 _CAMPAIGN_ID_RE = re.compile(
     r"^/v2/campaigns/(?P<id>\d+)/?$",
