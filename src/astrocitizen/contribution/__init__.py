@@ -2,6 +2,7 @@
 
 from astrocitizen.contribution.aavso import ExportAavso, format_aavso_extended
 from astrocitizen.contribution.bess import annotate_existing_fits, write_bess_fits
+from astrocitizen.contribution.cobs import ExportCobs, format_cobs_measure
 from astrocitizen.contribution.credentials import LocalCredentialsStore
 from astrocitizen.contribution.exoclock import ExportExoclock, format_exoclock_lc
 from astrocitizen.contribution.iota import format_iota_es_txt, write_iota_pack
@@ -17,6 +18,7 @@ from astrocitizen.contribution.wds import ExportWds, format_wds_measure
 
 __all__ = [
     "ExportAavso",
+    "ExportCobs",
     "ExportExoclock",
     "ExportSolarReport",
     "ExportWds",
@@ -28,6 +30,7 @@ __all__ = [
     "annotate_existing_fits",
     "format_aavso_extended",
     "format_ades_psv",
+    "format_cobs_measure",
     "format_exoclock_lc",
     "format_iota_es_txt",
     "format_solar_report",

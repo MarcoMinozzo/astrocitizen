@@ -14,7 +14,7 @@
 
 ## Fora deste slice
 
-- COBS exporter
+- COBS exporter — feito em [SPRINT_EXP_COBS.md](SPRINT_EXP_COBS.md)
 - Upload automatico portais
 - E19 / AC-191
 

@@ -25,7 +25,7 @@ def submission_table_rows(subs: list[Any]) -> list[list[str]]:
 def credentials_status_lines(store: Any) -> list[str]:
     data = store.load()
     lines = []
-    for net in ("aavso", "mpc", "tns", "bess", "exoclock", "iota", "wds"):
+    for net in ("aavso", "mpc", "tns", "bess", "exoclock", "iota", "wds", "cobs"):
         vals = dict(data.get(net) or {})
         if not vals:
             lines.append(f"{net}: (sem credenciais)")
@@ -45,7 +45,9 @@ def credentials_status_lines(store: Any) -> list[str]:
                 keys.append(f"user_id={vals['user_id']}")
             if vals.get("groupid") is not None:
                 keys.append(f"groupid={vals['groupid']}")
-        if net in ("bess", "exoclock", "iota", "wds") and vals.get("observer"):
+        if net == "cobs" and vals.get("obscode"):
+            keys.append(f"obscode={vals['obscode']}")
+        if net in ("bess", "exoclock", "iota", "wds", "cobs") and vals.get("observer"):
             keys.append(f"observer={vals['observer']}")
         lines.append(f"{net}: {', '.join(keys) if keys else '(vazio)'}")
     return lines
@@ -375,6 +377,82 @@ def prefill_iota_fields(
     return out
 
 
+def prefill_cobs_fields(
+    archive: Any,
+    *,
+    credentials: dict[str, Any] | None = None,
+    current: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Preenche rascunho COBS a partir de visual_log / light_curve."""
+    from astrocitizen.contribution.cobs import fields_from_comet_context
+
+    cred = dict(credentials or {})
+    cur = dict(current or {})
+    out: dict[str, Any] = {
+        "product_id": str(cur.get("product_id") or "").strip(),
+        "designation": str(cur.get("designation") or "").strip(),
+        "epoch_utc": str(cur.get("epoch_utc") or "").strip(),
+        "mag": cur.get("mag"),
+        "mag_method": str(cur.get("mag_method") or "B").strip() or "B",
+        "comp_cat": str(cur.get("comp_cat") or "").strip(),
+        "aperture_cm": cur.get("aperture_cm"),
+        "instr_type": str(cur.get("instr_type") or "L").strip() or "L",
+        "coma_arcmin": cur.get("coma_arcmin"),
+        "dc": str(cur.get("dc") or "").strip(),
+        "tail_deg": cur.get("tail_deg"),
+        "tail_pa": cur.get("tail_pa"),
+        "obscode": str(cur.get("obscode") or cred.get("obscode") or "").strip(),
+        "observer": str(cur.get("observer") or cred.get("observer") or "").strip(),
+        "location": str(cur.get("location") or "").strip(),
+        "notes": str(cur.get("notes") or "").strip(),
+    }
+    pid = _parse_uuid(out["product_id"])
+    product = archive.get_analysis_product(pid) if pid else None
+    filled = fields_from_comet_context(
+        archive,
+        product,
+        overrides={
+            "designation": out["designation"] or None,
+            "epoch_utc": out["epoch_utc"] or None,
+            "mag": out["mag"],
+            "mag_method": out["mag_method"] if cur.get("mag_method") else None,
+            "comp_cat": out["comp_cat"] or None,
+            "aperture_cm": out["aperture_cm"],
+            "instr_type": out["instr_type"] if cur.get("instr_type") else None,
+            "coma_arcmin": out["coma_arcmin"],
+            "dc": out["dc"] or None,
+            "tail_deg": out["tail_deg"],
+            "tail_pa": out["tail_pa"],
+            "obscode": out["obscode"] or None,
+            "observer": out["observer"] or None,
+            "location": out["location"] or None,
+            "notes": out["notes"] or None,
+        },
+    )
+    # Product/context wins for empty designation/epoch/mag
+    out["designation"] = filled["designation"] or out["designation"]
+    out["epoch_utc"] = filled["epoch_utc"] or out["epoch_utc"]
+    if out["mag"] is None:
+        out["mag"] = filled["mag"]
+    out["mag_method"] = filled["mag_method"] or out["mag_method"]
+    out["comp_cat"] = filled["comp_cat"] or out["comp_cat"]
+    if out["aperture_cm"] is None:
+        out["aperture_cm"] = filled["aperture_cm"]
+    out["instr_type"] = filled["instr_type"] or out["instr_type"]
+    if out["coma_arcmin"] is None:
+        out["coma_arcmin"] = filled["coma_arcmin"]
+    out["dc"] = filled["dc"] or out["dc"]
+    if out["tail_deg"] is None:
+        out["tail_deg"] = filled["tail_deg"]
+    if out["tail_pa"] is None:
+        out["tail_pa"] = filled["tail_pa"]
+    out["obscode"] = filled["obscode"] or out["obscode"]
+    out["observer"] = filled["observer"] or out["observer"] or "AstroCitizen"
+    out["location"] = filled["location"] or out["location"]
+    out["notes"] = filled["notes"] or out["notes"]
+    return out
+
+
 def format_validation_issue_lines(result: Any) -> list[str]:
     lines: list[str] = []
     for issue in getattr(result, "issues", None) or []:
@@ -422,6 +500,7 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
     )
     from astrocitizen.contribution.validate_minimum import validate_product_for_network
     from astrocitizen.contribution.wds import ExportWds
+    from astrocitizen.contribution.cobs import ExportCobs
     from astrocitizen.shared.ids import new_id
     from astrocitizen.shared.paths import default_artifacts_root
 
@@ -574,6 +653,64 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                 form.addRow("Asteroid", self._fields["asteroid"])
                 form.addRow("Observer", self._fields["observer"])
                 form.addRow("Result", self._fields["result"])
+            elif self.network == "cobs":
+                self._fields["product_id"] = QLineEdit(str(initial.get("product_id") or ""))
+                self._fields["designation"] = QLineEdit(
+                    str(initial.get("designation") or "")
+                )
+                self._fields["epoch_utc"] = QLineEdit(str(initial.get("epoch_utc") or ""))
+                self._fields["mag"] = QDoubleSpinBox()
+                self._fields["mag"].setRange(-5, 25)
+                self._fields["mag"].setDecimals(1)
+                self._fields["mag"].setSpecialValueText("(vazio)")
+                self._fields["mag"].setMinimum(-5.1)
+                self._fields["mag"].setValue(
+                    float(initial["mag"]) if initial.get("mag") is not None else -5.1
+                )
+                self._fields["mag_method"] = QLineEdit(
+                    str(initial.get("mag_method") or "B")
+                )
+                self._fields["comp_cat"] = QLineEdit(str(initial.get("comp_cat") or ""))
+                self._fields["aperture_cm"] = QDoubleSpinBox()
+                self._fields["aperture_cm"].setRange(0, 999)
+                self._fields["aperture_cm"].setDecimals(1)
+                self._fields["aperture_cm"].setSpecialValueText("(vazio)")
+                self._fields["aperture_cm"].setValue(
+                    float(initial["aperture_cm"])
+                    if initial.get("aperture_cm") is not None
+                    else 0
+                )
+                self._fields["instr_type"] = QLineEdit(
+                    str(initial.get("instr_type") or "L")
+                )
+                self._fields["coma_arcmin"] = QDoubleSpinBox()
+                self._fields["coma_arcmin"].setRange(0, 999)
+                self._fields["coma_arcmin"].setDecimals(1)
+                self._fields["coma_arcmin"].setSpecialValueText("(vazio)")
+                self._fields["coma_arcmin"].setValue(
+                    float(initial["coma_arcmin"])
+                    if initial.get("coma_arcmin") is not None
+                    else 0
+                )
+                self._fields["dc"] = QLineEdit(str(initial.get("dc") or ""))
+                self._fields["obscode"] = QLineEdit(str(initial.get("obscode") or ""))
+                self._fields["observer"] = QLineEdit(str(initial.get("observer") or ""))
+                self._fields["location"] = QLineEdit(str(initial.get("location") or ""))
+                self._fields["notes"] = QLineEdit(str(initial.get("notes") or ""))
+                form.addRow("Product UUID", self._fields["product_id"])
+                form.addRow("Designation", self._fields["designation"])
+                form.addRow("Epoch UTC", self._fields["epoch_utc"])
+                form.addRow("Mag", self._fields["mag"])
+                form.addRow("Mag method", self._fields["mag_method"])
+                form.addRow("Comp cat", self._fields["comp_cat"])
+                form.addRow("Aperture cm", self._fields["aperture_cm"])
+                form.addRow("Instr type", self._fields["instr_type"])
+                form.addRow("Coma '", self._fields["coma_arcmin"])
+                form.addRow("DC", self._fields["dc"])
+                form.addRow("OBSCODE", self._fields["obscode"])
+                form.addRow("Observer", self._fields["observer"])
+                form.addRow("Location", self._fields["location"])
+                form.addRow("Notes", self._fields["notes"])
             else:
                 self._fields["product_id"] = QLineEdit(str(initial.get("product_id") or ""))
                 self._fields["designation"] = QLineEdit(
@@ -695,6 +832,26 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                     "observer": self._fields["observer"].text().strip(),
                     "result": self._fields["result"].currentText(),
                 }
+            if self.network == "cobs":
+                mag_val = float(self._fields["mag"].value())
+                ap = float(self._fields["aperture_cm"].value())
+                coma = float(self._fields["coma_arcmin"].value())
+                return {
+                    "product_id": self._fields["product_id"].text().strip(),
+                    "designation": self._fields["designation"].text().strip(),
+                    "epoch_utc": self._fields["epoch_utc"].text().strip(),
+                    "mag": None if mag_val < -5 else mag_val,
+                    "mag_method": self._fields["mag_method"].text().strip() or "B",
+                    "comp_cat": self._fields["comp_cat"].text().strip(),
+                    "aperture_cm": None if ap <= 0 else ap,
+                    "instr_type": self._fields["instr_type"].text().strip() or "L",
+                    "coma_arcmin": None if coma <= 0 else coma,
+                    "dc": self._fields["dc"].text().strip(),
+                    "obscode": self._fields["obscode"].text().strip(),
+                    "observer": self._fields["observer"].text().strip(),
+                    "location": self._fields["location"].text().strip(),
+                    "notes": self._fields["notes"].text().strip(),
+                }
             mag_val = float(self._fields["mag"].value())
             return {
                 "product_id": self._fields["product_id"].text().strip(),
@@ -758,6 +915,23 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                 ri = self._fields["result"].findText(res)
                 if ri >= 0:
                     self._fields["result"].setCurrentIndex(ri)
+            elif self.network == "cobs":
+                self._fields["designation"].setText(str(filled.get("designation") or ""))
+                self._fields["epoch_utc"].setText(str(filled.get("epoch_utc") or ""))
+                if filled.get("mag") is not None:
+                    self._fields["mag"].setValue(float(filled["mag"]))
+                self._fields["mag_method"].setText(str(filled.get("mag_method") or "B"))
+                self._fields["comp_cat"].setText(str(filled.get("comp_cat") or ""))
+                if filled.get("aperture_cm") is not None:
+                    self._fields["aperture_cm"].setValue(float(filled["aperture_cm"]))
+                self._fields["instr_type"].setText(str(filled.get("instr_type") or "L"))
+                if filled.get("coma_arcmin") is not None:
+                    self._fields["coma_arcmin"].setValue(float(filled["coma_arcmin"]))
+                self._fields["dc"].setText(str(filled.get("dc") or ""))
+                self._fields["obscode"].setText(str(filled.get("obscode") or ""))
+                self._fields["observer"].setText(str(filled.get("observer") or ""))
+                self._fields["location"].setText(str(filled.get("location") or ""))
+                self._fields["notes"].setText(str(filled.get("notes") or ""))
             else:
                 self._fields["designation"].setText(
                     str(filled.get("designation") or "")
@@ -781,6 +955,7 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                 "exoclock": prefill_exoclock_fields,
                 "bess": prefill_bess_fields,
                 "iota": prefill_iota_fields,
+                "cobs": prefill_cobs_fields,
             }
             fn = prefills.get(self.network, prefill_mpc_fields)
             filled = fn(self.archive, credentials={}, current=vals)
@@ -847,6 +1022,19 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                         "observer": vals.get("observer"),
                     },
                 )
+            elif self.network == "cobs":
+                result = validate_product_for_network(
+                    self.archive,
+                    network="cobs",
+                    product_id=pid,
+                    payload={
+                        "designation": vals.get("designation"),
+                        "epoch_utc": vals.get("epoch_utc"),
+                        "mag": vals.get("mag"),
+                        "mag_method": vals.get("mag_method"),
+                        "obscode": vals.get("obscode"),
+                    },
+                )
             else:
                 result = validate_product_for_network(
                     self.archive,
@@ -894,7 +1082,7 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             top = QHBoxLayout()
             self.filter_combo = QComboBox()
             self.filter_combo.addItem("Todas", None)
-            for n in ("aavso", "mpc", "tns", "bess", "exoclock", "iota", "wds"):
+            for n in ("aavso", "mpc", "tns", "bess", "exoclock", "iota", "wds", "cobs"):
                 self.filter_combo.addItem(n, n)
             self.refresh_btn = QPushButton("Atualizar lista")
             self.refresh_btn.clicked.connect(self.refresh)
@@ -918,6 +1106,7 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             tabs.addTab(self._tab_aavso(), "AAVSO")
             tabs.addTab(self._tab_mpc(), "MPC")
             tabs.addTab(self._tab_wds(), "WDS")
+            tabs.addTab(self._tab_cobs(), "COBS")
             tabs.addTab(self._tab_tns(), "TNS")
             tabs.addTab(self._tab_bess(), "BeSS")
             tabs.addTab(self._tab_exoclock(), "ExoClock")
@@ -1049,6 +1238,46 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             form.addRow(row)
             return w
 
+        def _tab_cobs(self) -> QWidget:
+            w = QWidget()
+            form = QFormLayout(w)
+            self.c_product = QLineEdit()
+            self.c_desig = QLineEdit()
+            self.c_epoch = QLineEdit()
+            self.c_mag = QDoubleSpinBox()
+            self.c_mag.setRange(-5.1, 25)
+            self.c_mag.setDecimals(1)
+            self.c_mag.setSpecialValueText("(vazio)")
+            self.c_mag.setValue(-5.1)
+            self.c_method = QLineEdit()
+            self.c_method.setText("B")
+            self.c_aperture = QDoubleSpinBox()
+            self.c_aperture.setRange(0, 999)
+            self.c_aperture.setDecimals(1)
+            self.c_aperture.setSpecialValueText("(vazio)")
+            self.c_aperture.setValue(0)
+            self.c_obscode = QLineEdit()
+            self.c_observer = QLineEdit()
+            self.c_location = QLineEdit()
+            review = QPushButton("Revisar campos")
+            review.clicked.connect(lambda: self._review_fields("cobs"))
+            btn = QPushButton("Export EXP-COBS")
+            btn.clicked.connect(self._run_cobs)
+            form.addRow("Product UUID", self.c_product)
+            form.addRow("Designation", self.c_desig)
+            form.addRow("Epoch UTC", self.c_epoch)
+            form.addRow("Mag", self.c_mag)
+            form.addRow("Mag method", self.c_method)
+            form.addRow("Aperture cm", self.c_aperture)
+            form.addRow("OBSCODE", self.c_obscode)
+            form.addRow("Observer", self.c_observer)
+            form.addRow("Location", self.c_location)
+            row = QHBoxLayout()
+            row.addWidget(review)
+            row.addWidget(btn)
+            form.addRow(row)
+            return w
+
         def _tab_tns(self) -> QWidget:
             w = QWidget()
             form = QFormLayout(w)
@@ -1165,6 +1394,11 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             w_cred = self.creds.get_network("wds")
             if w_cred.get("observer") and not self.w_observer.text():
                 self.w_observer.setText(str(w_cred["observer"]))
+            c_cred = self.creds.get_network("cobs")
+            if c_cred.get("obscode") and not self.c_obscode.text():
+                self.c_obscode.setText(str(c_cred["obscode"]))
+            if c_cred.get("observer") and not self.c_observer.text():
+                self.c_observer.setText(str(c_cred["observer"]))
             t_cred = self.creds.get_network("tns")
             if t_cred.get("groupid") is not None and self.t_group.text() == "0":
                 self.t_group.setText(str(t_cred["groupid"]))
@@ -1205,6 +1439,7 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                     "aavso": "AAVSO",
                     "mpc": "MPC",
                     "wds": "WDS",
+                    "cobs": "COBS",
                     "tns": "TNS",
                     "bess": "BeSS",
                     "exoclock": "ExoClock",
@@ -1222,6 +1457,7 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                     "a_product",
                     "m_product",
                     "w_product",
+                    "c_product",
                     "t_product",
                     "e_product",
                     "b_product",
@@ -1389,6 +1625,38 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
             if ri >= 0:
                 self.i_result.setCurrentIndex(ri)
 
+        def _cobs_current(self) -> dict[str, Any]:
+            mag_val = float(self.c_mag.value())
+            ap = float(self.c_aperture.value())
+            return {
+                "product_id": self.c_product.text().strip(),
+                "designation": self.c_desig.text().strip(),
+                "epoch_utc": self.c_epoch.text().strip(),
+                "mag": None if mag_val < -5 else mag_val,
+                "mag_method": self.c_method.text().strip() or "B",
+                "aperture_cm": None if ap <= 0 else ap,
+                "obscode": self.c_obscode.text().strip(),
+                "observer": self.c_observer.text().strip(),
+                "location": self.c_location.text().strip(),
+            }
+
+        def _apply_cobs_fields(self, vals: dict[str, Any]) -> None:
+            self.c_product.setText(str(vals.get("product_id") or ""))
+            self.c_desig.setText(str(vals.get("designation") or ""))
+            self.c_epoch.setText(str(vals.get("epoch_utc") or ""))
+            if vals.get("mag") is not None:
+                self.c_mag.setValue(float(vals["mag"]))
+            else:
+                self.c_mag.setValue(-5.1)
+            self.c_method.setText(str(vals.get("mag_method") or "B"))
+            if vals.get("aperture_cm") is not None:
+                self.c_aperture.setValue(float(vals["aperture_cm"]))
+            else:
+                self.c_aperture.setValue(0)
+            self.c_obscode.setText(str(vals.get("obscode") or ""))
+            self.c_observer.setText(str(vals.get("observer") or ""))
+            self.c_location.setText(str(vals.get("location") or ""))
+
         def _save_review_draft(
             self, *, network: str, vals: dict[str, Any], product_id: UUID | None
         ) -> None:
@@ -1421,6 +1689,7 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                 ),
                 "bess": (prefill_bess_fields, self._bess_current, self._apply_bess_fields),
                 "iota": (prefill_iota_fields, self._iota_current, self._apply_iota_fields),
+                "cobs": (prefill_cobs_fields, self._cobs_current, self._apply_cobs_fields),
             }
             prefill_fn, current_fn, apply_fn = builders[network]
             initial = prefill_fn(
@@ -1655,6 +1924,79 @@ def build_contribute_dashboard(parent: Any | None = None) -> Any:
                 self.refresh()
             except Exception as exc:  # noqa: BLE001
                 QMessageBox.critical(self, "WDS", str(exc))
+
+        def _run_cobs(self) -> None:
+            if self._workspace_id is None:
+                QMessageBox.warning(self, "Contribute", "Sem workspace.")
+                return
+            product_id = _parse_uuid(self.c_product.text())
+            if product_id is not None:
+                filled = prefill_cobs_fields(
+                    self.archive,
+                    credentials=self.creds.get_network("cobs"),
+                    current=self._cobs_current(),
+                )
+                self._apply_cobs_fields(filled)
+            mag_val = float(self.c_mag.value())
+            mag = None if mag_val < -5 else mag_val
+            ap = float(self.c_aperture.value())
+            overrides: dict[str, Any] = {
+                "designation": self.c_desig.text().strip() or None,
+                "epoch_utc": self.c_epoch.text().strip() or None,
+                "mag": mag,
+                "mag_method": self.c_method.text().strip() or "B",
+                "aperture_cm": None if ap <= 0 else ap,
+                "obscode": self.c_obscode.text().strip()
+                or self.creds.get_network("cobs").get("obscode")
+                or None,
+                "observer": self.c_observer.text().strip()
+                or self.creds.get_network("cobs").get("observer")
+                or None,
+                "location": self.c_location.text().strip() or None,
+            }
+            check = validate_product_for_network(
+                self.archive,
+                network="cobs",
+                product_id=product_id,
+                payload=overrides,
+            )
+            if not check.ok:
+                QMessageBox.warning(
+                    self,
+                    "Validacao COBS",
+                    "\n".join(check.error_messages()) or "Campos incompletos.",
+                )
+                return
+            out_name = f"{product_id}.txt" if product_id else "gui_cobs.txt"
+            out = self.artifacts_root / "export" / "cobs" / out_name
+            try:
+                ExportCobs(self.archive).execute(
+                    product_id=product_id,
+                    out_path=out,
+                    overrides=overrides,
+                )
+                store = LocalArtifactStore(self.artifacts_root)
+                uri = store.put(out, key=f"export/cobs/{out.name}")
+                csv_path = out.with_suffix(".csv")
+                if csv_path.is_file():
+                    store.put(csv_path, key=f"export/cobs/{csv_path.name}")
+                sub = NetworkSubmission(
+                    id=new_id(),
+                    workspace_id=self._workspace_id,
+                    network="cobs",
+                    status="validated",
+                    artifact_uri=uri,
+                    product_id=product_id,
+                    payload_summary={
+                        "designation": self.c_desig.text().strip(),
+                        "note": "submit manual https://www.cobs.si/",
+                    },
+                )
+                self.archive.save_network_submission(sub)
+                self._log(f"COBS wrote {out} - submit https://www.cobs.si/")
+                self.refresh()
+            except Exception as exc:  # noqa: BLE001
+                QMessageBox.critical(self, "COBS", str(exc))
 
         def _run_tns(self) -> None:
             if self._workspace_id is None:

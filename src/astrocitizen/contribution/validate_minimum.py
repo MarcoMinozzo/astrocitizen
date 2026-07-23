@@ -66,6 +66,8 @@ def validate_product_for_network(
         issues.extend(_validate_solar(product))
     elif net == "wds":
         issues.extend(_validate_wds(product, payload))
+    elif net == "cobs":
+        issues.extend(_validate_cobs(product, payload))
     else:
         issues.append(
             _issue("network_unknown", f"rede sem regras AC-141: {network}", severity="warning")
@@ -218,4 +220,57 @@ def _validate_wds(
     ).strip()
     if not obj:
         issues.append(_issue("wds_object", "identificacao do par WDS obrigatoria"))
+    return issues
+
+
+def _validate_cobs(
+    product: Any | None, payload: dict[str, Any] | None = None
+) -> list[ValidationIssue]:
+    issues: list[ValidationIssue] = []
+    payload = dict(payload or {})
+    if product is not None and product.product_type not in ("visual_log", "light_curve"):
+        issues.append(
+            _issue(
+                "cobs_type",
+                f"COBS prefere visual_log ou light_curve (e {product.product_type})",
+                severity="warning",
+            )
+        )
+    summary = dict(getattr(product, "summary", None) or {}) if product else {}
+    params = dict(getattr(product, "parameters", None) or {}) if product else {}
+    desig = str(
+        payload.get("designation")
+        or summary.get("object")
+        or params.get("object_name")
+        or params.get("designation")
+        or ""
+    ).strip()
+    if not desig:
+        issues.append(_issue("cobs_desig", "designacao do cometa obrigatoria"))
+    epoch = str(
+        payload.get("epoch_utc")
+        or payload.get("ut_date")
+        or summary.get("observed_at_utc")
+        or summary.get("epoch_utc")
+        or ""
+    ).strip()
+    if not epoch:
+        issues.append(_issue("cobs_epoch", "epoca / UT date obrigatoria"))
+    mag = payload.get("mag")
+    if mag is None:
+        mag = params.get("magnitude")
+    if mag is None:
+        mag = summary.get("mag")
+    if mag is None:
+        issues.append(_issue("cobs_mag", "magnitude total obrigatoria"))
+    method = str(payload.get("mag_method") or params.get("mag_method") or "").strip()
+    if not method:
+        issues.append(
+            _issue("cobs_method", "metodo de magnitude ICQ obrigatorio (ex.: B)", severity="warning")
+        )
+    code = str(payload.get("obscode") or params.get("obscode") or "").strip()
+    if not code:
+        issues.append(_issue("cobs_obscode", "OBSCODE COBS/ICQ recomendado", severity="warning"))
+    elif len(code) < 3:
+        issues.append(_issue("cobs_obscode_short", "OBSCODE ICQ tipicamente 5 caracteres", severity="warning"))
     return issues

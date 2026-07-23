@@ -33,6 +33,7 @@ from astrocitizen.contribution.solar import ExportSolarReport
 from astrocitizen.contribution.tns import TnsClient, format_tns_at_report, write_tns_report
 from astrocitizen.contribution.validate_minimum import validate_product_for_network
 from astrocitizen.contribution.wds import ExportWds
+from astrocitizen.contribution.cobs import ExportCobs
 from astrocitizen.desktop import run_gui
 from astrocitizen.inventory.models import Equipment, Site
 from astrocitizen.observatory import (
@@ -1458,6 +1459,87 @@ def _cmd_contribute_wds(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_contribute_cobs(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    cred = LocalCredentialsStore(Path(args.credentials) if args.credentials else None)
+    cobs_cred = cred.get_network("cobs")
+    product_id = UUID(args.product) if args.product else None
+    overrides: dict = {}
+    for key in (
+        "designation",
+        "mag_method",
+        "comp_cat",
+        "instr_type",
+        "dc",
+        "obscode",
+        "observer",
+        "location",
+        "notes",
+    ):
+        val = getattr(args, key, None)
+        if val:
+            overrides[key] = val
+    if args.epoch:
+        overrides["epoch_utc"] = args.epoch
+    if args.mag is not None:
+        overrides["mag"] = args.mag
+    for key in (
+        "aperture_cm",
+        "focal_ratio",
+        "power_or_exptime",
+        "coma_arcmin",
+        "tail_deg",
+        "tail_pa",
+    ):
+        val = getattr(args, key, None)
+        if val is not None:
+            overrides[key] = val
+    if not overrides.get("obscode") and cobs_cred.get("obscode"):
+        overrides["obscode"] = cobs_cred["obscode"]
+    if not overrides.get("observer") and cobs_cred.get("observer"):
+        overrides["observer"] = cobs_cred["observer"]
+    check = validate_product_for_network(
+        archive,
+        network="cobs",
+        product_id=product_id,
+        payload=overrides,
+    )
+    for issue in check.issues:
+        print(f"{issue.severity}\t{issue.code}\t{issue.message}")
+    if not check.ok:
+        archive.close()
+        return 1
+    out = Path(args.out)
+    ExportCobs(archive).execute(
+        product_id=product_id,
+        out_path=out,
+        overrides=overrides or None,
+        write_csv=not args.no_csv,
+    )
+    store = LocalArtifactStore(Path(args.artifacts))
+    uri = store.put(out, key=f"export/cobs/{out.name}")
+    csv_path = out.with_suffix(".csv")
+    if csv_path.is_file():
+        store.put(csv_path, key=f"export/cobs/{csv_path.name}")
+    sub = NetworkSubmission(
+        id=new_id(),
+        workspace_id=ws.id,
+        network="cobs",
+        status="validated",
+        artifact_uri=uri,
+        product_id=product_id,
+        payload_summary={
+            "designation": overrides.get("designation"),
+            "note": "submit manual https://www.cobs.si/",
+        },
+    )
+    archive.save_network_submission(sub)
+    print(f"wrote={out}\turi={uri}\tsubmission={sub.id}\tsubmit=https://www.cobs.si/")
+    archive.close()
+    return 0
+
+
 def _cmd_meteo_forecast(args: argparse.Namespace) -> int:
     archive = _open_archive(Path(args.db))
     ws = _ensure_default_workspace(archive)
@@ -2066,7 +2148,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_cv.add_argument(
         "--network",
         required=True,
-        choices=("aavso", "mpc", "exoclock", "bess", "tns", "iota", "solar", "wds"),
+        choices=("aavso", "mpc", "exoclock", "bess", "tns", "iota", "solar", "wds", "cobs"),
     )
     p_cv.add_argument("--product", default=None)
     p_cv.add_argument("--obscode", default=None)
@@ -2200,12 +2282,50 @@ def build_parser() -> argparse.ArgumentParser:
     p_cwds.add_argument("--credentials", default=None)
     p_cwds.set_defaults(func=_cmd_contribute_wds)
 
+    p_ccobs = c_sub.add_parser("cobs", help="Export COBS/ICQ cometa (PO-A10)")
+    _add_db_arg(p_ccobs)
+    p_ccobs.add_argument("--product", default=None)
+    p_ccobs.add_argument("--designation", default=None)
+    p_ccobs.add_argument("--epoch", default=None, help="UTC ISO ou ICQ YYYY MM DD.DD")
+    p_ccobs.add_argument("--mag", type=float, default=None)
+    p_ccobs.add_argument("--mag-method", dest="mag_method", default=None)
+    p_ccobs.add_argument("--comp-cat", dest="comp_cat", default=None)
+    p_ccobs.add_argument("--aperture-cm", dest="aperture_cm", type=float, default=None)
+    p_ccobs.add_argument("--instr-type", dest="instr_type", default=None)
+    p_ccobs.add_argument("--focal-ratio", dest="focal_ratio", type=float, default=None)
+    p_ccobs.add_argument(
+        "--power-or-exptime", dest="power_or_exptime", type=float, default=None
+    )
+    p_ccobs.add_argument("--coma-arcmin", dest="coma_arcmin", type=float, default=None)
+    p_ccobs.add_argument("--dc", default=None)
+    p_ccobs.add_argument("--tail-deg", dest="tail_deg", type=float, default=None)
+    p_ccobs.add_argument("--tail-pa", dest="tail_pa", type=float, default=None)
+    p_ccobs.add_argument("--obscode", default=None)
+    p_ccobs.add_argument("--observer", default=None)
+    p_ccobs.add_argument("--location", default=None)
+    p_ccobs.add_argument("--notes", default=None)
+    p_ccobs.add_argument("--no-csv", action="store_true")
+    p_ccobs.add_argument("--out", required=True)
+    p_ccobs.add_argument("--artifacts", default=str(default_artifacts_root()))
+    p_ccobs.add_argument("--credentials", default=None)
+    p_ccobs.set_defaults(func=_cmd_contribute_cobs)
+
     p_cl = c_sub.add_parser("list", help="Listar network_submissions")
     _add_db_arg(p_cl)
     p_cl.add_argument(
         "--network",
         default=None,
-        choices=("aavso", "mpc", "tns", "bess", "exoclock", "iota", "solar", "wds"),
+        choices=(
+            "aavso",
+            "mpc",
+            "tns",
+            "bess",
+            "exoclock",
+            "iota",
+            "solar",
+            "wds",
+            "cobs",
+        ),
     )
     p_cl.set_defaults(func=_cmd_contribute_list)
 
