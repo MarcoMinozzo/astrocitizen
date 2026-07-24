@@ -231,7 +231,7 @@ Legenda UI: **nenhuma** = só store/CLI; **jornada** = ecrã de efeito.
 | Horizons | Efemérides | SS | Alvos/Noite | J6 | parcial |
 | Astrometry.net | WCS | Plate solve | Analisar | J6 | parcial |
 | Open-Meteo | Meteo | Viabilidade | Noite | J6 | ✅ |
-| RainViewer | Radar | Noite | Noite | J6 | ✅ |
+| RainViewer | Radar + mapa Leaflet | Noite | Noite | J6 | ✅ embutido/modal |
 | ASCOM Alpaca | Hardware | Aquisição | Observar | J6 | E4 |
 | IVOA TAP | Facade | Multiplicador | nenhuma | — | ❌ |
 

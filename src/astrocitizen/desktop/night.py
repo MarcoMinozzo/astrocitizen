@@ -1,4 +1,4 @@
-"""Painel Noite: forecast Open-Meteo + radar RainViewer + plano diario."""
+"""Painel Noite: forecast Open-Meteo + radar/mapa RainViewer + plano diario."""
 
 from __future__ import annotations
 
@@ -172,7 +172,6 @@ def build_night_payload(
 def build_night_dashboard(parent: Any | None = None) -> Any:
     """Devolve a classe NightDashboard (requer PySide6)."""
     from PySide6.QtCore import QDate, QObject, Qt, QThread, Signal, Slot
-    from PySide6.QtGui import QPixmap
     from PySide6.QtWidgets import (
         QCheckBox,
         QComboBox,
@@ -337,13 +336,12 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             sky_time_row.addWidget(self.sky_stars)
             sky_time_row.addWidget(self.sky_now_btn)
 
-            self.radar_label = QLabel("Radar: clique Atualizar")
-            self.radar_label.setObjectName("radarPane")
-            self.radar_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            self.radar_label.setMinimumSize(160, 100)
-            self.radar_attr = QLabel("")
-            self.radar_attr.setWordWrap(True)
-            self.radar_attr.setTextFormat(Qt.TextFormat.RichText)
+            from astrocitizen.desktop.radar_map_viewer import build_radar_map_viewer
+
+            RadarMapViewer = build_radar_map_viewer()
+            self.radar_map = RadarMapViewer()
+            self.radar_label = self.radar_map.radar_label
+            self.radar_attr = self.radar_map.attr
 
             left = QWidget()
             left_l = QVBoxLayout(left)
@@ -369,9 +367,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             radar_pane = QWidget()
             radar_l = QVBoxLayout(radar_pane)
             radar_l.setContentsMargins(0, 0, 0, 0)
-            radar_l.addWidget(QLabel("Radar (RainViewer)"))
-            radar_l.addWidget(self.radar_label, 1)
-            radar_l.addWidget(self.radar_attr)
+            radar_l.addWidget(self.radar_map, 1)
 
             right = QSplitter(Qt.Orientation.Vertical)
             right.addWidget(sky_pane)
@@ -502,9 +498,16 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
 
         def _on_site_combo_changed(self, *_args: object) -> None:
             self._update_coords_label()
+            site = self._current_site()
+            if site is not None:
+                self.radar_map.set_location(
+                    latitude_deg=float(site.latitude_deg),
+                    longitude_deg=float(site.longitude_deg),
+                    site_name=str(site.name or ""),
+                )
             if self._syncing_shell:
                 return
-            if self._current_site() is not None:
+            if site is not None:
                 self._bootstrap_sky_chart()
                 # Meteo sob demanda (botao Actualizar) — evita race no arranque
 
@@ -744,21 +747,20 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             if night.get("start_utc") and night.get("end_utc"):
                 self._init_sky_from_night(night)
             meta = payload.get("radar_meta") or {}
-            pix = QPixmap(str(meta.get("image_path") or ""))
-            if pix.isNull():
-                self.radar_label.setText("Falha ao carregar PNG do radar")
-            else:
-                scaled = pix.scaled(
-                    max(self.radar_label.width(), 320),
-                    max(self.radar_label.height(), 320),
-                    Qt.AspectRatioMode.KeepAspectRatio,
-                    Qt.TransformationMode.SmoothTransformation,
+            if site is not None:
+                self.radar_map.set_location(
+                    latitude_deg=float(site.latitude_deg),
+                    longitude_deg=float(site.longitude_deg),
+                    site_name=str(site.name or ""),
+                    zoom=int(meta.get("zoom") or 6),
                 )
-                self.radar_label.setPixmap(scaled)
-            self.radar_attr.setText(
-                f"{meta.get('attribution', '')}<br>"
-                f"<small>radar lat={meta.get('latitude_deg')} "
-                f"lon={meta.get('longitude_deg')} · {meta.get('image_path')}</small>"
+            self.radar_map.set_snapshot(
+                meta.get("image_path"),
+                attribution=str(meta.get("attribution") or ""),
+                meta_line=(
+                    f"radar lat={meta.get('latitude_deg')} "
+                    f"lon={meta.get('longitude_deg')} · {meta.get('image_path')}"
+                ),
             )
 
         @Slot(str)

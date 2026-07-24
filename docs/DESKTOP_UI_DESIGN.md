@@ -69,7 +69,8 @@ O `institutional_cache` é infra interna. A shell mostra **efeitos**:
 
 **Não** expor browse raw do `institutional_cache`. O menu **Catálogo** é a ficha consolidada
 (não a lista de providers). AC-234: chrome de plano (“Actualizar dados dos alvos”).  
-WebEngine AAVSO: opt-in `ASTROCITIZEN_WEBENGINE=1` (default = browser do SO).
+WebEngine AAVSO / mapa radar Noite: opt-in `ASTROCITIZEN_WEBENGINE=1` (default = PNG + browser do SO).
+Noite: painel **Radar/mapa** (Leaflet+RainViewer) com **Ampliar** (modal) e **Browser**.
 
 ## Historico
 
@@ -89,3 +90,4 @@ WebEngine AAVSO: opt-in `ASTROCITIZEN_WEBENGINE=1` (default = browser do SO).
 | 2.1 | 2026-07-24 | E22: efeitos interoperabilidade (sem store UI) |
 | 2.2 | 2026-07-24 | AC-235: nav Catálogo + ficha por secções |
 | 2.3 | 2026-07-24 | AC-236 fotometria; WebEngine/Noite estabilização |
+| 2.4 | 2026-07-24 | Noite: radar-map-viewer embutido + modal |
