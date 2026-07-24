@@ -58,3 +58,5 @@ astrocitizen catalog resolve --name "SS Cyg"
 - `51d6a3e` — buffer + ficha + nav (AC-235)
 - `536acf3` — fotometria extensos / Harris / UI thread
 - `b567a81` — SIMBAD TAP + estabilização GUI (AC-236)
+- `1d22427` — documentação sprint + backlog/E22/UX
+- `936f500` — GUIA: tabela de providers alinhada ao TAP/ficha
