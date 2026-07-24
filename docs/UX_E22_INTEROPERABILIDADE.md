@@ -2,9 +2,9 @@
 
 **Status:** especificação · **Data:** 2026-07-24  
 **Épico:** [EPICO_E22_HUB_CIENTIFICO.md](EPICO_E22_HUB_CIENTIFICO.md)  
-**Shell actual:** [DESKTOP_UI_DESIGN.md](DESKTOP_UI_DESIGN.md) (6 áreas U0–U5)  
-**Princípio:** o observador vê **efeitos** (agenda, alvos, Contribuir, alertas).  
-O `institutional_cache` **não** tem aba de exploração.
+**Shell actual:** [DESKTOP_UI_DESIGN.md](DESKTOP_UI_DESIGN.md) (7 áreas U0–U5 + Catálogo)  
+**Princípio:** o observador vê **efeitos** (agenda, alvos, Contribuir, alertas) e a **ficha unificada** do objecto.  
+O `institutional_cache` **não** tem aba de exploração raw — o menu **Catálogo** mostra a ficha consolidada (`catalog_objects`).
 
 ---
 
@@ -12,10 +12,10 @@ O `institutional_cache` **não** tem aba de exploração.
 
 | Evitar | Preferir |
 |--------|----------|
-| Aba “Catálogo” / lista de providers / JSON de cache | Notas e campos no domínio (Target, ObservationBlock) |
-| Lista “Sesame / VSX / SIMBAD” na UI | Uma acção: “Actualizar dados do plano” ou resolver por nome |
+| Lista de providers / JSON de cache institucional | Ficha por secções (posição, fotometria, …) no menu Catálogo |
+| Lista “Sesame / VSX / SIMBAD” como UI principal | Uma busca: “Buscar / actualizar” (multi-API → nosso buffer) |
 | Rede obrigatória ao “Gerar plano” | Plano offline; sync explícito e raro |
-| Ecrã por cada API de consumo | Ficha API = “UI: nenhuma” + jornada afectada |
+| Ecrã por cada API de consumo | Ficha API = “UI: nenhuma” + jornada afectada; ficha celeste unificada = Catálogo |
 
 ---
 
@@ -25,6 +25,7 @@ O `institutional_cache` **não** tem aba de exploração.
 |---------|----------|------------|
 | J1 Agenda enriquecida | Noite | Meteo / carta + blocos do plano |
 | J2 Resolver alvo | Configurar | Alvos |
+| J2b Ficha completa | **Catalogo** | Busca + formulário por domínio físico |
 | J3 Contribuir por rede | Contribuir | Rede seleccionada |
 | J4 Alertas → candidatos | Observatório / Noite | Inbox (futuro) → plano |
 | J5 Arquivos referência | Analisar / Arquivo | Contexto anexo (futuro) |

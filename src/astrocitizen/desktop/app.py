@@ -1,4 +1,4 @@
-"""Shell GUI PySide6 — IA 6 areas (U1) + ContextBar (U0)."""
+"""Shell GUI PySide6 — IA 7 areas (U1) + ContextBar (U0)."""
 
 from __future__ import annotations
 
@@ -40,6 +40,7 @@ def run_gui(db_path: str | None = None) -> int:
     from astrocitizen.desktop.aavso_campaigns_browser import (
         build_aavso_campaigns_browser,
     )
+    from astrocitizen.desktop.catalog_panel import build_catalog_dashboard
     from astrocitizen.desktop.contribute import build_contribute_dashboard
     from astrocitizen.desktop.entities import (
         build_programs_page,
@@ -77,6 +78,7 @@ def run_gui(db_path: str | None = None) -> int:
     ContributeDashboard = build_contribute_dashboard()
     ImportDashboard = build_import_dashboard()
     ArchiveDashboard = build_archive_dashboard()
+    CatalogDashboard = build_catalog_dashboard()
     AnalyzeDashboard = build_analyze_dashboard()
     SitesPage = build_sites_page()
     ProgramsPage = build_programs_page()
@@ -99,6 +101,7 @@ def run_gui(db_path: str | None = None) -> int:
     NAV_KEYS: list[str] = [
         "Noite",
         "Observatorio",
+        "Catalogo",
         "Analisar",
         "Contribuir",
         "Arquivo",
@@ -209,6 +212,7 @@ def run_gui(db_path: str | None = None) -> int:
                     "Contribuir", network=network, product_id=product_id
                 ),
             )
+            self.catalog_panel = CatalogDashboard(archive)
             self.analyze_panel = AnalyzeDashboard(
                 archive, artifacts_root=arts, on_changed=on_ch
             )
@@ -278,13 +282,14 @@ def run_gui(db_path: str | None = None) -> int:
                 ],
             )
 
-            # Stack = 6 areas
+            # Stack = 7 areas
             self.stack.addWidget(self.noite_hub)  # 0 Noite
             self.stack.addWidget(self.observatorio)  # 1 Observatorio
-            self.stack.addWidget(self.analyze_panel)  # 2 Analisar
-            self.stack.addWidget(self.contribute)  # 3 Contribuir
-            self.stack.addWidget(self.archive_panel)  # 4 Arquivo
-            self.stack.addWidget(self.configurar)  # 5 Configurar
+            self.stack.addWidget(self.catalog_panel)  # 2 Catalogo
+            self.stack.addWidget(self.analyze_panel)  # 3 Analisar
+            self.stack.addWidget(self.contribute)  # 4 Contribuir
+            self.stack.addWidget(self.archive_panel)  # 5 Arquivo
+            self.stack.addWidget(self.configurar)  # 6 Configurar
 
             self.nav.currentRowChanged.connect(self._on_nav)
             self.nav.setCurrentRow(0)
@@ -495,6 +500,7 @@ def run_gui(db_path: str | None = None) -> int:
             self._reload_context()
             self._fill_planos()
             self.archive_panel.reload()
+            self.catalog_panel.reload()
             self._sync_shell_context()
 
         def _on_nav(self, index: int) -> None:
@@ -607,6 +613,7 @@ def run_gui(db_path: str | None = None) -> int:
             self.radio_panel.reload()
             self.specialty_panel.reload()
             self.archive_panel.reload()
+            self.catalog_panel.reload()
             self.program_active.reload()
             self._reload_context()
             self._fill_planos()
@@ -640,6 +647,7 @@ def run_gui(db_path: str | None = None) -> int:
 NAV_AREA_KEYS = (
     "Noite",
     "Observatorio",
+    "Catalogo",
     "Analisar",
     "Contribuir",
     "Arquivo",

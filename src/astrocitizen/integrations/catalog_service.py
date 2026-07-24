@@ -310,7 +310,20 @@ class CatalogResolveService:
             if not target.designation or target.designation.strip() == keys[0]:
                 target.designation = desig.strip()
 
-        return self.archive.upsert_target(target)
+        saved = self.archive.upsert_target(target)
+        # Buffer do catálogo próprio (AC-235): toda busca actualiza a ficha
+        try:
+            from astrocitizen.catalog.dossier import CatalogDossierService
+
+            CatalogDossierService(self.archive, resolve_service=self).persist_resolved(
+                target.workspace_id,
+                target.designation,
+                resolved,
+                enqueue_sync=True,
+            )
+        except Exception:
+            pass
+        return saved
 
     def refresh_program_targets(
         self,

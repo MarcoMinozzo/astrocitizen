@@ -48,6 +48,23 @@ def network_submission_canonical(sub: Any) -> dict[str, Any]:
     }
 
 
+def catalog_object_canonical(obj: Any) -> dict[str, Any]:
+    """CatalogObject → JSON canónico para o catálogo mestre SaaS."""
+    return {
+        "id": str(obj.id),
+        "workspace_id": str(obj.workspace_id),
+        "query_name": obj.query_name,
+        "designation": obj.designation,
+        "ra_deg": obj.ra_deg,
+        "dec_deg": obj.dec_deg,
+        "sections": dict(obj.sections or {}),
+        "sources": list(obj.sources or []),
+        "fetched_at": obj.fetched_at,
+        "updated_at": obj.updated_at,
+        "version": int(obj.version),
+    }
+
+
 def batch_operation(
     *,
     client_op_id: UUID,

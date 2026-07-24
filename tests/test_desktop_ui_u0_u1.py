@@ -32,10 +32,11 @@ class _FakeCombo:
         self._index = i
 
 
-def test_nav_six_areas() -> None:
-    assert len(NAV_AREA_KEYS) == 6
+def test_nav_seven_areas() -> None:
+    assert len(NAV_AREA_KEYS) == 7
     assert NAV_AREA_KEYS[0] == "Noite"
     assert NAV_AREA_KEYS[1] == "Observatorio"
+    assert NAV_AREA_KEYS[2] == "Catalogo"
     assert "Analisar" in NAV_AREA_KEYS
     assert "Configurar" in NAV_AREA_KEYS
     assert "Import" not in NAV_AREA_KEYS

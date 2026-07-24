@@ -133,6 +133,7 @@ def area_to_help_topic(area_name: str) -> str:
     mapping = {
         "Noite": "night",
         "Observatorio": "observatory",
+        "Catalogo": "catalog",
         "Analisar": "analyze",
         "Contribuir": "contribute",
         "Arquivo": "archive",

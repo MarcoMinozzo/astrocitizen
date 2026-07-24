@@ -2530,3 +2530,121 @@ class SqliteArchive:
             (stream, cursor, utc_now_iso()),
         )
         self._conn.commit()
+
+    # --- catalog_objects (AC-235) ---
+    def _row_to_catalog_object(self, row: sqlite3.Row) -> Any:
+        from astrocitizen.catalog.models import CatalogObject
+
+        return CatalogObject(
+            id=UUID(row["id"]),
+            workspace_id=UUID(row["workspace_id"]),
+            query_name=row["query_name"],
+            designation=row["designation"],
+            ra_deg=row["ra_deg"],
+            dec_deg=row["dec_deg"],
+            sections=_loads(row["sections"], {}),
+            sources=_loads(row["sources"], []),
+            fetched_at=row["fetched_at"] or "",
+            updated_at=row["updated_at"] or "",
+            version=int(row["version"] or 1),
+        )
+
+    def upsert_catalog_object(self, obj: Any) -> Any:
+        from astrocitizen.catalog.models import CatalogObject
+
+        assert isinstance(obj, CatalogObject)
+        now = utc_now_iso()
+        existing = self.get_catalog_object(obj.id)
+        if existing is None:
+            self._conn.execute(
+                """
+                INSERT INTO catalog_objects(
+                    id, workspace_id, query_name, designation, ra_deg, dec_deg,
+                    sections, sources, fetched_at, updated_at, version
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    str(obj.id),
+                    str(obj.workspace_id),
+                    obj.query_name,
+                    obj.designation,
+                    obj.ra_deg,
+                    obj.dec_deg,
+                    _j(obj.sections),
+                    _j(obj.sources),
+                    obj.fetched_at or now,
+                    obj.updated_at or now,
+                    obj.version,
+                ),
+            )
+        else:
+            self._conn.execute(
+                """
+                UPDATE catalog_objects SET
+                    query_name = ?, designation = ?, ra_deg = ?, dec_deg = ?,
+                    sections = ?, sources = ?, fetched_at = ?, updated_at = ?,
+                    version = version + 1
+                WHERE id = ? AND deleted_at IS NULL
+                """,
+                (
+                    obj.query_name,
+                    obj.designation,
+                    obj.ra_deg,
+                    obj.dec_deg,
+                    _j(obj.sections),
+                    _j(obj.sources),
+                    obj.fetched_at or now,
+                    now,
+                    str(obj.id),
+                ),
+            )
+            obj.version = existing.version + 1
+            obj.updated_at = now
+        self._conn.commit()
+        return obj
+
+    def get_catalog_object(self, object_id: UUID) -> Any | None:
+        row = self._conn.execute(
+            "SELECT * FROM catalog_objects WHERE id = ? AND deleted_at IS NULL",
+            (str(object_id),),
+        ).fetchone()
+        return None if row is None else self._row_to_catalog_object(row)
+
+    def find_catalog_object(self, workspace_id: UUID, query_name: str) -> Any | None:
+        row = self._conn.execute(
+            """
+            SELECT * FROM catalog_objects
+            WHERE workspace_id = ? AND query_name = ? AND deleted_at IS NULL
+            ORDER BY updated_at DESC LIMIT 1
+            """,
+            (str(workspace_id), (query_name or "").strip()),
+        ).fetchone()
+        return None if row is None else self._row_to_catalog_object(row)
+
+    def find_catalog_object_by_designation(
+        self, workspace_id: UUID, designation: str
+    ) -> Any | None:
+        row = self._conn.execute(
+            """
+            SELECT * FROM catalog_objects
+            WHERE workspace_id = ? AND designation = ? AND deleted_at IS NULL
+            ORDER BY updated_at DESC LIMIT 1
+            """,
+            (str(workspace_id), (designation or "").strip()),
+        ).fetchone()
+        return None if row is None else self._row_to_catalog_object(row)
+
+    def list_catalog_objects(
+        self, workspace_id: UUID, *, limit: int = 100
+    ) -> list[Any]:
+        lim = max(1, min(int(limit), 500))
+        rows = self._conn.execute(
+            """
+            SELECT * FROM catalog_objects
+            WHERE workspace_id = ? AND deleted_at IS NULL
+            ORDER BY updated_at DESC
+            LIMIT ?
+            """,
+            (str(workspace_id), lim),
+        ).fetchall()
+        return [self._row_to_catalog_object(r) for r in rows]

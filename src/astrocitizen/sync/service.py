@@ -8,6 +8,7 @@ from uuid import UUID
 from astrocitizen.shared.ids import new_id
 from astrocitizen.shared.timeutil import utc_now_iso
 from astrocitizen.sync.canonical import (
+    catalog_object_canonical,
     network_submission_canonical,
     observation_canonical,
 )
@@ -58,6 +59,28 @@ class SyncEnqueueService:
                 entity_type="network_submission",
                 operation=operation,  # type: ignore[arg-type]
                 payload=network_submission_canonical(sub),
+                status="pending",
+                created_at=utc_now_iso(),
+                updated_at=utc_now_iso(),
+            )
+        )
+
+    def enqueue_catalog_object(
+        self, object_id: UUID, *, operation: str = "upsert"
+    ) -> SyncQueueItem:
+        obj = self.archive.get_catalog_object(object_id)
+        if obj is None:
+            from astrocitizen.shared.errors import NotFoundError
+
+            raise NotFoundError(f"catalog_object nao encontrado: {object_id}")
+        return self.archive.enqueue_sync(
+            SyncQueueItem(
+                id=new_id(),
+                client_op_id=new_id(),
+                workspace_id=obj.workspace_id,
+                entity_type="catalog_object",
+                operation=operation,  # type: ignore[arg-type]
+                payload=catalog_object_canonical(obj),
                 status="pending",
                 created_at=utc_now_iso(),
                 updated_at=utc_now_iso(),

@@ -1,6 +1,6 @@
 """Schema SQLite — alinhado a MODELO_DADOS_V1 (subset S1+S2)."""
 
-SCHEMA_VERSION = 10
+SCHEMA_VERSION = 11
 
 # Tabelas S1 (v1)
 SCHEMA_V1_SQL = """
@@ -502,6 +502,33 @@ CREATE TABLE IF NOT EXISTS sync_cursor (
 );
 """
 
+# AC-235: catálogo próprio (fichas celestes)
+SCHEMA_V11_SQL = """
+CREATE TABLE IF NOT EXISTS catalog_objects (
+    id TEXT PRIMARY KEY,
+    workspace_id TEXT NOT NULL REFERENCES workspaces(id),
+    query_name TEXT NOT NULL,
+    designation TEXT NOT NULL,
+    ra_deg REAL,
+    dec_deg REAL,
+    sections TEXT NOT NULL,
+    sources TEXT NOT NULL,
+    fetched_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    version INTEGER NOT NULL DEFAULT 1,
+    deleted_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_catalog_objects_ws
+    ON catalog_objects(workspace_id, updated_at) WHERE deleted_at IS NULL;
+
+CREATE INDEX IF NOT EXISTS idx_catalog_objects_query
+    ON catalog_objects(workspace_id, query_name) WHERE deleted_at IS NULL;
+
+CREATE INDEX IF NOT EXISTS idx_catalog_objects_desig
+    ON catalog_objects(workspace_id, designation) WHERE deleted_at IS NULL;
+"""
+
 SCHEMA_SQL = (
     SCHEMA_V1_SQL
     + SCHEMA_V2_SQL
@@ -513,6 +540,7 @@ SCHEMA_SQL = (
     + SCHEMA_V8_SQL
     + SCHEMA_V9_SQL
     + SCHEMA_V10_SQL
+    + SCHEMA_V11_SQL
 )
 
 # Colunas extra em observations (ALTER idempotente via migrate helper)

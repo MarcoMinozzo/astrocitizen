@@ -52,6 +52,16 @@ class SaasMasterStore:
                 status TEXT NOT NULL,
                 created_at TEXT NOT NULL
             );
+
+            CREATE TABLE IF NOT EXISTS catalog_objects (
+                id TEXT PRIMARY KEY,
+                workspace_id TEXT NOT NULL,
+                designation TEXT NOT NULL,
+                payload TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_saas_cat_ws
+                ON catalog_objects(workspace_id, updated_at);
             """
         )
         self._conn.commit()
@@ -105,6 +115,26 @@ class SaasMasterStore:
                     server_id,
                     ws,
                     network,
+                    json.dumps(payload, ensure_ascii=False),
+                    now,
+                ),
+            )
+        elif entity == "catalog_object":
+            ws = str(payload.get("workspace_id") or "")
+            desig = str(payload.get("designation") or payload.get("query_name") or "")
+            self._conn.execute(
+                """
+                INSERT INTO catalog_objects(id, workspace_id, designation, payload, updated_at)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(id) DO UPDATE SET
+                    designation = excluded.designation,
+                    payload = excluded.payload,
+                    updated_at = excluded.updated_at
+                """,
+                (
+                    server_id,
+                    ws,
+                    desig,
                     json.dumps(payload, ensure_ascii=False),
                     now,
                 ),

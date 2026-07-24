@@ -1373,8 +1373,75 @@ def _cmd_catalog_resolve(args: argparse.Namespace) -> int:
         archive.close()
         print(f"erro: {exc}")
         return 1
+    # Buffer do catálogo próprio (AC-235)
+    try:
+        from astrocitizen.catalog.dossier import CatalogDossierService
+
+        ws = _ensure_default_workspace(archive)
+        CatalogDossierService(archive, resolve_service=svc).persist_resolved(
+            ws.id, args.name, resolved, enqueue_sync=True
+        )
+    except Exception:
+        pass
     archive.close()
     print(json.dumps(resolved, ensure_ascii=False, indent=2))
+    return 0
+
+
+def _cmd_catalog_dossier(args: argparse.Namespace) -> int:
+    import json
+
+    from astrocitizen.catalog.dossier import CatalogDossierService
+
+    archive = _open_archive(Path(args.db))
+    archive.migrate()
+    ws = _ensure_default_workspace(archive)
+    providers = tuple(
+        p.strip()
+        for p in (args.providers or "sesame,vsx,simbad,vizier,gaia").split(",")
+        if p.strip()
+    )
+    try:
+        obj = CatalogDossierService(archive).lookup(
+            ws.id,
+            args.name,
+            network=not args.cache_only,
+            providers=providers,
+        )
+    except Exception as exc:
+        archive.close()
+        print(f"erro: {exc}")
+        return 1
+    out = {
+        "id": str(obj.id),
+        "query_name": obj.query_name,
+        "designation": obj.designation,
+        "ra_deg": obj.ra_deg,
+        "dec_deg": obj.dec_deg,
+        "sources": obj.sources,
+        "fetched_at": obj.fetched_at,
+        "version": obj.version,
+        "sections": obj.sections,
+    }
+    archive.close()
+    print(json.dumps(out, ensure_ascii=False, indent=2))
+    return 0
+
+
+def _cmd_catalog_list(args: argparse.Namespace) -> int:
+    from astrocitizen.catalog.dossier import CatalogDossierService
+
+    archive = _open_archive(Path(args.db))
+    archive.migrate()
+    ws = _ensure_default_workspace(archive)
+    rows = CatalogDossierService(archive).list(ws.id, limit=int(args.limit))
+    print(f"objects={len(rows)}")
+    for o in rows:
+        ra = f"{o.ra_deg:.5f}" if o.ra_deg is not None else "-"
+        dec = f"{o.dec_deg:.5f}" if o.dec_deg is not None else "-"
+        src = ",".join(o.sources[:3]) if o.sources else "-"
+        print(f"  {o.designation}\tra={ra}\tdec={dec}\tsources={src}\tid={o.id}")
+    archive.close()
     return 0
 
 
@@ -3086,6 +3153,27 @@ def build_parser() -> argparse.ArgumentParser:
         help="So ler cache (sem rede)",
     )
     p_cres.set_defaults(func=_cmd_catalog_resolve)
+    p_cdos = cat_sub.add_parser(
+        "dossier",
+        help="Ficha completa (multi-API) → catalog_objects (AC-235)",
+    )
+    _add_db_arg(p_cdos)
+    p_cdos.add_argument("--name", required=True, help='ex.: "SS Cyg"')
+    p_cdos.add_argument(
+        "--providers",
+        default="sesame,vsx,simbad,vizier,gaia",
+        help="Lista CSV de providers",
+    )
+    p_cdos.add_argument(
+        "--cache-only",
+        action="store_true",
+        help="So ler cache (sem rede)",
+    )
+    p_cdos.set_defaults(func=_cmd_catalog_dossier)
+    p_clist = cat_sub.add_parser("list", help="Listar fichas do catalogo proprio")
+    _add_db_arg(p_clist)
+    p_clist.add_argument("--limit", type=int, default=50)
+    p_clist.set_defaults(func=_cmd_catalog_list)
     p_cref = cat_sub.add_parser(
         "refresh-targets",
         help="Enriquecer alvos de programas active (rede+cache)",

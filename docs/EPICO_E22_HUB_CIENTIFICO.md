@@ -16,9 +16,11 @@ Organizar num único mapa de produto:
 2. **Que informação** cada uma aporta.
 3. **Que objectivo** serve no AstroCitizen.
 4. **O que já está pronto** vs **o que falta**.
-5. **Como a UI mostra efeitos** — sem aba de browse do store interno.
+5. **Como a UI mostra efeitos** — agenda/alvos sem browse raw do cache; menu **Catálogo** = ficha unificada.
 
-O store (`institutional_cache` + `Target.external_ids`) é **infra interna**. A UI de produto consome efeitos (agenda, alvos, Contribuir, alertas). A CLI (`catalog *`) e jobs de ingest alimentam o cache.
+O store (`institutional_cache` + `Target.external_ids` + `catalog_objects`) é **infra + buffer próprio**.  
+A UI de produto consome efeitos (agenda, alvos, Contribuir) e a ficha em **Catálogo**.  
+A CLI (`catalog resolve|dossier|list|…`) e jobs de ingest alimentam cache e catálogo.
 
 ## 2. Relação com outros épicos
 
@@ -148,7 +150,8 @@ Facade actual: `CatalogResolveService` (Sesame → VSX → SIMBAD) · AC-226.
 | AC-231 | UX E22 jornadas + fichas API | P1 | M | AC-230 | ✅ [UX_E22…](UX_E22_INTEROPERABILIDADE.md) |
 | AC-232 | Matriz A–E no GUIA + links INDEX/backlog | P1 | S | AC-230 | ✅ |
 | AC-233 | CDS X-Match provider + cache | P2 | M | AC-212 | Código futuro |
-| AC-234 | UX: sync de dados do plano sem browse de cache | P1 | S | AC-231, AC-226 | Código futuro |
+| AC-234 | UX: sync de dados do plano (copy; sem browse de cache) | P1 | S | AC-231, AC-226 | ✅ |
+| AC-235 | Catálogo próprio: buffer + ficha multi-API + nav | P1 | L | AC-226, AC-222 | ✅ |
 
 Implementação de providers continua sob **E20**; SaaS/forms sob **E21**; hardware sob **E4**.
 
@@ -156,7 +159,7 @@ Implementação de providers continua sob **E20**; SaaS/forms sob **E21**; hardw
 
 | Fase | Foco | APIs | DoD parcial |
 |------|------|------|-------------|
-| **1** | Consumo → cache → agenda | Sesame, SIMBAD, VSX (+ VizieR/Gaia) | Plano offline com metadados; CLI catalog |
+| **1** | Consumo → cache → agenda + ficha | Sesame, SIMBAD, VSX (+ VizieR/Gaia) | Plano offline; menu Catálogo; CLI |
 | **2** | Espectroscopia | ARAS, BeSS, AAVSO Spec | Contribuir espectro ponta a ponta |
 | **3** | Transientes / alertas | TNS, ALeRCE, Lasair | Inbox → candidato no plano |
 | **4** | Arquivos | MAST, ESO | Referência em Analisar |
@@ -164,8 +167,8 @@ Implementação de providers continua sob **E20**; SaaS/forms sob **E21**; hardw
 
 ## 7. Anti-padrões (E22)
 
-- Aba ou ecrã “Catálogo / cache” para o observador explorar APIs
-- Proxy VSX/SIMBAD→UI sem gravar `institutional_cache`
+- Browse raw do `institutional_cache` / lista de providers na UI
+- Proxy VSX/SIMBAD→UI sem gravar cache **nem** `catalog_objects`
 - Misturar ASCOM Alpaca dentro de `integrations/`
 - Gerar plano com rede obrigatória se o cache já estiver povoado
 - Publicar sem `NetworkSubmission` / intenção de sync (D-013)
@@ -176,7 +179,7 @@ Implementação de providers continua sob **E20**; SaaS/forms sob **E21**; hardw
 - [x] Inventário pronto/lacuna
 - [x] UX de efeitos (jornadas) documentada
 - [x] Backlog E22 + links INDEX/GUIA/DESKTOP_UI
-- [ ] Sprints de código (VizieR/Gaia, AC-234, …) — *fora desta entrega documental*
+- [ ] Sprints de código (espelho SaaS Postgres, Fase 2+ espectro…) — *em curso*; AC-235 ✅
 
 ## 9. Referências
 

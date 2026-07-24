@@ -371,7 +371,7 @@ Pilares: (1) cópia no BD mestre, (2) form schemas atlas, (3) cache/serviços in
 
 Doc: [EPICO_E22_HUB_CIENTIFICO.md](EPICO_E22_HUB_CIENTIFICO.md) · UX: [UX_E22_INTEROPERABILIDADE.md](UX_E22_INTEROPERABILIDADE.md)  
 Guarda-chuva sobre **E20** (providers), **E21** (espelho/forms/cache) e efeitos na UI.  
-**Store interno sem aba de browse.** Hardware continua em **E4**.
+**Sem browse raw do `institutional_cache`.** Ficha unificada = menu **Catálogo** (AC-235). Hardware continua em **E4**.
 
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
@@ -380,8 +380,9 @@ Guarda-chuva sobre **E20** (providers), **E21** (espelho/forms/cache) e efeitos 
 | AC-232 | Matriz A–E no GUIA + links INDEX/DESKTOP_UI | P1 | S | AC-230 | ✅ |
 | AC-233 | CDS X-Match provider + cache | P2 | M | AC-212 | Código futuro |
 | AC-234 | UX: sync “dados do plano” sem chrome de catálogo | P1 | S | AC-231, AC-226 | ✅ copy Noite/Alvos |
+| AC-235 | Catálogo próprio: buffer + ficha multi-API + nav | P1 | L | AC-226, AC-222 | ✅ `catalog_objects` + GUI |
 
-Ordem de código sugerida após docs: AC-212/213 → AC-234 → AC-222/223 → Fase 2+ (AC-216…).
+Ordem de código sugerida após docs: AC-212/213 → AC-234 → AC-222/223 → AC-235 → Fase 2+ (AC-216…).
 
 ---
 

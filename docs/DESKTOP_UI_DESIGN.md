@@ -65,9 +65,10 @@ O `institutional_cache` é infra interna. A shell mostra **efeitos**:
 | Contribuir | Contribuir | Artefactos oficiais por rede |
 | Alertas → plano | futuro | ALeRCE/Lasair (Fase 3) |
 | Arquivos referência | futuro | MAST/ESO em Analisar (Fase 4) |
+| Ficha celeste unificada | **Catalogo** (nav) | Multi-API → `catalog_objects` (AC-235) |
 
-**Não** adicionar aba “Catálogo” / browse de cache. AC-234: renomear chrome residual
-(“Atualizar catálogo” → linguagem de dados do plano).
+**Não** expor browse raw do `institutional_cache`. O menu **Catálogo** é a ficha consolidada
+(não a lista de providers). AC-234: chrome de plano (“Actualizar dados dos alvos”).
 
 ## Historico
 
@@ -85,3 +86,4 @@ O `institutional_cache` é infra interna. A shell mostra **efeitos**:
 | 1.9 | 2026-07-22 | Arquivo: abrir artefacto + export directo |
 | 2.0 | 2026-07-23 | Noite: carta do plano L0 (AC-079; nao planetario) |
 | 2.1 | 2026-07-24 | E22: efeitos interoperabilidade (sem store UI) |
+| 2.2 | 2026-07-24 | AC-235: nav Catálogo + ficha por secções |

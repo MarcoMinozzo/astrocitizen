@@ -18,7 +18,8 @@ Além do hub externo, a plataforma:
 1. **Espelha** todas as observações/submissões no **SaaS próprio** (BD mestre).
 2. Usa **formulários** versionados compatíveis com cada API (atlas).
 3. Expõe **serviços de informação internos** sobre cache nosso dos dados
-   institucionais (VSX, SIMBAD, …) — **sem UI de browse do store**.
+   institucionais (VSX, SIMBAD, …) e o **catálogo próprio** (ficha unificada);
+   sem browse raw do `institutional_cache`.
 4. **Controla hardware** no Desktop via **ASCOM Alpaca** (câmara, telescópio,
    focuser; depois filter wheel / condições / dome) — épico E4; não confundir
    com `integrations/` de redes. Ver [ascom/README.md](ascom/README.md).
