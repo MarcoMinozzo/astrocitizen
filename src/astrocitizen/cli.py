@@ -1399,6 +1399,84 @@ def _cmd_catalog_refresh_targets(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_sync_status(args: argparse.Namespace) -> int:
+    archive = _open_archive(Path(args.db))
+    archive.migrate()
+    status = args.status
+    if status == "" or status == "all":
+        status = None
+    rows = archive.list_sync_queue(status=status, limit=int(args.limit))
+    print(f"items={len(rows)}\tstatus_filter={args.status or 'all'}")
+    for it in rows:
+        err = (it.last_error or "-")[:60]
+        print(
+            f"{it.status}\t{it.entity_type}\t{it.operation}\t"
+            f"op={it.client_op_id}\t{err}"
+        )
+    archive.close()
+    return 0
+
+def _cmd_sync_enqueue_observation(args: argparse.Namespace) -> int:
+    from astrocitizen.sync import SyncEnqueueService
+
+    archive = _open_archive(Path(args.db))
+    archive.migrate()
+    item = SyncEnqueueService(archive).enqueue_observation(UUID(args.id))
+    print(f"enqueued={item.id}\tclient_op_id={item.client_op_id}\tentity=observation")
+    archive.close()
+    return 0
+
+
+def _cmd_sync_enqueue_submission(args: argparse.Namespace) -> int:
+    from astrocitizen.sync import SyncEnqueueService
+
+    archive = _open_archive(Path(args.db))
+    archive.migrate()
+    item = SyncEnqueueService(archive).enqueue_network_submission(UUID(args.id))
+    print(
+        f"enqueued={item.id}\tclient_op_id={item.client_op_id}\t"
+        f"entity=network_submission"
+    )
+    archive.close()
+    return 0
+
+
+def _cmd_sync_push(args: argparse.Namespace) -> int:
+    import json
+
+    from astrocitizen.sync import SyncClient
+
+    archive = _open_archive(Path(args.db))
+    archive.migrate()
+    ws = _ensure_default_workspace(archive)
+    client = SyncClient(
+        archive,
+        base_url=args.url,
+        token=args.token,
+        device_id=args.device_id,
+        workspace_id=ws.id,
+    )
+    try:
+        out = client.push_pending(limit=int(args.limit))
+    except Exception as exc:
+        archive.close()
+        print(f"erro: {exc}")
+        return 1
+    archive.close()
+    print(json.dumps(out, ensure_ascii=False, indent=2))
+    return 0
+
+
+def _cmd_saas_serve(args: argparse.Namespace) -> int:
+    try:
+        from astrocitizen.saas.app import run
+    except ImportError as exc:
+        print(f"erro: {exc}")
+        return 1
+    run(host=args.host, port=int(args.port))
+    return 0
+
+
 def _cmd_contribute_list(args: argparse.Namespace) -> int:
     archive = _open_archive(Path(args.db))
     ws = _ensure_default_workspace(archive)
@@ -3029,6 +3107,36 @@ def build_parser() -> argparse.ArgumentParser:
     p_clst.add_argument("--provider", default=None)
     p_clst.add_argument("--limit", type=int, default=50)
     p_clst.set_defaults(func=_cmd_catalog_cache_list)
+
+    p_sync = sub.add_parser("sync", help="Fila Desktop → SaaS (AC-222)")
+    sync_sub = p_sync.add_subparsers(dest="sync_cmd", required=True)
+    p_ss = sync_sub.add_parser("status", help="Listar sync_queue")
+    _add_db_arg(p_ss)
+    p_ss.add_argument("--status", default="pending", help="pending|acked|failed|… ou vazio")
+    p_ss.add_argument("--limit", type=int, default=50)
+    p_ss.set_defaults(func=_cmd_sync_status)
+    p_seo = sync_sub.add_parser("enqueue-observation", help="Enfileirar observation")
+    _add_db_arg(p_seo)
+    p_seo.add_argument("--id", required=True, help="UUID observation")
+    p_seo.set_defaults(func=_cmd_sync_enqueue_observation)
+    p_ses = sync_sub.add_parser("enqueue-submission", help="Enfileirar network_submission")
+    _add_db_arg(p_ses)
+    p_ses.add_argument("--id", required=True, help="UUID submission")
+    p_ses.set_defaults(func=_cmd_sync_enqueue_submission)
+    p_sp = sync_sub.add_parser("push", help="POST /sync/batch das pending")
+    _add_db_arg(p_sp)
+    p_sp.add_argument("--url", required=True, help="Base URL SaaS, ex. http://127.0.0.1:8080")
+    p_sp.add_argument("--token", required=True, help="Bearer token")
+    p_sp.add_argument("--device-id", default="desktop-local")
+    p_sp.add_argument("--limit", type=int, default=50)
+    p_sp.set_defaults(func=_cmd_sync_push)
+
+    p_saas = sub.add_parser("saas", help="Scaffold SaaS FastAPI (AC-223)")
+    saas_sub = p_saas.add_subparsers(dest="saas_cmd", required=True)
+    p_serve = saas_sub.add_parser("serve", help="Correr API local")
+    p_serve.add_argument("--host", default="127.0.0.1")
+    p_serve.add_argument("--port", type=int, default=8080)
+    p_serve.set_defaults(func=_cmd_saas_serve)
 
     p_kb = sub.add_parser("knowledge", help="Base de conhecimento E19 (ingest offline)")
     kb_sub = p_kb.add_subparsers(dest="knowledge_cmd", required=True)

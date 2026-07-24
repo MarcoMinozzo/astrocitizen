@@ -1,6 +1,6 @@
 """Schema SQLite — alinhado a MODELO_DADOS_V1 (subset S1+S2)."""
 
-SCHEMA_VERSION = 9
+SCHEMA_VERSION = 10
 
 # Tabelas S1 (v1)
 SCHEMA_V1_SQL = """
@@ -471,6 +471,37 @@ CREATE INDEX IF NOT EXISTS idx_inst_cache_fetched
     ON institutional_cache(fetched_at);
 """
 
+# D-013 / AC-222: fila offline-first Desktop → SaaS
+SCHEMA_V10_SQL = """
+CREATE TABLE IF NOT EXISTS sync_queue (
+    id TEXT PRIMARY KEY,
+    client_op_id TEXT NOT NULL UNIQUE,
+    workspace_id TEXT NOT NULL,
+    entity_type TEXT NOT NULL,
+    operation TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    status TEXT NOT NULL,
+    retry_count INTEGER NOT NULL DEFAULT 0,
+    last_error TEXT,
+    created_at TEXT NOT NULL,
+    updated_at TEXT NOT NULL,
+    acked_at TEXT,
+    server_id TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_sync_queue_status
+    ON sync_queue(status, created_at);
+
+CREATE INDEX IF NOT EXISTS idx_sync_queue_ws
+    ON sync_queue(workspace_id, status);
+
+CREATE TABLE IF NOT EXISTS sync_cursor (
+    stream TEXT PRIMARY KEY,
+    cursor TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+"""
+
 SCHEMA_SQL = (
     SCHEMA_V1_SQL
     + SCHEMA_V2_SQL
@@ -481,6 +512,7 @@ SCHEMA_SQL = (
     + SCHEMA_V7_SQL
     + SCHEMA_V8_SQL
     + SCHEMA_V9_SQL
+    + SCHEMA_V10_SQL
 )
 
 # Colunas extra em observations (ALTER idempotente via migrate helper)

@@ -691,6 +691,39 @@ class SqliteArchive:
             ).fetchall()
         return [dict(r) for r in rows]
 
+    def get_observation(self, observation_id: UUID) -> ObservationRecord | None:
+        row = self._conn.execute(
+            "SELECT * FROM observations WHERE id = ? AND deleted_at IS NULL",
+            (str(observation_id),),
+        ).fetchone()
+        if row is None:
+            return None
+        return ObservationRecord(
+            id=UUID(row["id"]),
+            workspace_id=UUID(row["workspace_id"]),
+            observed_at_utc=row["observed_at_utc"],
+            site_id=UUID(row["site_id"]) if row["site_id"] else None,
+            session_id=UUID(row["session_id"]) if row["session_id"] else None,
+            block_id=UUID(row["block_id"]) if row["block_id"] else None,
+            program_id=UUID(row["program_id"]) if row["program_id"] else None,
+            target_id=UUID(row["target_id"]) if row["target_id"] else None,
+            instrument_config_id=(
+                UUID(row["instrument_config_id"])
+                if row["instrument_config_id"]
+                else None
+            ),
+            state=row["state"] or "raw",
+            camera_backend=row["camera_backend"],
+            simulated=bool(row["simulated"]),
+            meteo_manual=bool(row["meteo_manual"]) if "meteo_manual" in row.keys() else False,
+            meteo_snapshot_id=(
+                UUID(row["meteo_snapshot_id"]) if row["meteo_snapshot_id"] else None
+            ),
+            headers_summary=_loads(row["headers_summary"], {}),
+            notes=row["notes"] or "",
+            version=row["version"],
+        )
+
     def soft_delete_observation(self, observation_id: UUID) -> None:
         self._soft_delete("observations", observation_id)
 
@@ -2355,3 +2388,145 @@ class SqliteArchive:
             }
             for r in rows
         ]
+
+    # --- sync_queue (AC-222) ---
+    def enqueue_sync(self, item: Any) -> Any:
+        from astrocitizen.sync.models import SyncQueueItem
+
+        assert isinstance(item, SyncQueueItem)
+        now = utc_now_iso()
+        self._conn.execute(
+            """
+            INSERT INTO sync_queue(
+                id, client_op_id, workspace_id, entity_type, operation, payload,
+                status, retry_count, last_error, created_at, updated_at, acked_at, server_id
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                str(item.id),
+                str(item.client_op_id),
+                str(item.workspace_id),
+                item.entity_type,
+                item.operation,
+                _j(item.payload),
+                item.status,
+                item.retry_count,
+                item.last_error,
+                item.created_at or now,
+                item.updated_at or now,
+                item.acked_at,
+                item.server_id,
+            ),
+        )
+        self._conn.commit()
+        return item
+
+    def list_sync_queue(
+        self,
+        *,
+        status: str | None = "pending",
+        limit: int = 100,
+    ) -> list[Any]:
+        from astrocitizen.sync.models import SyncQueueItem
+
+        lim = max(1, min(int(limit), 500))
+        if status:
+            rows = self._conn.execute(
+                """
+                SELECT * FROM sync_queue
+                WHERE status = ?
+                ORDER BY created_at ASC
+                LIMIT ?
+                """,
+                (status, lim),
+            ).fetchall()
+        else:
+            rows = self._conn.execute(
+                """
+                SELECT * FROM sync_queue
+                ORDER BY created_at DESC
+                LIMIT ?
+                """,
+                (lim,),
+            ).fetchall()
+        out: list[SyncQueueItem] = []
+        for r in rows:
+            out.append(
+                SyncQueueItem(
+                    id=UUID(r["id"]),
+                    client_op_id=UUID(r["client_op_id"]),
+                    workspace_id=UUID(r["workspace_id"]),
+                    entity_type=r["entity_type"],
+                    operation=r["operation"],
+                    payload=_loads(r["payload"], {}),
+                    status=r["status"],
+                    retry_count=int(r["retry_count"] or 0),
+                    last_error=r["last_error"],
+                    created_at=r["created_at"] or "",
+                    updated_at=r["updated_at"] or "",
+                    acked_at=r["acked_at"],
+                    server_id=r["server_id"],
+                )
+            )
+        return out
+
+    def update_sync_status(
+        self,
+        item_id: UUID,
+        *,
+        status: str,
+        last_error: str | None = None,
+        server_id: str | None = None,
+        acked: bool = False,
+    ) -> None:
+        now = utc_now_iso()
+        row = self._conn.execute(
+            "SELECT retry_count FROM sync_queue WHERE id = ?",
+            (str(item_id),),
+        ).fetchone()
+        retry = int(row["retry_count"] or 0) if row else 0
+        if status == "failed":
+            retry += 1
+        self._conn.execute(
+            """
+            UPDATE sync_queue SET
+                status = ?,
+                last_error = COALESCE(?, last_error),
+                server_id = COALESCE(?, server_id),
+                retry_count = ?,
+                updated_at = ?,
+                acked_at = CASE WHEN ? THEN ? ELSE acked_at END
+            WHERE id = ?
+            """,
+            (
+                status,
+                last_error,
+                server_id,
+                retry,
+                now,
+                1 if acked else 0,
+                now if acked else None,
+                str(item_id),
+            ),
+        )
+        self._conn.commit()
+
+    def get_sync_cursor(self, stream: str = "pull_changes") -> str | None:
+        row = self._conn.execute(
+            "SELECT cursor FROM sync_cursor WHERE stream = ?",
+            (stream,),
+        ).fetchone()
+        return None if row is None else str(row["cursor"])
+
+    def set_sync_cursor(self, cursor: str, *, stream: str = "pull_changes") -> None:
+        self._conn.execute(
+            """
+            INSERT INTO sync_cursor(stream, cursor, updated_at)
+            VALUES (?, ?, ?)
+            ON CONFLICT(stream) DO UPDATE SET
+                cursor = excluded.cursor,
+                updated_at = excluded.updated_at
+            """,
+            (stream, cursor, utc_now_iso()),
+        )
+        self._conn.commit()

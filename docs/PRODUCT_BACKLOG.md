@@ -359,8 +359,8 @@ Pilares: (1) cópia no BD mestre, (2) form schemas atlas, (3) cache/serviços in
 |----|------|-----|-----|-----|-------|
 | AC-220 | Schemas formulario por rede (AAVSO primeiro) + loader | P1 | M | D-013, AC-210 | ✅ `form_schema.json` + `contribute form-schema` |
 | AC-221 | Contribute/registry liga features → schema → FieldReview | P2 | M | AC-220 | |
-| AC-222 | Fila sync Desktop → payload canonico | P1 | L | D-008, AC-210 | |
-| AC-223 | Scaffold SaaS FastAPI+Postgres (auth + sync/batch + GET observations) | P1 | L | AC-222, API_ALVO | |
+| AC-222 | Fila sync Desktop → payload canonico | P1 | L | D-008, AC-210 | ✅ `sync_queue` + `sync push` |
+| AC-223 | Scaffold SaaS FastAPI+Postgres (auth + sync/batch + GET observations) | P1 | L | AC-222, API_ALVO | ✅ FastAPI + SQLite mestre (Postgres a seguir) |
 | AC-224 | Info service cache VSX/SIMBAD (Desktop proto → SaaS) | P1 | M | AC-220 | ✅ `institutional_cache` + `catalog cache-*` |
 | AC-225 | Ingest job AID/LCG para cache | P2 | L | AC-223, AC-224 | |
 | AC-226 | CatalogResolveService + ligação ProgramaDiario (cache→agenda) | P1 | M | AC-211, AC-224 | ✅ resolve/refresh + plan notes/mag |

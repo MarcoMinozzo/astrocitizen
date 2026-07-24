@@ -1,3 +1,6 @@
-"""Bounded context: sincronização Desktop ↔ SaaS."""
+"""Pacote sync Desktop → SaaS (AC-222)."""
 
-__all__: list[str] = []
+from astrocitizen.sync.client import SyncClient
+from astrocitizen.sync.service import SyncEnqueueService
+
+__all__ = ["SyncClient", "SyncEnqueueService"]

@@ -132,7 +132,6 @@ Facade actual: `CatalogResolveService` (Sesame → VSX → SIMBAD) · AC-226.
 | Prioridade | Item | AC |
 |------------|------|-----|
 | P1 | CDS X-Match | AC-233 |
-| P1 | Sync queue + SaaS scaffold | AC-222, AC-223 |
 | P2 | ARAS / AAVSO Spec | AC-216, AC-217 |
 | P2 | ALeRCE / Lasair → candidatos | AC-218 |
 | P2 | Contribute UI por `features` + FieldReview schemas | AC-214, AC-221 |
