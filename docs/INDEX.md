@@ -66,7 +66,9 @@
 | [ANALISE_ESPECTRAL_ASSISTIDA.md](ANALISE_ESPECTRAL_ASSISTIDA.md) | AC-106: como funciona a interpretacao espectral (sem LLM) |
 | [EPICO_E19_BASE_CONHECIMENTO_RAG.md](EPICO_E19_BASE_CONHECIMENTO_RAG.md) | Epico E19: base interna de conhecimento para RAG |
 | [AAVSO_WEBOBS_CHECKLIST.md](AAVSO_WEBOBS_CHECKLIST.md) | Validar export Extended no WebObs |
-| [GUIA_INTEROPERABILIDADE.md](GUIA_INTEROPERABILIDADE.md) | Hub providers / fases 1–5 (D-012, E20) |
+| [GUIA_INTEROPERABILIDADE.md](GUIA_INTEROPERABILIDADE.md) | Hub providers / fases 1–5 (D-012, E20) · matriz A–E |
+| [EPICO_E22_HUB_CIENTIFICO.md](EPICO_E22_HUB_CIENTIFICO.md) | Épico E22: APIs, inventário, store interno, ordem |
+| [UX_E22_INTEROPERABILIDADE.md](UX_E22_INTEROPERABILIDADE.md) | UX E22: jornadas + wireframes (sem browse do cache) |
 | [decisoes/D-012-hub-integrations.md](decisoes/D-012-hub-integrations.md) | ADR: hub ObservatoryProvider |
 | [decisoes/D-013-espelho-formularios-info.md](decisoes/D-013-espelho-formularios-info.md) | ADR: espelho SaaS + forms + info |
 

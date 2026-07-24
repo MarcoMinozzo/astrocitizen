@@ -10,7 +10,8 @@ from astrocitizen.planning.models import Target
 from astrocitizen.shared.errors import DomainError, NotFoundError
 from astrocitizen.shared.timeutil import utc_now_iso
 
-DEFAULT_PROVIDERS: tuple[str, ...] = ("sesame", "vsx", "simbad")
+DEFAULT_PROVIDERS: tuple[str, ...] = ("sesame", "vsx", "simbad", "vizier", "gaia")
+_NEAR_PROVIDERS: frozenset[str] = frozenset({"vizier", "gaia"})
 
 
 def _merge_payload(base: dict[str, Any], incoming: dict[str, Any], source: str) -> dict[str, Any]:
@@ -36,7 +37,20 @@ def _merge_payload(base: dict[str, Any], incoming: dict[str, Any], source: str) 
         elif k not in ids:
             ids[k] = v
     # Prefer VSX photometric / variability fields when present
-    for k in ("auid", "variability_type", "period", "mag_max", "mag_min", "vsx", "otype"):
+    for k in (
+        "auid",
+        "variability_type",
+        "period",
+        "mag_max",
+        "mag_min",
+        "vsx",
+        "otype",
+        "gmag",
+        "gaia_source_id",
+        "parallax_mas",
+        "pmra",
+        "pmdec",
+    ):
         if k in (incoming.get("external_ids") or {}):
             ids[k] = incoming["external_ids"][k]
     out["external_ids"] = ids
@@ -53,12 +67,17 @@ def catalog_notes_from_ids(external_ids: dict[str, Any] | None) -> str:
     mag = ids.get("mag_max")
     if mag is not None:
         parts.append(f"mag_max={mag}")
+    elif ids.get("gmag") is not None:
+        parts.append(f"gmag={ids['gmag']}")
     period = ids.get("period")
     if period is not None:
         parts.append(f"period={period}")
     otype = ids.get("otype")
     if otype and not vsx_type:
         parts.append(f"otype={otype}")
+    sid = ids.get("gaia_source_id")
+    if sid:
+        parts.append(f"gaia={sid}")
     return "; ".join(parts)
 
 
@@ -140,6 +159,10 @@ class CatalogResolveService:
                     provider = self.registry.get(provider_name)
                     if not provider.supports("search"):
                         continue
+                    # Gaia por nome livre falha — enriquecer por cone depois
+                    if provider_name in _NEAR_PROVIDERS and provider_name == "gaia":
+                        if not str(query).strip().isdigit():
+                            continue
                     payload = provider.search_object(query)
                     from_network = True
                 except (NotFoundError, DomainError):
@@ -168,6 +191,29 @@ class CatalogResolveService:
                         fetched_at=utc_now_iso(),
                     )
             merged = _merge_payload(merged, payload, provider_name)
+
+        # Cone enrich (VizieR/Gaia) quando ja ha coords
+        if (
+            network
+            and merged.get("ra_deg") is not None
+            and merged.get("dec_deg") is not None
+        ):
+            ra = float(merged["ra_deg"])
+            dec = float(merged["dec_deg"])
+            for provider_name in providers:
+                if provider_name not in _NEAR_PROVIDERS:
+                    continue
+                if provider_name in (merged.get("sources") or []):
+                    continue
+                try:
+                    provider = self.registry.get(provider_name)
+                    near = getattr(provider, "search_near", None)
+                    if not callable(near):
+                        continue
+                    payload = near(ra, dec)
+                    merged = _merge_payload(merged, payload, provider_name)
+                except (NotFoundError, DomainError):
+                    continue
 
         if merged.get("ra_deg") is None or merged.get("dec_deg") is None:
             raise NotFoundError(f"catalogo nao resolveu coords: {query}")

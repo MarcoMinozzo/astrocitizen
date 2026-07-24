@@ -51,6 +51,7 @@
 | E19 | Base de conhecimento interna + RAG | P2–P3 |
 | E20 | Interoperabilidade (hub integrations / IVOA) | P1–P2 |
 | E21 | Espelho SaaS + formulários + info services | P1–P2 |
+| E22 | Hub científico + store interno + UX de efeitos (guarda-chuva) | P1–P2 |
 
 ---
 
@@ -337,8 +338,8 @@ Skeleton: `integrations.registry` + `ObservatoryProvider` + modelos `Observation
 |----|------|-----|-----|-----|-------|
 | AC-210 | Ports + domain + registry + wrappers AAVSO/MPC/TNS/BeSS/SIMBAD/VSX | P1 | M | D-012 | ✅ skeleton |
 | AC-211 | Sesame name resolver | P1 | S | AC-210 | ✅ `SesameProvider` + cache |
-| AC-212 | VizieR catalog query | P1 | M | AC-210 | Fase 1 · sprint seguinte |
-| AC-213 | Gaia Archive TAP client | P1 | M | AC-210 | Fase 1 · IVOA · sprint seguinte |
+| AC-212 | VizieR catalog query | P1 | M | AC-210 | ✅ ASU TSV + cache · cone enrich |
+| AC-213 | Gaia Archive TAP client | P1 | M | AC-210 | ✅ TAP sync CSV + cache · cone |
 | AC-214 | Contribute UI lista providers por `features` | P2 | M | AC-210 | |
 | AC-215 | IVOA TAP/Cone facade genérica | P2 | L | AC-213 | multiplicador |
 | AC-216 | ARAS spectrum query/submit | P2 | L | AC-210, E10 | Fase 2 |
@@ -363,6 +364,24 @@ Pilares: (1) cópia no BD mestre, (2) form schemas atlas, (3) cache/serviços in
 | AC-224 | Info service cache VSX/SIMBAD (Desktop proto → SaaS) | P1 | M | AC-220 | ✅ `institutional_cache` + `catalog cache-*` |
 | AC-225 | Ingest job AID/LCG para cache | P2 | L | AC-223, AC-224 | |
 | AC-226 | CatalogResolveService + ligação ProgramaDiario (cache→agenda) | P1 | M | AC-211, AC-224 | ✅ resolve/refresh + plan notes/mag |
+
+---
+
+## E22 — Hub científico + store interno + UX de efeitos
+
+Doc: [EPICO_E22_HUB_CIENTIFICO.md](EPICO_E22_HUB_CIENTIFICO.md) · UX: [UX_E22_INTEROPERABILIDADE.md](UX_E22_INTEROPERABILIDADE.md)  
+Guarda-chuva sobre **E20** (providers), **E21** (espelho/forms/cache) e efeitos na UI.  
+**Store interno sem aba de browse.** Hardware continua em **E4**.
+
+| ID | Item | Pri | Est | Dep | Notas |
+|----|------|-----|-----|-----|-------|
+| AC-230 | Doc épico E22 (matriz A–E + inventário) | P1 | S | D-012, D-013 | ✅ |
+| AC-231 | UX E22 jornadas + fichas API | P1 | M | AC-230 | ✅ |
+| AC-232 | Matriz A–E no GUIA + links INDEX/DESKTOP_UI | P1 | S | AC-230 | ✅ |
+| AC-233 | CDS X-Match provider + cache | P2 | M | AC-212 | Código futuro |
+| AC-234 | UX: sync “dados do plano” sem chrome de catálogo | P1 | S | AC-231, AC-226 | ✅ copy Noite/Alvos |
+
+Ordem de código sugerida após docs: AC-212/213 → AC-234 → AC-222/223 → Fase 2+ (AC-216…).
 
 ---
 

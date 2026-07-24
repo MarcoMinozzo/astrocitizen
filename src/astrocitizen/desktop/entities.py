@@ -499,7 +499,12 @@ def build_targets_page() -> type:
         QWidget,
     )
 
+    from astrocitizen.integrations.catalog_service import (
+        CatalogResolveService,
+        catalog_notes_from_ids,
+    )
     from astrocitizen.planning.models import Target
+    from astrocitizen.shared.errors import DomainError, NotFoundError
     from astrocitizen.shared.ids import new_id
 
     class TargetDialog(QDialog):
@@ -574,32 +579,57 @@ def build_targets_page() -> type:
             lay.setContentsMargins(16, 12, 16, 12)
             self.title = QLabel("Alvos")
             self.title.setObjectName("pageTitle")
+            hint = QLabel(
+                "Metadados (tipo, mag, período) alimentam a agenda em segundo plano. "
+                "«Resolver por nome» preenche coords/IDs do alvo seleccionado."
+            )
+            hint.setObjectName("emptyState")
+            hint.setWordWrap(True)
             bar = QHBoxLayout()
             self.btn_new = QPushButton("Novo")
             self.btn_edit = QPushButton("Editar")
             self.btn_del = QPushButton("Remover")
+            self.btn_resolve = QPushButton("Resolver por nome")
+            self.btn_resolve.setToolTip(
+                "Resolve o nome do alvo (rede → store interno) e actualiza coords + IDs"
+            )
             self.btn_refresh = QPushButton("Atualizar")
-            for b in (self.btn_new, self.btn_edit, self.btn_del, self.btn_refresh):
+            for b in (
+                self.btn_new,
+                self.btn_edit,
+                self.btn_del,
+                self.btn_resolve,
+                self.btn_refresh,
+            ):
                 bar.addWidget(b)
             bar.addStretch(1)
             self.empty = QLabel()
             self.empty.setObjectName("emptyState")
             self.empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.empty.hide()
-            self.table = QTableWidget(0, 4)
+            self.table = QTableWidget(0, 5)
             self.table.setAlternatingRowColors(True)
             self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
             self.table.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
             self.table.horizontalHeader().setStretchLastSection(True)
-            self.table.setHorizontalHeaderLabels(["Designacao", "RA", "Dec", "Tipo"])
+            self.table.setHorizontalHeaderLabels(
+                ["Designacao", "RA", "Dec", "Tipo", "Resumo"]
+            )
+            self.detail = QLabel("")
+            self.detail.setObjectName("emptyState")
+            self.detail.setWordWrap(True)
             lay.addWidget(self.title)
+            lay.addWidget(hint)
             lay.addLayout(bar)
             lay.addWidget(self.empty)
             lay.addWidget(self.table, 1)
+            lay.addWidget(self.detail)
             self.btn_new.clicked.connect(self._new)
             self.btn_edit.clicked.connect(self._edit)
             self.btn_del.clicked.connect(self._delete)
+            self.btn_resolve.clicked.connect(self._resolve_selected)
             self.btn_refresh.clicked.connect(self.reload)
+            self.table.itemSelectionChanged.connect(self._on_select)
 
         def _workspace(self):
             ws = self.archive.list_workspaces()
@@ -612,11 +642,13 @@ def build_targets_page() -> type:
             self.title.setText(f"Alvos ({len(targets)})")
             self.table.setRowCount(len(targets))
             for r, t in enumerate(targets):
+                cat = catalog_notes_from_ids(t.external_ids) or "-"
                 vals = [
                     t.designation,
                     f"{t.ra_deg:.4f}" if t.ra_deg is not None else "-",
                     f"{t.dec_deg:.4f}" if t.dec_deg is not None else "-",
                     t.target_type,
+                    cat,
                 ]
                 for c, v in enumerate(vals):
                     self.table.setItem(r, c, QTableWidgetItem(v))
@@ -627,6 +659,56 @@ def build_targets_page() -> type:
                 self.empty.setText("Nenhum alvo. Use Novo ou CLI: astrocitizen target add")
                 self.empty.show()
                 self.table.hide()
+            self._on_select()
+
+        def _on_select(self) -> None:
+            tid = self._selected_id()
+            if tid is None:
+                self.detail.setText("")
+                return
+            target = self.archive.get_target(tid)
+            if target is None:
+                self.detail.setText("")
+                return
+            ids = target.external_ids or {}
+            notes = catalog_notes_from_ids(ids)
+            bits = [f"seleccionado={target.designation}"]
+            if notes:
+                bits.append(notes)
+            for key in ("auid", "vsx", "sesame", "simbad", "otype"):
+                if ids.get(key):
+                    bits.append(f"{key}={ids[key]}")
+            self.detail.setText("  ·  ".join(bits))
+
+        def _resolve_selected(self) -> None:
+            tid = self._selected_id()
+            if tid is None:
+                QMessageBox.information(self, "Alvos", "Selecione um alvo.")
+                return
+            target = self.archive.get_target(tid)
+            if target is None:
+                return
+            try:
+                enriched = CatalogResolveService(self.archive).enrich_target(
+                    target, network=True
+                )
+            except (NotFoundError, DomainError) as exc:
+                QMessageBox.warning(self, "Resolver por nome", str(exc))
+                return
+            except Exception as exc:  # noqa: BLE001
+                QMessageBox.critical(self, "Resolver por nome", str(exc))
+                return
+            notes = catalog_notes_from_ids(enriched.external_ids) or "(sem metadados)"
+            self.reload()
+            QMessageBox.information(
+                self,
+                "Resolver por nome",
+                f"{enriched.designation}\n"
+                f"RA={enriched.ra_deg}  Dec={enriched.dec_deg}\n"
+                f"{notes}",
+            )
+            if self.on_changed:
+                self.on_changed()
 
         def _selected_id(self) -> UUID | None:
             rows = self.table.selectionModel().selectedRows()

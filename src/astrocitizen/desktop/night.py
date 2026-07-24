@@ -263,6 +263,12 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             self.badge.setObjectName("badgeIdle")
             self.refresh_btn = QPushButton("Atualizar noite")
             self.refresh_btn.clicked.connect(self.refresh_night)
+            self.catalog_btn = QPushButton("Actualizar dados dos alvos")
+            self.catalog_btn.setObjectName("secondaryBtn")
+            self.catalog_btn.setToolTip(
+                "Actualiza coords/metadados dos alvos de programas active (rede → store interno)"
+            )
+            self.catalog_btn.clicked.connect(self.refresh_catalog)
             self.plan_btn = QPushButton("Gerar plano")
             self.plan_btn.setObjectName("secondaryBtn")
             self.plan_btn.clicked.connect(self.generate_plan)
@@ -274,6 +280,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             top.addWidget(self.meteo_combo)
             top.addWidget(self.badge)
             top.addWidget(self.refresh_btn)
+            top.addWidget(self.catalog_btn)
             top.addWidget(self.plan_btn)
 
             self.coords_label = QLabel("")
@@ -292,6 +299,14 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
 
             self.plan_label = QLabel("plano: -")
             self.plan_label.setWordWrap(True)
+            self.blocks = QTableWidget(0, 6)
+            self.blocks.setAlternatingRowColors(True)
+            self.blocks.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+            self.blocks.horizontalHeader().setStretchLastSection(True)
+            self.blocks.setHorizontalHeaderLabels(
+                ["#", "Alvo", "Status", "Pri", "Alt°", "Tipo/mag/período"]
+            )
+            self.blocks.setMaximumHeight(180)
 
             SkyChartWidget = build_sky_chart_widget()
             self.sky_chart = SkyChartWidget()
@@ -337,6 +352,8 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             left_l.addWidget(QLabel("Horario (janela da noite)"))
             left_l.addWidget(self.hours, 1)
             left_l.addWidget(self.plan_label)
+            left_l.addWidget(QLabel("Blocos do plano (notas de catálogo)"))
+            left_l.addWidget(self.blocks)
 
             sky_pane = QWidget()
             sky_pane.setMinimumHeight(200)
@@ -525,9 +542,38 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
 
         def _update_plan_label(self, site: Any, night_date: str) -> None:
             assert self._workspace_id is not None
-            self.plan_label.setText(
-                fetch_plan_status(self.archive, self._workspace_id, site.id, night_date)
+            plan = self.archive.get_daily_plan_for_night(
+                self._workspace_id, site.id, night_date
             )
+            blocks = (
+                self.archive.list_observation_blocks(plan.id) if plan is not None else []
+            )
+            self.plan_label.setText(plan_status_text(plan, blocks))
+            self._fill_blocks_table(blocks)
+
+        def _fill_blocks_table(self, blocks: list[Any]) -> None:
+            self.blocks.setRowCount(len(blocks))
+            for r, b in enumerate(blocks):
+                target_name = "-"
+                tid = getattr(b, "target_id", None)
+                if tid is not None:
+                    t = self.archive.get_target(tid)
+                    if t is not None:
+                        target_name = t.designation
+                alt = getattr(b, "predicted_altitude_deg", None)
+                alt_s = f"{alt:.1f}" if alt is not None else "-"
+                notes = (getattr(b, "notes", None) or "").strip() or "-"
+                vals = [
+                    str(getattr(b, "sort_order", r)),
+                    target_name,
+                    str(getattr(b, "status", "")),
+                    str(getattr(b, "priority", "")),
+                    alt_s,
+                    notes,
+                ]
+                for c, v in enumerate(vals):
+                    self.blocks.setItem(r, c, QTableWidgetItem(v))
+            self.blocks.resizeColumnsToContents()
 
         def _on_sky_marker(self, marker: Any) -> None:
             if marker is None:
@@ -627,6 +673,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
 
         def _set_busy(self, busy: bool) -> None:
             self.refresh_btn.setEnabled(not busy)
+            self.catalog_btn.setEnabled(not busy)
             self.plan_btn.setEnabled(not busy)
             self.site_combo.setEnabled(not busy)
             self.date_edit.setEnabled(not busy)
@@ -714,6 +761,28 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             self.summary.setPlainText(f"erro: {message}")
             QMessageBox.critical(self, "Noite", message)
 
+        def refresh_catalog(self) -> None:
+            if self._workspace_id is None:
+                QMessageBox.warning(self, "Noite", "Sem workspace.")
+                return
+            from astrocitizen.integrations.catalog_service import CatalogResolveService
+
+            self._set_busy(True)
+            try:
+                updated = CatalogResolveService(self.archive).refresh_program_targets(
+                    self._workspace_id
+                )
+                QMessageBox.information(
+                    self,
+                    "Dados dos alvos",
+                    f"Alvos actualizados: {len(updated)}\n"
+                    "Segue com «Gerar plano» para ver tipo/mag/período nos blocos.",
+                )
+            except Exception as exc:  # noqa: BLE001
+                QMessageBox.critical(self, "Actualizar dados dos alvos", str(exc))
+            finally:
+                self._set_busy(False)
+
         def generate_plan(self) -> None:
             site = self._current_site()
             if site is None or self._workspace_id is None:
@@ -731,10 +800,14 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                 )
                 self._update_plan_label(site, night_date)
                 self._refresh_sky_chart()
+                blocks = self.archive.list_observation_blocks(plan.id)
+                with_notes = sum(1 for b in blocks if (b.notes or "").strip())
                 QMessageBox.information(
                     self,
                     "Plano",
-                    f"Plano gerado: {plan.id}\nestado={plan.state}",
+                    f"Plano gerado: {plan.id}\nestado={plan.state}\n"
+                    f"blocos={len(blocks)}  com metadados={with_notes}\n"
+                    "(Se 0 metadados: use «Actualizar dados dos alvos» antes.)",
                 )
             except Exception as exc:  # noqa: BLE001 - UI boundary
                 QMessageBox.critical(self, "Gerar plano", str(exc))

@@ -6,10 +6,12 @@ from typing import Any, Iterable
 
 from astrocitizen.integrations.aavso import AavsoProvider
 from astrocitizen.integrations.bess import BessProvider
+from astrocitizen.integrations.gaia import GaiaProvider
 from astrocitizen.integrations.mpc import MpcProvider
 from astrocitizen.integrations.sesame import SesameProvider
 from astrocitizen.integrations.simbad import SimbadProvider
 from astrocitizen.integrations.tns import TnsProvider
+from astrocitizen.integrations.vizier import VizierProvider
 from astrocitizen.integrations.vsx import VsxProvider
 from astrocitizen.ports.observatory_provider import ObservatoryProvider
 from astrocitizen.shared.errors import NotFoundError
@@ -21,6 +23,8 @@ def default_providers(*, archive: Any | None = None) -> list[ObservatoryProvider
         SesameProvider(archive=archive),
         SimbadProvider(archive=archive),
         VsxProvider(archive=archive),
+        VizierProvider(archive=archive),
+        GaiaProvider(archive=archive),
         AavsoProvider(archive=archive),
         MpcProvider(),
         TnsProvider(),

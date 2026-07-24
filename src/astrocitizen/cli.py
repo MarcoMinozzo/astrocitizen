@@ -1358,7 +1358,9 @@ def _cmd_catalog_resolve(args: argparse.Namespace) -> int:
     archive.migrate()
     svc = CatalogResolveService(archive)
     providers = tuple(
-        p.strip() for p in (args.providers or "sesame,vsx,simbad").split(",") if p.strip()
+        p.strip()
+        for p in (args.providers or "sesame,vsx,simbad,vizier,gaia").split(",")
+        if p.strip()
     )
     try:
         resolved = svc.resolve(
@@ -1383,7 +1385,9 @@ def _cmd_catalog_refresh_targets(args: argparse.Namespace) -> int:
     ws = _ensure_default_workspace(archive)
     svc = CatalogResolveService(archive)
     providers = tuple(
-        p.strip() for p in (args.providers or "sesame,vsx,simbad").split(",") if p.strip()
+        p.strip()
+        for p in (args.providers or "sesame,vsx,simbad,vizier,gaia").split(",")
+        if p.strip()
     )
     updated = svc.refresh_program_targets(ws.id, providers=providers)
     print(f"enriched={len(updated)}")
@@ -2990,8 +2994,8 @@ def build_parser() -> argparse.ArgumentParser:
     p_cres.add_argument("--name", required=True, help='ex.: "SS Cyg"')
     p_cres.add_argument(
         "--providers",
-        default="sesame,vsx,simbad",
-        help="Lista CSV de providers (default: sesame,vsx,simbad)",
+        default="sesame,vsx,simbad,vizier,gaia",
+        help="Lista CSV de providers (default: sesame,vsx,simbad,vizier,gaia)",
     )
     p_cres.add_argument(
         "--no-cache",
@@ -3011,7 +3015,7 @@ def build_parser() -> argparse.ArgumentParser:
     _add_db_arg(p_cref)
     p_cref.add_argument(
         "--providers",
-        default="sesame,vsx,simbad",
+        default="sesame,vsx,simbad,vizier,gaia",
         help="Lista CSV de providers",
     )
     p_cref.set_defaults(func=_cmd_catalog_refresh_targets)

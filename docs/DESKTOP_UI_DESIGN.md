@@ -49,7 +49,25 @@ Mantidos: 4 modos WORKFLOWS, 7 superficies ENTRADA, ops first, CLI=espelho, tema
 
 - Ocultar combos locais quando ContextBar activo  
 - Enrollment multi-observador / membership de programas partilhados  
-- Contribuir: UI Revisar campos atlas — redes principais ✅ (R2/R3/WDS/COBS) 
+- Contribuir: UI Revisar campos atlas — redes principais ✅ (R2/R3/WDS/COBS)
+
+## E22 — efeitos de interoperabilidade (sem store UI)
+
+Doc normativo: [EPICO_E22_HUB_CIENTIFICO.md](EPICO_E22_HUB_CIENTIFICO.md) ·
+[UX_E22_INTEROPERABILIDADE.md](UX_E22_INTEROPERABILIDADE.md).
+
+O `institutional_cache` é infra interna. A shell mostra **efeitos**:
+
+| Jornada | Onde | Nota |
+|---------|------|------|
+| Agenda enriquecida | Noite | Notas tipo/mag/período nos blocos |
+| Resolver por nome | Configurar → Alvos | Preenche Target; sem lista de APIs |
+| Contribuir | Contribuir | Artefactos oficiais por rede |
+| Alertas → plano | futuro | ALeRCE/Lasair (Fase 3) |
+| Arquivos referência | futuro | MAST/ESO em Analisar (Fase 4) |
+
+**Não** adicionar aba “Catálogo” / browse de cache. AC-234: renomear chrome residual
+(“Atualizar catálogo” → linguagem de dados do plano).
 
 ## Historico
 
@@ -66,3 +84,4 @@ Mantidos: 4 modos WORKFLOWS, 7 superficies ENTRADA, ops first, CLI=espelho, tema
 | 1.8 | 2026-07-22 | Medida astrometria GUI (x,y → RA/Dec) |
 | 1.9 | 2026-07-22 | Arquivo: abrir artefacto + export directo |
 | 2.0 | 2026-07-23 | Noite: carta do plano L0 (AC-079; nao planetario) |
+| 2.1 | 2026-07-24 | E22: efeitos interoperabilidade (sem store UI) |

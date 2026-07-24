@@ -3,14 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from uuid import UUID
 
-from astrocitizen.integrations.catalog_service import (
-    CatalogResolveService,
-    catalog_notes_from_ids,
-    mag_max_from_ids,
-)
 from astrocitizen.planning.conflicts import resolve_priority_conflicts
 from astrocitizen.planning.equipment_rules import validate_instrument_config
 from astrocitizen.planning.meteo_rules import evaluate_meteo_window
@@ -23,6 +18,9 @@ from astrocitizen.planning.models import (
 from astrocitizen.shared.errors import DomainError, NotFoundError
 from astrocitizen.shared.ids import new_id
 from astrocitizen.shared.timeutil import utc_now_iso
+
+if TYPE_CHECKING:
+    from astrocitizen.integrations.catalog_service import CatalogResolveService
 
 
 def _midpoint_iso(start_utc: str, end_utc: str) -> str:
@@ -89,6 +87,12 @@ class GenerateDailyPlan:
         site_id: UUID,
         night_date: str,
     ) -> DailyPlan:
+        from astrocitizen.integrations.catalog_service import (
+            CatalogResolveService,
+            catalog_notes_from_ids,
+            mag_max_from_ids,
+        )
+
         site = self.archive.get_site(site_id)
         if site is None or site.workspace_id != workspace_id:
             raise NotFoundError(f"site nao encontrado: {site_id}")
