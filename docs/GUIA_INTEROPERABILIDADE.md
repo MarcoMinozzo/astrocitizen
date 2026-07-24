@@ -91,16 +91,17 @@ Cada provider converte para o destino (AEF, BeSS FITS, ADES, TNS JSON, …).
 | Provider | features (manifesto) | Backend actual |
 |----------|----------------------|----------------|
 | Sesame | search | `adapters/sky/sesame_resolver.py` + cache |
-| SIMBAD | search | `adapters/sky/simbad_resolver.py` + cache |
+| SIMBAD | search | TAP `simbad_tap.py` (B/V/R) + fallback astroquery |
 | VSX | search | `adapters/sky/vsx_resolver.py` + cache |
-| VizieR | search | `adapters/sky/vizier_resolver.py` + cache (ASU) |
-| Gaia | search | `adapters/sky/gaia_resolver.py` + cache (TAP) |
+| VizieR | search | ASU + Harris VII/202 para GlC |
+| Gaia | search | TAP cone (só pontual; G → `gmag`, não mag_max do alvo) |
 | AAVSO | search, prepare_photometry | AEF + WebObs (AC-096) |
 | MPC | prepare_astrometry | ADES PSV |
 | TNS | prepare_transient | AT report |
 | BeSS | prepare_spectrum | FITS 1D |
 
-Facade: `CatalogResolveService` (Sesame→VSX→SIMBAD + cone VizieR/Gaia).
+Facade: `CatalogResolveService` + ficha `CatalogDossierService` → `catalog_objects`.  
+Doc: [SPRINT_AC235_CATALOGO.md](SPRINT_AC235_CATALOGO.md).
 
 Novos clientes (X-Match, …) = E20 / AC-233 · coordenados por **E22**.
 Mapa completo: [EPICO_E22_HUB_CIENTIFICO.md](EPICO_E22_HUB_CIENTIFICO.md).
