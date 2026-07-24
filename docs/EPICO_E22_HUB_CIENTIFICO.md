@@ -151,7 +151,8 @@ Facade actual: `CatalogResolveService` (Sesame → VSX → SIMBAD) · AC-226.
 | AC-232 | Matriz A–E no GUIA + links INDEX/backlog | P1 | S | AC-230 | ✅ |
 | AC-233 | CDS X-Match provider + cache | P2 | M | AC-212 | Código futuro |
 | AC-234 | UX: sync de dados do plano (copy; sem browse de cache) | P1 | S | AC-231, AC-226 | ✅ |
-| AC-235 | Catálogo próprio: buffer + ficha multi-API + nav | P1 | L | AC-226, AC-222 | ✅ |
+| AC-235 | Catálogo próprio: buffer + ficha multi-API + nav | P1 | L | AC-226, AC-222 | ✅ [SPRINT](SPRINT_AC235_CATALOGO.md) |
+| AC-236 | Fotometria SIMBAD TAP + política mag por tipo | P1 | M | AC-235 | ✅ |
 
 Implementação de providers continua sob **E20**; SaaS/forms sob **E21**; hardware sob **E4**.
 
@@ -159,7 +160,7 @@ Implementação de providers continua sob **E20**; SaaS/forms sob **E21**; hardw
 
 | Fase | Foco | APIs | DoD parcial |
 |------|------|------|-------------|
-| **1** | Consumo → cache → agenda + ficha | Sesame, SIMBAD, VSX (+ VizieR/Gaia) | Plano offline; menu Catálogo; CLI |
+| **1** | Consumo → cache → agenda + ficha | Sesame, SIMBAD TAP, VSX, Harris (+ VizieR/Gaia pontual) | Plano offline; menu Catálogo; mag por tipo |
 | **2** | Espectroscopia | ARAS, BeSS, AAVSO Spec | Contribuir espectro ponta a ponta |
 | **3** | Transientes / alertas | TNS, ALeRCE, Lasair | Inbox → candidato no plano |
 | **4** | Arquivos | MAST, ESO | Referência em Analisar |
@@ -169,6 +170,7 @@ Implementação de providers continua sob **E20**; SaaS/forms sob **E21**; hardw
 
 - Browse raw do `institutional_cache` / lista de providers na UI
 - Proxy VSX/SIMBAD→UI sem gravar cache **nem** `catalog_objects`
+- Usar G Gaia de cone como magnitude de enxame/galáxia
 - Misturar ASCOM Alpaca dentro de `integrations/`
 - Gerar plano com rede obrigatória se o cache já estiver povoado
 - Publicar sem `NetworkSubmission` / intenção de sync (D-013)
@@ -179,7 +181,8 @@ Implementação de providers continua sob **E20**; SaaS/forms sob **E21**; hardw
 - [x] Inventário pronto/lacuna
 - [x] UX de efeitos (jornadas) documentada
 - [x] Backlog E22 + links INDEX/GUIA/DESKTOP_UI
-- [ ] Sprints de código (espelho SaaS Postgres, Fase 2+ espectro…) — *em curso*; AC-235 ✅
+- [x] AC-235/236 (ficha + fotometria por tipo)
+- [ ] Sprints de código (espelho SaaS Postgres, Fase 2+ espectro…) — *em curso*
 
 ## 9. Referências
 

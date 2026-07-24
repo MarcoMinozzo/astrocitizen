@@ -30,7 +30,7 @@ Ver [D-013](decisoes/D-013-espelho-formularios-info.md).
 
 | Grupo | Papel | Exemplos | UI de produto |
 |-------|--------|----------|---------------|
-| **A** Consumo | Nome → coords / mag / tipo → cache | Sesame, SIMBAD, VSX, VizieR, Gaia | Nenhuma (efeitos em Noite/Alvos) |
+| **A** Consumo | Nome → coords / mag / tipo → cache + ficha | Sesame, SIMBAD TAP, VSX, Harris, VizieR, Gaia | Catálogo (ficha) + efeitos Noite/Alvos |
 | **B** Publicação | Artefacto oficial | AAVSO, BeSS, MPC, TNS, ARAS | Contribuir |
 | **C** Alertas | Candidatos | ALeRCE, Lasair | Inbox → Noite (Fase 3) |
 | **D** Arquivos | Referência | MAST, ESO | Analisar (Fase 4) |
@@ -43,7 +43,7 @@ Wireframes: [UX_E22_INTEROPERABILIDADE.md](UX_E22_INTEROPERABILIDADE.md).
 
 | Fase | Foco | Integrações |
 |------|------|-------------|
-| **1** Base científica | **Consumo → cache → agenda**: Sesame, SIMBAD, VSX (VizieR/Gaia a seguir); AAVSO fotometria (consulta + AEF/WebObs) |
+| **1** Base científica | **Consumo → cache → agenda + ficha**: Sesame, SIMBAD TAP, VSX, Harris; VizieR/Gaia pontual; AAVSO AEF/WebObs |
 | **2** Espectroscopia | ARAS, BeSS, AAVSO Spectroscopy |
 | **3** Transientes | TNS, ALeRCE, Lasair |
 | **4** Arquivos | MAST, ESO Archive |
@@ -53,15 +53,17 @@ Wireframes: [UX_E22_INTEROPERABILIDADE.md](UX_E22_INTEROPERABILIDADE.md).
 
 Prioridade desta fase **não** é publicar mais formatos; é:
 
-1. **Consumir** catálogos (Sesame coords → VSX AUID/tipo/período/mag → SIMBAD fallback).
-2. **Organizar** em `institutional_cache` + `Target.external_ids` (**store interno**).
-3. **Consultar** offline via CLI (`catalog resolve|refresh-targets|cache-*`) — diagnóstico; não é UX principal.
+1. **Consumir** catálogos (Sesame coords → VSX mag/tipo → SIMBAD TAP B/V/R → Harris se GlC).
+2. **Organizar** em `institutional_cache` + `Target.external_ids` + **`catalog_objects`** (ficha).
+3. **Consultar** via menu **Catálogo** ou CLI (`catalog dossier|resolve|list|…`).
 4. **Alimentar** `GenerateDailyPlan` / ProgramaDiario com notas de catálogo e
    tie-break por `mag_max` quando a prioridade de programa empatar
    (geração **sem rede**; refresh prévio é explícito).
 
-Serviço: `CatalogResolveService` (`integrations/catalog_service.py`) · AC-226 / AC-211.  
-Coordenação: **E22** (AC-230…234).
+**Política de mag:** objectos extensos não herdam G Gaia de cone; ver [SPRINT_AC235_CATALOGO.md](SPRINT_AC235_CATALOGO.md).
+
+Serviço: `CatalogResolveService` + `CatalogDossierService` · AC-226 / AC-235 / AC-236.  
+Coordenação: **E22** (AC-230…236).
 
 **Paralelo (obrigatório, não opcional):** **ASCOM Alpaca** (E4 — aquisição),
 Astrometry.net, JPL Horizons, meteo, client IVOA TAP. INDI fica como opção

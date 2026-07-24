@@ -65,10 +65,11 @@ O `institutional_cache` é infra interna. A shell mostra **efeitos**:
 | Contribuir | Contribuir | Artefactos oficiais por rede |
 | Alertas → plano | futuro | ALeRCE/Lasair (Fase 3) |
 | Arquivos referência | futuro | MAST/ESO em Analisar (Fase 4) |
-| Ficha celeste unificada | **Catalogo** (nav) | Multi-API → `catalog_objects` (AC-235) |
+| Ficha celeste unificada | **Catalogo** (nav) | Multi-API → `catalog_objects` (AC-235/236) |
 
 **Não** expor browse raw do `institutional_cache`. O menu **Catálogo** é a ficha consolidada
-(não a lista de providers). AC-234: chrome de plano (“Actualizar dados dos alvos”).
+(não a lista de providers). AC-234: chrome de plano (“Actualizar dados dos alvos”).  
+WebEngine AAVSO: opt-in `ASTROCITIZEN_WEBENGINE=1` (default = browser do SO).
 
 ## Historico
 
@@ -87,3 +88,4 @@ O `institutional_cache` é infra interna. A shell mostra **efeitos**:
 | 2.0 | 2026-07-23 | Noite: carta do plano L0 (AC-079; nao planetario) |
 | 2.1 | 2026-07-24 | E22: efeitos interoperabilidade (sem store UI) |
 | 2.2 | 2026-07-24 | AC-235: nav Catálogo + ficha por secções |
+| 2.3 | 2026-07-24 | AC-236 fotometria; WebEngine/Noite estabilização |

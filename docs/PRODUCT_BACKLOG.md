@@ -195,7 +195,7 @@ Instanciar templates + fluxos mínimos (planejar → registrar → produto míni
 | AC-092 | Curva de luz → BD (pontos) | P2 | M | AC-091, E1 | ✅ S5 — measurement_points |
 | AC-093 | Export AAVSO | P2 | M | AC-092, E14 | ✅ Extended com JD · `contribute aavso` · WebObs manual |
 | AC-094 | Templates A02–A04, A09 | P2 | M | AC-091 | |
-| AC-095 | Browser embutido Observing Campaigns (Qt WebEngine opt-in) | P2 | M | AC-071, CS-F14 | ✅ portal `apps.aavso.org` · extra `gui-web` · fallback browser SO |
+| AC-095 | Browser embutido Observing Campaigns (Qt WebEngine opt-in) | P2 | M | AC-071, CS-F14 | ✅ portal · default browser SO · embutido `ASTROCITIZEN_WEBENGINE=1` + `gui-web` |
 | AC-096 | Fluxo oficial AEF→WebObs + VSX resolve + validacao AEF | P1 | M | AC-093, AC-141 | ✅ Submit assistido · `target --resolve-vsx` · sem Selenium |
 
 ---
@@ -380,9 +380,10 @@ Guarda-chuva sobre **E20** (providers), **E21** (espelho/forms/cache) e efeitos 
 | AC-232 | Matriz A–E no GUIA + links INDEX/DESKTOP_UI | P1 | S | AC-230 | ✅ |
 | AC-233 | CDS X-Match provider + cache | P2 | M | AC-212 | Código futuro |
 | AC-234 | UX: sync “dados do plano” sem chrome de catálogo | P1 | S | AC-231, AC-226 | ✅ copy Noite/Alvos |
-| AC-235 | Catálogo próprio: buffer + ficha multi-API + nav | P1 | L | AC-226, AC-222 | ✅ `catalog_objects` + GUI |
+| AC-235 | Catálogo próprio: buffer + ficha multi-API + nav | P1 | L | AC-226, AC-222 | ✅ `catalog_objects` + GUI · [SPRINT](SPRINT_AC235_CATALOGO.md) |
+| AC-236 | Fotometria SIMBAD TAP + política mag por tipo | P1 | M | AC-235 | ✅ B/V/R; Harris GlC; sem Gaia→mag_max |
 
-Ordem de código sugerida após docs: AC-212/213 → AC-234 → AC-222/223 → AC-235 → Fase 2+ (AC-216…).
+Ordem de código sugerida: AC-235/236 ✅ → Fase 2+ espectro (AC-216…) · AC-233 X-Match · Postgres SaaS.
 
 ---
 

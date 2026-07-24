@@ -51,16 +51,20 @@ instalacao de sistema separada.
 
 ## Browser AAVSO (Qt WebEngine, AC-095)
 
-O `.exe` / build base **nao** inclui Chromium (D-010). Para o painel
-**Observatorio ? Campanhas AAVSO** embutido:
+O `.exe` / build base **nao** inclui Chromium (D-010). Por defeito o painel
+**Observatorio → Campanhas AAVSO** usa o **browser do sistema** (mais estavel;
+evita segfaults Chromium em alguns Linux/GPU).
+
+Browser embutido (opt-in):
 
 ```bash
 pip install 'astrocitizen[gui-web]'   # PySide6-WebEngine
+export ASTROCITIZEN_WEBENGINE=1
+astrocitizen gui
 ```
 
-Sem o extra, o painel mostra fallback e o botao **Abrir no browser** usa o
-browser do sistema. Um instalador "full" com WebEngine exigiria
-`--collect-all PySide6` / plugins `QtWebEngineProcess` e aumenta ~80?150 MB.
+Um instalador "full" com WebEngine exigiria `--collect-all PySide6` /
+plugins `QtWebEngineProcess` e aumenta ~80–150 MB.
 
 ## onedir vs onefile
 

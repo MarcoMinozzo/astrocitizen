@@ -241,23 +241,25 @@ Legenda UI: **nenhuma** = só store/CLI; **jornada** = ecrã de efeito.
 
 | Evitar | Usar |
 |--------|------|
-| Catálogo / Cache / Sesame / Provider | Dados do plano · Resolver por nome · Actualizar dados dos alvos |
+| Catálogo / Cache / Sesame / Provider (no chrome do plano) | Dados do plano · Resolver por nome · Actualizar dados dos alvos |
 | institutional_cache | (nunca na UI) |
+| Mag “misteriosa” sem banda | Campos V/B/R + `band_notes` na ficha Catálogo |
 | API miss | Não encontrado · Tente outro nome |
 
-CLI pode manter `catalog *` (ferramenta de diagnóstico / ops).
+Menu **Catálogo** é intencional (ficha unificada). CLI `catalog *` continua para ops.
 
 ---
 
 ## 6. Critérios de aceite UX (E22 docs)
 
-1. Nenhuma jornada exige “abrir o store”.
+1. Nenhuma jornada exige “abrir o store” raw.
 2. Cada API da matriz tem ficha com UI explícita (nenhuma ou jornada).
-3. J1–J3 alinhadas ao shell actual; J4–J5 marcadas futuro.
-4. AC-234 implementará rename/remoção do chrome residual (código separado).
+3. J1–J3 + J2b (Catálogo) alinhadas ao shell; J4–J5 futuro.
+4. Fotometria na ficha segue política por tipo (AC-236) — ver [SPRINT_AC235_CATALOGO.md](SPRINT_AC235_CATALOGO.md).
 
 ## 7. Histórico
 
 | Ver. | Data | Nota |
 |------|------|------|
 | 1.0 | 2026-07-24 | Especificação inicial E22 |
+| 1.1 | 2026-07-24 | J2b Catálogo + AC-235/236 fotometria |
