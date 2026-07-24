@@ -53,30 +53,62 @@ def _float_field(row: dict[str, str], *keys: str) -> float | None:
 def row_to_payload(row: dict[str, str], *, query: str, source: str) -> dict[str, Any]:
     ra = _float_field(row, "RA_ICRS", "RAJ2000", "RA_d", "_RAJ2000", "ra")
     dec = _float_field(row, "DE_ICRS", "DEJ2000", "DEC_d", "_DEJ2000", "dec")
-    if ra is None or dec is None:
-        raise DomainError("VizieR sem RA/Dec validos", rule_id="AC-212")
     source_id = (
         row.get("Source") or row.get("source_id") or row.get("GaiaDR3") or ""
     ).strip() or None
     gmag = _float_field(row, "Gmag", "phot_g_mean_mag", "G")
+    # Harris VII/202 — magnitude V integrada do enxame
+    vmag = _float_field(row, "Vt", "V_t", "Vmag", "V")
+    name = (row.get("Name") or row.get("ID") or "").strip() or None
+
     external_ids: dict[str, Any] = {
         "vizier": source,
-        "source": "vizier",
+        "source": "vizier" if "harris" not in source.lower() and "202" not in source else "harris",
     }
+    if "VII/202" in source:
+        external_ids["source"] = "harris"
+        external_ids["harris"] = name or query
     if source_id:
         external_ids["gaia_source_id"] = source_id
         external_ids["vizier_id"] = source_id
     if gmag is not None:
+        # G de estrela: NUNCA promover a mag_max (objecto ≠ vizinho Gaia)
         external_ids["gmag"] = gmag
-        # mag_max so para tie-break se VSX nao tiver mag
-        external_ids.setdefault("mag_max", gmag)
-    desig = source_id or query
+    if vmag is not None:
+        external_ids["vmag"] = vmag
+        external_ids["mag_max"] = vmag
+        external_ids["band_notes"] = "V integrada (Harris VII/202)" if "VII/202" in source else "V"
+
+    if ra is None or dec is None:
+        if vmag is None:
+            raise DomainError("VizieR sem RA/Dec validos", rule_id="AC-212")
+        # Harris: coords sexagesimais; fotometria basta se o caller ja tem coords
+        return {
+            "ra_deg": None,
+            "dec_deg": None,
+            "designation": name or query,
+            "external_ids": external_ids,
+        }
+
+    desig = name or (None if source_id and source_id.isdigit() else source_id) or query
     return {
         "ra_deg": ra,
         "dec_deg": dec,
         "designation": desig,
         "external_ids": external_ids,
     }
+
+
+def parse_harris_tsv(raw: str, *, query: str) -> dict[str, Any]:
+    """Parse resposta Harris VII/202 → vmag / mag_max."""
+    rows = _parse_asu_tsv(raw)
+    # Saltar linha de unidades (valores nao numericos em Vt)
+    for row in rows:
+        vmag = _float_field(row, "Vt", "V_t", "Vmag")
+        if vmag is None:
+            continue
+        return row_to_payload(row, query=query, source="VII/202/catalog")
+    raise NotFoundError(f"Harris VII/202 sem Vt para: {query}")
 
 
 class VizierResolver:
@@ -101,6 +133,15 @@ class VizierResolver:
         ident = (name or "").strip()
         if not ident:
             raise DomainError("nome VizieR vazio", rule_id="AC-212")
+        if self.source.startswith("VII/202"):
+            params = {
+                "-source": self.source,
+                "-c": ident,
+                "-out": "Name,ID,Vt,MVt",
+                "-out.max": "1",
+            }
+            raw = self._fetch(params)
+            return parse_harris_tsv(raw, query=ident)
         params = {
             "-source": self.source,
             "-c": ident,

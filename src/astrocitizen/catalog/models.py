@@ -42,9 +42,10 @@ SECTION_FIELDS: dict[str, tuple[tuple[str, str], ...]] = {
         ("coord_frame", "Sistema"),
     ),
     "photometry": (
-        ("mag_max", "Mag max"),
-        ("mag_min", "Mag min"),
-        ("gmag", "G (Gaia)"),
+        ("vmag", "V (catalogo / integrada)"),
+        ("mag_max", "Mag max (VSX / V)"),
+        ("mag_min", "Mag min (VSX)"),
+        ("gmag", "G Gaia (estrela proxima)"),
         ("band_notes", "Notas de banda"),
     ),
     "variability": (
@@ -103,9 +104,11 @@ def dossier_from_resolved(
     sections["position"]["dec_deg"] = resolved.get("dec_deg")
     sections["position"]["coord_frame"] = "ICRS J2000"
 
-    sections["photometry"]["mag_max"] = ids.get("mag_max")
+    sections["photometry"]["vmag"] = ids.get("vmag")
+    sections["photometry"]["mag_max"] = ids.get("mag_max") or ids.get("vmag")
     sections["photometry"]["mag_min"] = ids.get("mag_min")
     sections["photometry"]["gmag"] = ids.get("gmag")
+    sections["photometry"]["band_notes"] = ids.get("band_notes")
 
     sections["variability"]["variability_type"] = ids.get("variability_type")
     sections["variability"]["period"] = ids.get("period")
@@ -135,7 +138,9 @@ def dossier_from_resolved(
         "period",
         "mag_max",
         "mag_min",
+        "vmag",
         "gmag",
+        "band_notes",
         "otype",
         "gaia_source_id",
         "parallax_mas",
@@ -144,6 +149,7 @@ def dossier_from_resolved(
         "source",
         "spectral_type",
         "sptype",
+        "harris",
     }
     other = {k: v for k, v in ids.items() if k not in skip and v is not None}
     sections["identifiers"]["other_ids"] = other or None

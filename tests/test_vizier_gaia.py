@@ -146,4 +146,45 @@ def test_catalog_resolve_cone_enrich(tmp_path: Path) -> None:
     assert "gaia" in out["sources"]
     assert out["external_ids"]["gaia_source_id"] == "2"
     assert out["external_ids"]["parallax_mas"] == 1.2
+    # G de estrela no cone nao vira mag_max do alvo
+    assert out["external_ids"].get("mag_max") is None
+    assert out["external_ids"]["gmag"] == 11.0
+    assert out["designation"] == "SS Cyg"  # nao source_id Gaia
     archive.close()
+
+
+def test_extended_object_skips_stellar_cone_and_keeps_name() -> None:
+    from astrocitizen.integrations.catalog_service import _merge_payload, _is_extended_object
+
+    assert _is_extended_object({"otype": "GlC"})
+    base = {
+        "query": "M56",
+        "designation": "M56",
+        "ra_deg": 289.1,
+        "dec_deg": 30.1,
+        "external_ids": {"otype": "GlC", "sesame": "M56"},
+        "sources": ["sesame"],
+    }
+    gaia = {
+        "designation": "2039254015507205888",
+        "ra_deg": 289.1,
+        "dec_deg": 30.1,
+        "external_ids": {"gmag": 17.7, "gaia_source_id": "2039254015507205888", "mag_max": 17.7},
+    }
+    out = _merge_payload(base, gaia, "gaia")
+    assert out["designation"] == "M56"
+    assert out["external_ids"].get("mag_max") is None or out["external_ids"].get("mag_max") != 17.7
+    assert out["external_ids"]["gmag"] == 17.7
+
+    harris = {
+        "designation": "M 56",
+        "external_ids": {
+            "vmag": 8.27,
+            "mag_max": 8.27,
+            "band_notes": "V integrada (Harris VII/202)",
+            "harris": "M 56",
+        },
+    }
+    out2 = _merge_payload(out, harris, "harris")
+    assert abs(float(out2["external_ids"]["mag_max"]) - 8.27) < 1e-6
+    assert out2["designation"] == "M56" or "56" in out2["designation"]

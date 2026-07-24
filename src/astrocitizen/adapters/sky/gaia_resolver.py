@@ -74,7 +74,8 @@ def row_to_payload(row: dict[str, str], *, query: str) -> dict[str, Any]:
         external_ids["gaia_source_id"] = sid
     if gmag is not None:
         external_ids["gmag"] = gmag
-        external_ids.setdefault("mag_max", gmag)
+        # Nao definir mag_max a partir de G — so faz sentido para a propria estrela
+        # Gaia; o merge promove vmag/VSX. Cone enrich nao deve fingir mag do alvo.
     if parallax is not None:
         external_ids["parallax_mas"] = parallax
     if pmra is not None:

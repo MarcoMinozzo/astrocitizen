@@ -26,35 +26,151 @@ def _merge_payload(base: dict[str, Any], incoming: dict[str, Any], source: str) 
     if out.get("dec_deg") is None and incoming.get("dec_deg") is not None:
         out["dec_deg"] = float(incoming["dec_deg"])
 
+    # Designação: preferir nome humano; nunca trocar por source_id Gaia numérico
+    # nem por labels de cone (viz/gaia).
     desig = incoming.get("designation")
-    if desig and (not out.get("designation") or out["designation"] == out.get("query")):
-        out["designation"] = str(desig)
+    if desig:
+        cur = str(out.get("designation") or "").strip()
+        new = str(desig).strip()
+        if not cur:
+            out["designation"] = new
+        elif _is_numeric_id(cur) and not _is_numeric_id(new):
+            out["designation"] = new
+        elif not _is_numeric_id(cur) and _is_numeric_id(new):
+            pass
+        elif source in ("sesame", "simbad", "harris") and not _is_numeric_id(new):
+            q = str(out.get("query") or "").strip()
+            if cur == q or _is_numeric_id(cur):
+                out["designation"] = new
 
     ids = dict(out.get("external_ids") or {})
-    for k, v in dict(incoming.get("external_ids") or {}).items():
-        if v is not None and (k not in ids or ids[k] in (None, "")):
+    in_ids = dict(incoming.get("external_ids") or {})
+    stellar_near = source in ("gaia", "vizier")
+    skip_generic = {"mag_max", "mag_min"} if stellar_near else set()
+    for k, v in in_ids.items():
+        if v is None or k in skip_generic:
+            continue
+        if k not in ids or ids[k] in (None, ""):
             ids[k] = v
-        elif k not in ids:
-            ids[k] = v
-    # Prefer VSX photometric / variability fields when present
-    for k in (
-        "auid",
-        "variability_type",
-        "period",
-        "mag_max",
-        "mag_min",
-        "vsx",
-        "otype",
-        "gmag",
-        "gaia_source_id",
-        "parallax_mas",
-        "pmra",
-        "pmdec",
-    ):
-        if k in (incoming.get("external_ids") or {}):
-            ids[k] = incoming["external_ids"][k]
+
+    # Campos preferidos por fonte — Gaia/VizieR NÃO definem mag_max (estrela ≠ objecto)
+    preferred: tuple[str, ...]
+    if source == "vsx":
+        preferred = (
+            "auid",
+            "variability_type",
+            "period",
+            "mag_max",
+            "mag_min",
+            "vsx",
+        )
+    elif source in ("sesame", "simbad"):
+        preferred = ("otype", "simbad", "sesame", "vmag", "bmag")
+    elif source == "harris":
+        preferred = ("vmag", "mag_max", "band_notes", "harris", "otype")
+    elif stellar_near:
+        preferred = (
+            "gmag",
+            "gaia_source_id",
+            "parallax_mas",
+            "pmra",
+            "pmdec",
+            "vizier",
+            "gaia",
+        )
+    else:
+        preferred = (
+            "auid",
+            "variability_type",
+            "period",
+            "mag_max",
+            "mag_min",
+            "vsx",
+            "otype",
+            "vmag",
+            "gmag",
+            "gaia_source_id",
+            "parallax_mas",
+            "pmra",
+            "pmdec",
+        )
+    for k in preferred:
+        if k in in_ids and in_ids[k] is not None:
+            ids[k] = in_ids[k]
+
+    # mag_max: VSX ou V integrada (Harris/SIMBAD); nunca G de estrela próxima
+    if "mag_max" in in_ids and in_ids["mag_max"] is not None and not stellar_near:
+        ids["mag_max"] = in_ids["mag_max"]
+    if "mag_min" in in_ids and in_ids["mag_min"] is not None and source == "vsx":
+        ids["mag_min"] = in_ids["mag_min"]
+    if ids.get("mag_max") is None and ids.get("vmag") is not None:
+        ids["mag_max"] = ids["vmag"]
+
     out["external_ids"] = ids
     return out
+
+
+def _is_numeric_id(value: str) -> bool:
+    s = (value or "").strip()
+    return bool(s) and s.isdigit()
+
+
+# Objectos extensos: cone Gaia/VizieR apanha estrela, não a fotometria integrada
+_EXTENDED_OTYPE_PREFIXES: tuple[str, ...] = (
+    "GlC",
+    "GCl",
+    "OpC",
+    "Cl*",
+    "As*",
+    "C?*",
+    "Galaxy",
+    "G",
+    "GiC",
+    "GiG",
+    "IG",
+    "PaG",
+    "QSO",
+    "AGN",
+    "Rad",
+    "HII",
+    "PN",
+    "SNR",
+    "Neb",
+    "EmN",
+    "CGb",
+    "MoC",
+    "dark",
+    "ISM",
+    "SFR",
+    "bubble",
+    "mul",
+    "PoC",
+    "SBG",
+    "LSB",
+    "bCG",
+    "EmG",
+    "SyG",
+    "rG",
+    "BiC",
+    "GrG",
+    "CGG",
+    "ClG",
+    "SuperClG",
+    "PartofG",
+    "BlueCompG",
+    "GinCl",
+    "GinGroup",
+)
+
+
+def _is_extended_object(external_ids: dict[str, Any] | None) -> bool:
+    otype = str((external_ids or {}).get("otype") or "").strip()
+    if not otype:
+        return False
+    if otype in _EXTENDED_OTYPE_PREFIXES:
+        return True
+    # SIMBAD compact codes: GlC, OpC, ...
+    return any(otype.startswith(p) for p in ("GlC", "GCl", "OpC", "Cl*", "Galaxy", "G "))
 
 
 def catalog_notes_from_ids(external_ids: dict[str, Any] | None) -> str:
@@ -150,10 +266,22 @@ class CatalogResolveService:
         }
 
         for provider_name in providers:
+            # Gaia/VizieR (estrelas) nao fazem sentido como fonte primaria de GlC/Galaxy
+            if provider_name in _NEAR_PROVIDERS and _is_extended_object(
+                merged.get("external_ids")
+            ):
+                continue
             payload: dict[str, Any] | None = None
             from_network = False
             if use_cache:
                 payload = self._cache_get(provider_name, query)
+                # Cache antigo pode ter G de estrela como mag_max — ignorar
+                if (
+                    payload is not None
+                    and provider_name in _NEAR_PROVIDERS
+                    and _is_extended_object(merged.get("external_ids"))
+                ):
+                    payload = None
             if payload is None and network:
                 try:
                     provider = self.registry.get(provider_name)
@@ -192,11 +320,13 @@ class CatalogResolveService:
                     )
             merged = _merge_payload(merged, payload, provider_name)
 
-        # Cone enrich (VizieR/Gaia) quando ja ha coords
+        # Cone enrich (VizieR/Gaia) — só para fontes pontuais; enxames/galáxias
+        # não devem herdar G de uma estrela aleatória no cone.
         if (
             network
             and merged.get("ra_deg") is not None
             and merged.get("dec_deg") is not None
+            and not _is_extended_object(merged.get("external_ids"))
         ):
             ra = float(merged["ra_deg"])
             dec = float(merged["dec_deg"])
@@ -215,9 +345,32 @@ class CatalogResolveService:
                 except (NotFoundError, DomainError):
                     continue
 
+        # Fotometria integrada (Harris) para enxames globulares
+        if network:
+            otype = str((merged.get("external_ids") or {}).get("otype") or "")
+            if otype.startswith("GlC") or otype.startswith("GCl"):
+                merged = self._enrich_harris_globular(merged, query=query)
+
         if merged.get("ra_deg") is None or merged.get("dec_deg") is None:
             raise NotFoundError(f"catalogo nao resolveu coords: {query}")
         return merged
+
+    def _enrich_harris_globular(
+        self, merged: dict[str, Any], *, query: str
+    ) -> dict[str, Any]:
+        """VII/202 Harris — Vt integrada para GlC (ex. M56 ≈ 8.3)."""
+        ids = dict(merged.get("external_ids") or {})
+        # Nao sobrescrever fotometria VSX de variaveis
+        if ids.get("variability_type") or ids.get("vsx"):
+            return merged
+        try:
+            from astrocitizen.adapters.sky.vizier_resolver import VizierResolver
+
+            resolver = VizierResolver(source="VII/202/catalog", timeout_s=20.0)
+            payload = resolver.resolve(query)
+        except (NotFoundError, DomainError):
+            return merged
+        return _merge_payload(merged, payload, "harris")
 
     def resolve_from_cache(
         self,
