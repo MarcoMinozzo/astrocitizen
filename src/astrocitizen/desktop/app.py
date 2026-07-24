@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -622,15 +623,22 @@ def run_gui(db_path: str | None = None) -> int:
     db = Path(db_path) if db_path else default_db_path()
     archive = SqliteArchive(db)
     archive.migrate()
-    # QtWebEngine (AC-095) exige partilha de contextos OpenGL antes do QApplication.
-    try:
-        from PySide6.QtCore import Qt as _Qt
+    # QtWebEngine (AC-095) exige AA_ShareOpenGLContexts — so com embutido opt-in.
+    _want_web = (os.environ.get("ASTROCITIZEN_WEBENGINE") or "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    )
+    if _want_web:
+        try:
+            from PySide6.QtCore import Qt as _Qt
 
-        QApplication.setAttribute(
-            _Qt.ApplicationAttribute.AA_ShareOpenGLContexts, True
-        )
-    except Exception:
-        pass
+            QApplication.setAttribute(
+                _Qt.ApplicationAttribute.AA_ShareOpenGLContexts, True
+            )
+        except Exception:
+            pass
     app = QApplication(sys.argv)
     lang = resolve_ui_lang(load_ui_lang_pref(), detected=detect_system_lang())
     set_current_lang(lang)

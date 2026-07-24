@@ -1,22 +1,40 @@
-"""Resolver SIMBAD via Astroquery (opcional)."""
+"""Resolver SIMBAD — TAP (fotometria) com fallback astroquery."""
 
 from __future__ import annotations
 
 from typing import Any
 
+from astrocitizen.adapters.sky.simbad_tap import SimbadTapResolver
 from astrocitizen.shared.errors import DomainError, NotFoundError
 
 
 class SimbadResolver:
-    """TargetResolverPort usando astroquery.simbad."""
+    """TargetResolverPort: preferir TAP (coords+fluxos); fallback astroquery."""
+
+    def __init__(
+        self,
+        *,
+        tap: SimbadTapResolver | None = None,
+        prefer_tap: bool = True,
+    ) -> None:
+        self._tap = tap or SimbadTapResolver()
+        self._prefer_tap = prefer_tap
 
     def resolve(self, name: str) -> dict[str, Any]:
+        if self._prefer_tap:
+            try:
+                return self._tap.resolve(name)
+            except (NotFoundError, DomainError):
+                pass
+        return self._resolve_astroquery(name)
+
+    def _resolve_astroquery(self, name: str) -> dict[str, Any]:
         try:
             from astroquery.simbad import Simbad
         except ImportError as exc:
             raise DomainError(
-                "astroquery nao instalado; use `pip install astrocitizen[sky]` "
-                "ou forneca --ra/--dec",
+                "astroquery nao instalado e SIMBAD TAP falhou; "
+                "use `pip install astrocitizen[sky]` ou forneca --ra/--dec",
                 rule_id="AC-031",
             ) from exc
 
@@ -25,7 +43,6 @@ class SimbadResolver:
             raise NotFoundError(f"SIMBAD nao encontrou: {name}")
 
         row = result[0]
-        # Astroquery versions differ on column names
         ra = None
         dec = None
         for ra_key in ("ra", "RA", "RA_d"):
@@ -37,7 +54,6 @@ class SimbadResolver:
                 dec = float(row[dec_key])
                 break
         if ra is None or dec is None:
-            # Sexagesimal fallback via SkyCoord if available
             import astropy.units as u
             from astropy.coordinates import SkyCoord
 
@@ -50,5 +66,6 @@ class SimbadResolver:
         return {
             "ra_deg": ra,
             "dec_deg": dec,
-            "external_ids": {"simbad": name},
+            "designation": name,
+            "external_ids": {"simbad": name, "source": "simbad"},
         }

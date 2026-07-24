@@ -2,10 +2,26 @@
 
 from __future__ import annotations
 
+import os
 from typing import Any
 
 
 def webengine_available() -> bool:
+    """WebEngine embutido é opt-in: ASTROCITIZEN_WEBENGINE=1.
+
+    Em várias GPUs/Linux o Chromium do QtWebEngine segfaulta ao carregar o
+    portal AAVSO no arranque; o fallback (browser do SO) é o default estável.
+    """
+    flag = (os.environ.get("ASTROCITIZEN_WEBENGINE") or "").strip().lower()
+    if flag not in ("1", "true", "yes", "on"):
+        return False
+    if (os.environ.get("ASTROCITIZEN_NO_WEBENGINE") or "").strip().lower() in (
+        "1",
+        "true",
+        "yes",
+        "on",
+    ):
+        return False
     try:
         from PySide6.QtWebEngineWidgets import QWebEngineView  # noqa: F401
 
@@ -45,7 +61,9 @@ def build_aavso_campaigns_browser() -> type:
 
             hint = QLabel(
                 "Portal Observing Campaigns (sem API publica). "
-                "Requer pip install 'astrocitizen[gui-web]' para browser embutido."
+                "Por defeito abre no browser do sistema (mais estavel). "
+                "Browser embutido: ASTROCITIZEN_WEBENGINE=1 e "
+                "pip install 'astrocitizen[gui-web]'."
             )
             hint.setObjectName("emptyState")
             hint.setWordWrap(True)
@@ -132,17 +150,16 @@ def build_aavso_campaigns_browser() -> type:
             self.btn_fwd.setEnabled(False)
             self.btn_reload.setEnabled(False)
             msg = QLabel(
-                "Qt WebEngine nao instalado.\n\n"
-                "Instale: pip install 'astrocitizen[gui-web]'\n"
-                "Ou use «Abrir no browser» para o portal AAVSO no sistema."
+                "Portal no browser do sistema (recomendado).\n\n"
+                "Use «Abrir no browser» para Observing Campaigns.\n"
+                "Embutido (instavel em alguns PCs): "
+                "ASTROCITIZEN_WEBENGINE=1 e pip install 'astrocitizen[gui-web]'."
             )
             msg.setObjectName("emptyState")
             msg.setAlignment(Qt.AlignmentFlag.AlignCenter)
             msg.setWordWrap(True)
             root.addWidget(msg, 1)
-            self.status.setText(
-                f"Fallback · {self._home} · pip install 'astrocitizen[gui-web]'"
-            )
+            self.status.setText(f"Fallback · {self._home}")
 
         def _on_url_changed(self, url: QUrl) -> None:
             self._current_url = url.toString()

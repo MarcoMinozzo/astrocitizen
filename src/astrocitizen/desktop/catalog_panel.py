@@ -7,7 +7,7 @@ from uuid import UUID
 
 
 def build_catalog_dashboard() -> type:
-    from PySide6.QtCore import QObject, Qt, QThread, Signal, Slot
+    from PySide6.QtCore import Qt
     from PySide6.QtWidgets import (
         QApplication,
         QCheckBox,
@@ -32,36 +32,7 @@ def build_catalog_dashboard() -> type:
         SECTION_LABELS,
         SECTION_ORDER,
     )
-
-    class _LookupWorker(QObject):
-        finished = Signal(object)
-        failed = Signal(str)
-
-        def __init__(
-            self,
-            archive: Any,
-            workspace_id: UUID,
-            name: str,
-            *,
-            network: bool,
-        ) -> None:
-            super().__init__()
-            self._archive = archive
-            self._workspace_id = workspace_id
-            self._name = name
-            self._network = network
-
-        @Slot()
-        def run(self) -> None:
-            try:
-                obj = CatalogDossierService(self._archive).lookup(
-                    self._workspace_id,
-                    self._name,
-                    network=self._network,
-                )
-                self.finished.emit(obj)
-            except Exception as exc:  # noqa: BLE001 — boundary thread→UI
-                self.failed.emit(str(exc))
+    from astrocitizen.shared.errors import DomainError, NotFoundError
 
     class CatalogDashboard(QWidget):
         def __init__(self, archive: Any) -> None:
@@ -70,8 +41,7 @@ def build_catalog_dashboard() -> type:
             self._svc = CatalogDossierService(archive)
             self._ids: list[UUID] = []
             self._fields: dict[str, dict[str, QLineEdit]] = {}
-            self._thread: QThread | None = None
-            self._worker: _LookupWorker | None = None
+            self._busy = False
 
             root = QVBoxLayout(self)
             root.setContentsMargins(16, 12, 16, 12)
@@ -80,9 +50,9 @@ def build_catalog_dashboard() -> type:
             root.addWidget(self.title)
 
             hint = QLabel(
-                "Pesquise um objecto: consultamos Sesame, VSX, SIMBAD e, conforme o tipo, "
-                "Harris/VizieR/Gaia. A ficha e gravada no catalogo local (buffer + sync). "
-                "Enxames/galaxias usam V integrada — nao a mag G de uma estrela no campo."
+                "Pesquise um objecto (ex. NGC1200, M56, SS Cyg). "
+                "Consultamos Sesame/VSX/SIMBAD e, conforme o tipo, Harris. "
+                "A ficha fica no catalogo local."
             )
             hint.setWordWrap(True)
             hint.setObjectName("hintText")
@@ -90,7 +60,7 @@ def build_catalog_dashboard() -> type:
 
             search_row = QHBoxLayout()
             self.search = QLineEdit()
-            self.search.setPlaceholderText('ex.: "SS Cyg", "M56", "HD 209458"')
+            self.search.setPlaceholderText('ex.: "NGC1200", "M56", "SS Cyg"')
             self.search.returnPressed.connect(self._lookup)
             self.cache_only = QCheckBox("So cache (sem rede)")
             self.btn_lookup = QPushButton("Buscar / actualizar")
@@ -184,10 +154,7 @@ def build_catalog_dashboard() -> type:
             self._fill_form(obj)
 
         def _lookup(self) -> None:
-            if self._thread is not None and self._thread.isRunning():
-                QMessageBox.information(
-                    self, "Catalogo", "Ainda a consultar — aguarde."
-                )
+            if self._busy:
                 return
             ws = self._workspace()
             if ws is None:
@@ -200,32 +167,29 @@ def build_catalog_dashboard() -> type:
                 )
                 return
 
+            self._busy = True
             self.btn_lookup.setEnabled(False)
-            self.status.setText("A consultar APIs em segundo plano…")
+            self.status.setText(f"A consultar «{name}»… (pode demorar alguns segundos)")
             QApplication.processEvents()
 
-            thread = QThread(self)
-            worker = _LookupWorker(
-                self.archive,
-                ws.id,
-                name,
-                network=not self.cache_only.isChecked(),
-            )
-            worker.moveToThread(thread)
-            thread.started.connect(worker.run)
-            worker.finished.connect(self._on_lookup_ok)
-            worker.failed.connect(self._on_lookup_err)
-            worker.finished.connect(thread.quit)
-            worker.failed.connect(thread.quit)
-            thread.finished.connect(worker.deleteLater)
-            thread.finished.connect(thread.deleteLater)
-            thread.finished.connect(self._on_thread_done)
-            self._thread = thread
-            self._worker = worker
-            thread.start()
+            try:
+                obj = self._svc.lookup(
+                    ws.id,
+                    name,
+                    network=not self.cache_only.isChecked(),
+                )
+            except (NotFoundError, DomainError) as exc:
+                self.status.setText("")
+                QMessageBox.warning(self, "Catalogo", str(exc))
+                return
+            except Exception as exc:  # noqa: BLE001 — UI boundary
+                self.status.setText("")
+                QMessageBox.critical(self, "Catalogo", str(exc))
+                return
+            finally:
+                self._busy = False
+                self.btn_lookup.setEnabled(True)
 
-        @Slot(object)
-        def _on_lookup_ok(self, obj: Any) -> None:
             src = ", ".join(obj.sources) if obj.sources else "(sem fontes)"
             self.status.setText(
                 f"Gravado: {obj.designation}  ·  fontes: {src}  ·  v{obj.version}"
@@ -237,16 +201,5 @@ def build_catalog_dashboard() -> type:
                 idx = 0
             self.list.setCurrentRow(idx)
             self._fill_form(obj)
-
-        @Slot(str)
-        def _on_lookup_err(self, message: str) -> None:
-            self.status.setText("")
-            QMessageBox.warning(self, "Catalogo", message)
-
-        @Slot()
-        def _on_thread_done(self) -> None:
-            self.btn_lookup.setEnabled(True)
-            self._thread = None
-            self._worker = None
 
     return CatalogDashboard

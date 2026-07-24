@@ -46,6 +46,34 @@ def test_browser_factory_is_callable() -> None:
     assert isinstance(webengine_available(), bool)
 
 
+def test_webengine_opt_in_default_off(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from astrocitizen.desktop import aavso_campaigns_browser as mod
+
+    monkeypatch.delenv("ASTROCITIZEN_WEBENGINE", raising=False)
+    monkeypatch.delenv("ASTROCITIZEN_NO_WEBENGINE", raising=False)
+    assert mod.webengine_available() is False
+    monkeypatch.setenv("ASTROCITIZEN_WEBENGINE", "1")
+
+    def _ok() -> None:
+        return None
+
+    monkeypatch.setattr(
+        mod,
+        "webengine_available",
+        mod.webengine_available,
+    )
+    # Com flag=1, depende de QtWebEngine instalado — so garantir que nao e sempre True
+    # sem o pacote: se ImportError, False.
+    try:
+        from PySide6.QtWebEngineWidgets import QWebEngineView  # noqa: F401
+
+        assert mod.webengine_available() is True
+    except ImportError:
+        assert mod.webengine_available() is False
+
+
 def test_browser_fallback_path(monkeypatch: pytest.MonkeyPatch) -> None:
     """Sem WebEngine, o painel usa fallback (sem crash)."""
     pytest.importorskip("PySide6")

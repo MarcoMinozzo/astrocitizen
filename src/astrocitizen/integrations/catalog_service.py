@@ -65,7 +65,18 @@ def _merge_payload(base: dict[str, Any], incoming: dict[str, Any], source: str) 
             "vsx",
         )
     elif source in ("sesame", "simbad"):
-        preferred = ("otype", "simbad", "sesame", "vmag", "bmag")
+        preferred = (
+            "otype",
+            "simbad",
+            "sesame",
+            "vmag",
+            "bmag",
+            "rmag",
+            "imag",
+            "umag",
+            "band_notes",
+            "mag_max",
+        )
     elif source == "harris":
         preferred = ("vmag", "mag_max", "band_notes", "harris", "otype")
     elif stellar_near:
@@ -351,9 +362,39 @@ class CatalogResolveService:
             if otype.startswith("GlC") or otype.startswith("GCl"):
                 merged = self._enrich_harris_globular(merged, query=query)
 
+        # SIMBAD TAP fotometria se ainda faltar V/B/R (galáxias, etc.)
+        if network and "simbad" in providers:
+            merged = self._enrich_simbad_photometry(merged, query=query)
+
         if merged.get("ra_deg") is None or merged.get("dec_deg") is None:
             raise NotFoundError(f"catalogo nao resolveu coords: {query}")
         return merged
+
+    def _enrich_simbad_photometry(
+        self, merged: dict[str, Any], *, query: str
+    ) -> dict[str, Any]:
+        """Completa vmag/bmag/rmag via SIMBAD TAP allfluxes (AC-236)."""
+        ids = dict(merged.get("external_ids") or {})
+        # VSX ja definiu amplitude — nao sobrescrever mag_max/min
+        if ids.get("variability_type") or ids.get("vsx"):
+            if ids.get("vmag") is not None or ids.get("bmag") is not None:
+                return merged
+        if ids.get("vmag") is not None and ids.get("bmag") is not None:
+            return merged
+        try:
+            from astrocitizen.adapters.sky.simbad_tap import SimbadTapResolver
+
+            payload = SimbadTapResolver(timeout_s=25.0).resolve(query)
+        except (NotFoundError, DomainError):
+            return merged
+        # Nao deixar TAP apagar mag_max VSX
+        if ids.get("variability_type") or ids.get("vsx"):
+            in_ids = dict(payload.get("external_ids") or {})
+            in_ids.pop("mag_max", None)
+            in_ids.pop("mag_min", None)
+            payload = dict(payload)
+            payload["external_ids"] = in_ids
+        return _merge_payload(merged, payload, "simbad")
 
     def _enrich_harris_globular(
         self, merged: dict[str, Any], *, query: str

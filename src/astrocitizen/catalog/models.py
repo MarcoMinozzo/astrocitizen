@@ -42,8 +42,10 @@ SECTION_FIELDS: dict[str, tuple[tuple[str, str], ...]] = {
         ("coord_frame", "Sistema"),
     ),
     "photometry": (
-        ("vmag", "V (catalogo / integrada)"),
-        ("mag_max", "Mag max (VSX / V)"),
+        ("vmag", "V (SIMBAD / Harris)"),
+        ("bmag", "B (SIMBAD)"),
+        ("rmag", "R (SIMBAD)"),
+        ("mag_max", "Mag max (VSX / ref)"),
         ("mag_min", "Mag min (VSX)"),
         ("gmag", "G Gaia (estrela proxima)"),
         ("band_notes", "Notas de banda"),
@@ -105,7 +107,11 @@ def dossier_from_resolved(
     sections["position"]["coord_frame"] = "ICRS J2000"
 
     sections["photometry"]["vmag"] = ids.get("vmag")
-    sections["photometry"]["mag_max"] = ids.get("mag_max") or ids.get("vmag")
+    sections["photometry"]["bmag"] = ids.get("bmag")
+    sections["photometry"]["rmag"] = ids.get("rmag")
+    sections["photometry"]["mag_max"] = ids.get("mag_max") or ids.get("vmag") or ids.get(
+        "rmag"
+    ) or ids.get("bmag")
     sections["photometry"]["mag_min"] = ids.get("mag_min")
     sections["photometry"]["gmag"] = ids.get("gmag")
     sections["photometry"]["band_notes"] = ids.get("band_notes")
@@ -139,6 +145,10 @@ def dossier_from_resolved(
         "mag_max",
         "mag_min",
         "vmag",
+        "bmag",
+        "rmag",
+        "imag",
+        "umag",
         "gmag",
         "band_notes",
         "otype",
@@ -150,6 +160,7 @@ def dossier_from_resolved(
         "spectral_type",
         "sptype",
         "harris",
+        "simbad_g",
     }
     other = {k: v for k, v in ids.items() if k not in skip and v is not None}
     sections["identifiers"]["other_ids"] = other or None

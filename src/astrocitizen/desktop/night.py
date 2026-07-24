@@ -171,7 +171,7 @@ def build_night_payload(
 
 def build_night_dashboard(parent: Any | None = None) -> Any:
     """Devolve a classe NightDashboard (requer PySide6)."""
-    from PySide6.QtCore import QDate, QObject, Qt, QThread, Signal
+    from PySide6.QtCore import QDate, QObject, Qt, QThread, Signal, Slot
     from PySide6.QtGui import QPixmap
     from PySide6.QtWidgets import (
         QCheckBox,
@@ -224,6 +224,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             self._meteo = meteo
             self._artifacts_root = artifacts_root
 
+        @Slot()
         def run(self) -> None:
             try:
                 payload = build_night_payload(
@@ -489,7 +490,8 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             self._update_coords_label()
             if changed and self._current_site() is not None:
                 self._bootstrap_sky_chart()
-                self.refresh_night()
+                # Nao auto-refresh meteo aqui: QThread+UI no arranque segfaultava.
+                # O utilizador usa «Atualizar noite».
 
         def set_shell_night_date(self, night_date: str) -> None:
             if not night_date:
@@ -504,7 +506,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                 return
             if self._current_site() is not None:
                 self._bootstrap_sky_chart()
-                self.refresh_night()
+                # Meteo sob demanda (botao Actualizar) — evita race no arranque
 
         def _update_coords_label(self) -> None:
             site = self._current_site()
@@ -695,7 +697,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
             )
             self._set_badge(None)
 
-            thread = QThread(self)
+            thread = QThread()
             worker = _NightWorker(
                 site=site,
                 night_date=night_date,
@@ -703,23 +705,26 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                 artifacts_root=self.artifacts_root,
             )
             worker.moveToThread(thread)
+            queued = Qt.ConnectionType.QueuedConnection
             thread.started.connect(worker.run)
-            worker.finished.connect(self._on_night_ok)
-            worker.failed.connect(self._on_night_fail)
+            worker.finished.connect(self._on_night_ok, queued)
+            worker.failed.connect(self._on_night_fail, queued)
             worker.finished.connect(thread.quit)
             worker.failed.connect(thread.quit)
             thread.finished.connect(worker.deleteLater)
             thread.finished.connect(thread.deleteLater)
-            thread.finished.connect(self._on_thread_done)
+            thread.finished.connect(self._on_thread_done, queued)
             self._thread = thread
             self._worker = worker
             thread.start()
 
+        @Slot()
         def _on_thread_done(self) -> None:
             self._thread = None
             self._worker = None
             self._set_busy(False)
 
+        @Slot(dict)
         def _on_night_ok(self, payload: dict) -> None:
             self._set_badge(bool(payload.get("ok")))
             self.summary.setPlainText("\n".join(payload.get("summary_lines") or []))
@@ -756,6 +761,7 @@ def build_night_dashboard(parent: Any | None = None) -> Any:
                 f"lon={meta.get('longitude_deg')} · {meta.get('image_path')}</small>"
             )
 
+        @Slot(str)
         def _on_night_fail(self, message: str) -> None:
             self._set_badge(None)
             self.summary.setPlainText(f"erro: {message}")
