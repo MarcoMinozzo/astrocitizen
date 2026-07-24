@@ -49,6 +49,7 @@
 | E17 | Observatório avançado (cúpula, remoto) | P3–P4 |
 | E18 | Educação / labs | P3 |
 | E19 | Base de conhecimento interna + RAG | P2–P3 |
+| E20 | Interoperabilidade (hub integrations / IVOA) | P1–P2 |
 
 ---
 
@@ -320,6 +321,26 @@ Doc: [EPICO_E19_BASE_CONHECIMENTO_RAG.md](EPICO_E19_BASE_CONHECIMENTO_RAG.md)
 | AC-198 | Glossario astro/redes/PO sync → chunks + UI | P2 | M | AC-192 | ✅ glossary.json + sync + kb_get_glossary |
 | AC-199 | Gold questions + eval citation rate (≥80% factuais) | P2 | M | AC-193 | ✅ `eval-gold` · gold-v0 ≥80% |
 | AC-200 | Ligacao spectrum: RAG + AC-107 (explicar relatorio com corpus ARAS/BeSS) | P2 | M | AC-107, AC-194 | ✅ `spectrum-explain` extractivo + RAG |
+
+---
+
+## E20 — Interoperabilidade (hub / providers)
+
+Doc: [GUIA_INTEROPERABILIDADE.md](GUIA_INTEROPERABILIDADE.md) · ADR [D-012](decisoes/D-012-hub-integrations.md)  
+Skeleton: `integrations.registry` + `ObservatoryProvider` + modelos `Observation`/`Spectrum`.
+
+| ID | Item | Pri | Est | Dep | Notas |
+|----|------|-----|-----|-----|-------|
+| AC-210 | Ports + domain + registry + wrappers AAVSO/MPC/TNS/BeSS/SIMBAD/VSX | P1 | M | D-012 | ✅ skeleton |
+| AC-211 | Sesame name resolver | P1 | S | AC-210 | Fase 1 |
+| AC-212 | VizieR catalog query | P1 | M | AC-210 | Fase 1 |
+| AC-213 | Gaia Archive TAP client | P1 | M | AC-210 | Fase 1 · IVOA |
+| AC-214 | Contribute UI lista providers por `features` | P2 | M | AC-210 | |
+| AC-215 | IVOA TAP/Cone facade genérica | P2 | L | AC-213 | multiplicador |
+| AC-216 | ARAS spectrum query/submit | P2 | L | AC-210, E10 | Fase 2 |
+| AC-217 | AAVSO Spectroscopy | P2 | M | AC-210 | Fase 2 |
+| AC-218 | ALeRCE / Lasair alert ingest | P2 | L | AC-210 | Fase 3 |
+| AC-219 | MAST / ESO archive query | P3 | L | AC-210 | Fase 4 |
 
 ---
 

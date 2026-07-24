@@ -1,0 +1,53 @@
+# Guia de interoperabilidade — AstroCitizen
+
+Resumo normativo da correção de rota (fonte completa externa:
+`moodle_espectroscopia/guia_astrocitizen.md`). Nome de produto: **AstroCitizen**.
+Arquitectura: [D-012](decisoes/D-012-hub-integrations.md).
+
+## Ideia central
+
+Observatório de pequeno/médio porte → hub que **consulta catálogos** e
+**publica** fotometria / espectro / astrometria / transientes via providers
+pluggáveis — sem inventar APIs privadas.
+
+## Fases
+
+| Fase | Foco | Integrações |
+|------|------|-------------|
+| **1** Base científica | SIMBAD, VizieR, Gaia TAP, Sesame; AAVSO fotometria (consulta + AEF/WebObs) |
+| **2** Espectroscopia | ARAS, BeSS, AAVSO Spectroscopy |
+| **3** Transientes | TNS, ALeRCE, Lasair |
+| **4** Arquivos | MAST, ESO Archive |
+| **5** Automação | alertas→plano, comparação histórica, one-click publish |
+
+**Paralelo:** Alpaca/INDI, Astrometry.net, JPL Horizons, meteo, client IVOA TAP.
+
+## Top 20 (checklist longo prazo)
+
+1. SIMBAD · 2. VizieR · 3. Gaia · 4. CDS X-Match · 5. Sesame  
+6. AAVSO · 7. ARAS · 8. BeSS · 9. TNS · 10. MPC  
+11. JPL Horizons · 12. Astrometry.net · 13. ALeRCE · 14. Lasair  
+15. MAST · 16. ESO · 17. ASCOM Alpaca · 18. INDI  
+19. CelesTrak · 20. Meteoblue / meteo astronómico  
+
+Multiplicador: padrões **IVOA** (TAP, SIA, SSA, Cone Search, VOEvent).
+
+## Modelo interno (não formato institucional)
+
+- `Observation` — id, object_name, ra, dec, jd, observer, observatory_code, instrument, filter, exposure, snr  
+- `Spectrum` — wavelength[], flux[], uncertainty[], resolution, fits_header  
+
+Cada provider converte para o destino (AEF, BeSS FITS, ADES, TNS JSON, …).
+
+## Estado no repo (slice skeleton)
+
+| Provider | features (manifesto) | Backend actual |
+|----------|----------------------|----------------|
+| SIMBAD | search | `adapters/sky/simbad_resolver.py` |
+| VSX | search | `adapters/sky/vsx_resolver.py` |
+| AAVSO | search, prepare_photometry | AEF + WebObs (AC-096) |
+| MPC | prepare_astrometry | ADES PSV |
+| TNS | prepare_transient | AT report |
+| BeSS | prepare_spectrum | FITS 1D |
+
+Novos clientes (VizieR, Gaia, …) = itens E20 / AC-21x.
