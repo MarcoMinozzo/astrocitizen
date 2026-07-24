@@ -108,6 +108,9 @@
 
 ## E4 — Observatory ports (hardware)
 
+**Pilar ASCOM:** controlo de telescópio/câmera no Desktop via **Alpaca** (D-005,
+D-013 §4). Independente do hub de redes (E20/E21). Docs: [ascom/](ascom/).
+
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
 | AC-040 | `CameraPort` + SimulatorCamera | P1 | M | AC-002 | ✅ S3 — `SimulatorCamera` |
@@ -115,7 +118,7 @@
 | AC-042 | Adapter SBIG udrv (integração sbig-suite) | P1 | L | AC-040 | ✅ S3 — stub; repo `sbig-suite` |
 | AC-043 | `MountPort` + Simulator + Alpyca Telescope | P1 | L | AC-002 | ✅ S3 — sim + stub Alpaca |
 | AC-044 | `FocuserPort` + Alpyca Focuser | P1 | M | AC-002 | ✅ S3 — sim + stub Alpaca |
-| AC-045 | FilterWheel / ObservingConditions (Alpaca) | P2 | M | AC-043 | |
+| AC-045 | FilterWheel / ObservingConditions (Alpaca) | P2 | M | AC-043 | Próximo hardware |
 | AC-046 | Factory de backends (udrv \| alpaca \| sim) | P1 | S | AC-040…044 | ✅ S3 |
 | AC-047 | Omni Simulator / docs setup Linux+Windows | P1 | M | AC-043 | ✅ S3 — [HARDWARE_SIMULATOR.md](HARDWARE_SIMULATOR.md) |
 
@@ -348,7 +351,8 @@ Skeleton: `integrations.registry` + `ObservatoryProvider` + modelos `Observation
 ## E21 — Espelho SaaS + formulários + info services
 
 Doc: [D-013](decisoes/D-013-espelho-formularios-info.md) · [GUIA_INTEROPERABILIDADE.md](GUIA_INTEROPERABILIDADE.md)  
-Pilares: (1) cópia no BD mestre, (2) form schemas atlas, (3) cache/serviços internos.
+Pilares: (1) cópia no BD mestre, (2) form schemas atlas, (3) cache/serviços internos.  
+**Hardware ASCOM** continua em **E4** (não misturar com este épico).
 
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|

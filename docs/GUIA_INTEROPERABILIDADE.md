@@ -17,6 +17,9 @@ Além do hub externo, a plataforma:
 2. Usa **formulários** versionados compatíveis com cada API (atlas).
 3. Expõe **serviços de informação internos** sobre cache nosso dos dados
    institucionais (VSX, SIMBAD, …).
+4. **Controla hardware** no Desktop via **ASCOM Alpaca** (câmara, telescópio,
+   focuser; depois filter wheel / condições / dome) — épico E4; não confundir
+   com `integrations/` de redes. Ver [ascom/README.md](ascom/README.md).
 
 Ver [D-013](decisoes/D-013-espelho-formularios-info.md).
 
@@ -30,7 +33,9 @@ Ver [D-013](decisoes/D-013-espelho-formularios-info.md).
 | **4** Arquivos | MAST, ESO Archive |
 | **5** Automação | alertas→plano, comparação histórica, one-click publish |
 
-**Paralelo:** Alpaca/INDI, Astrometry.net, JPL Horizons, meteo, client IVOA TAP.
+**Paralelo (obrigatório, não opcional):** **ASCOM Alpaca** (E4 — aquisição),
+Astrometry.net, JPL Horizons, meteo, client IVOA TAP. INDI fica como opção
+secundária se necessário no ecossistema Linux.
 
 ## Top 20 (checklist longo prazo)
 
