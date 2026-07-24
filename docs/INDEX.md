@@ -68,6 +68,7 @@
 | [AAVSO_WEBOBS_CHECKLIST.md](AAVSO_WEBOBS_CHECKLIST.md) | Validar export Extended no WebObs |
 | [GUIA_INTEROPERABILIDADE.md](GUIA_INTEROPERABILIDADE.md) | Hub providers / fases 1–5 (D-012, E20) |
 | [decisoes/D-012-hub-integrations.md](decisoes/D-012-hub-integrations.md) | ADR: hub ObservatoryProvider |
+| [decisoes/D-013-espelho-formularios-info.md](decisoes/D-013-espelho-formularios-info.md) | ADR: espelho SaaS + forms + info |
 
 ## Arquitetura SaaS + Desktop
 

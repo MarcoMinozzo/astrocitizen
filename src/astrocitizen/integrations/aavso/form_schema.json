@@ -1,0 +1,55 @@
+{
+  "network": "aavso",
+  "version": 1,
+  "title": "AAVSO Extended / WebObs",
+  "channel": "file_plus_webobs",
+  "webobs_url": "https://www.aavso.org/webobs/",
+  "atlas_ref": "atlas/ATLAS_REPORTE_OBSERVACOES.md#aavso",
+  "fields": [
+    {
+      "id": "product_id",
+      "label": "Product UUID",
+      "type": "uuid",
+      "required": true,
+      "maps_to": "extra.product_id"
+    },
+    {
+      "id": "star",
+      "label": "STARID (nome ou AUID)",
+      "type": "string",
+      "required": true,
+      "maps_to": "object_name",
+      "hint": "Preferir AUID VSX quando disponivel"
+    },
+    {
+      "id": "obscode",
+      "label": "OBSCODE",
+      "type": "string",
+      "required": true,
+      "maps_to": "observatory_code"
+    },
+    {
+      "id": "band",
+      "label": "FILTER",
+      "type": "string",
+      "required": true,
+      "default": "V",
+      "maps_to": "filter_name"
+    },
+    {
+      "id": "chart",
+      "label": "CHART (VSP)",
+      "type": "string",
+      "required": false,
+      "default": "NA",
+      "maps_to": "extra.chart"
+    }
+  ],
+  "validation": {
+    "network": "aavso",
+    "require_jd_points": true,
+    "warn_chart_na": true,
+    "warn_missing_magerr": true
+  },
+  "features": ["prepare_photometry", "search"]
+}

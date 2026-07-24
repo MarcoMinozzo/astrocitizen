@@ -11,7 +11,7 @@ from astrocitizen.adapters.fs import LocalArtifactStore
 from astrocitizen.adapters.hardware import create_camera
 from astrocitizen.adapters.meteo import ManualMeteo, OpenMeteo, RainViewerRadar
 from astrocitizen.adapters.platesolve import create_plate_solver
-from astrocitizen.adapters.sky import AstropyEphemeris, SimbadResolver, VsxResolver
+from astrocitizen.adapters.sky import AstropyEphemeris, SimbadResolver
 from astrocitizen.adapters.sqlite import SqliteArchive
 from astrocitizen.analysis import (
     AperturePhotometry,
@@ -247,7 +247,9 @@ def _cmd_target_add(args: argparse.Namespace) -> int:
     external_ids: dict = {}
     designation = args.name
     if (ra is None or dec is None) and getattr(args, "resolve_vsx", False):
-        resolved = VsxResolver().resolve(args.name)
+        from astrocitizen.integrations.vsx import VsxProvider
+
+        resolved = VsxProvider(archive=archive).search_object(args.name)
         ra = resolved["ra_deg"]
         dec = resolved["dec_deg"]
         external_ids = dict(resolved.get("external_ids") or {})
@@ -1297,6 +1299,53 @@ def _cmd_contribute_tns(args: argparse.Namespace) -> int:
     archive.save_network_submission(sub)
     print(f"wrote={out}\turi={uri}\tstatus={sub.status}\tsubmission={sub.id}")
     archive.close()
+    return 0
+
+
+def _cmd_contribute_form_schema(args: argparse.Namespace) -> int:
+    import json
+
+    from astrocitizen.integrations.form_schemas import list_form_networks, load_form_schema
+
+    if getattr(args, "list_networks", False):
+        for name in list_form_networks():
+            print(name)
+        return 0
+    network = (args.network or "").strip().lower()
+    if not network:
+        print("indique --network ou --list")
+        return 1
+    schema = load_form_schema(network)
+    print(json.dumps(schema, ensure_ascii=False, indent=2))
+    return 0
+
+
+def _cmd_catalog_cache_get(args: argparse.Namespace) -> int:
+    import json
+
+    archive = _open_archive(Path(args.db))
+    archive.migrate()
+    row = archive.get_institutional_cache(
+        provider=args.provider, object_id=args.id
+    )
+    archive.close()
+    if row is None:
+        print("cache miss")
+        return 1
+    print(json.dumps(row, ensure_ascii=False, indent=2))
+    return 0
+
+
+def _cmd_catalog_cache_list(args: argparse.Namespace) -> int:
+    import json
+
+    archive = _open_archive(Path(args.db))
+    archive.migrate()
+    rows = archive.list_institutional_cache(
+        provider=args.provider, limit=int(args.limit)
+    )
+    archive.close()
+    print(json.dumps(rows, ensure_ascii=False, indent=2))
     return 0
 
 
@@ -2873,6 +2922,31 @@ def build_parser() -> argparse.ArgumentParser:
         ),
     )
     p_cl.set_defaults(func=_cmd_contribute_list)
+
+    p_cfs = c_sub.add_parser(
+        "form-schema", help="Mostrar schema de formulario atlas (D-013)"
+    )
+    p_cfs.add_argument("--network", default=None, help="ex.: aavso")
+    p_cfs.add_argument(
+        "--list",
+        dest="list_networks",
+        action="store_true",
+        help="Listar redes com schema",
+    )
+    p_cfs.set_defaults(func=_cmd_contribute_form_schema)
+
+    p_cat = sub.add_parser("catalog", help="Cache institucional / info services (D-013)")
+    cat_sub = p_cat.add_subparsers(dest="catalog_cmd", required=True)
+    p_cg = cat_sub.add_parser("cache-get", help="Ler entrada do institutional_cache")
+    _add_db_arg(p_cg)
+    p_cg.add_argument("--provider", required=True, help="ex.: vsx")
+    p_cg.add_argument("--id", required=True, help="object_id (nome ou AUID)")
+    p_cg.set_defaults(func=_cmd_catalog_cache_get)
+    p_clst = cat_sub.add_parser("cache-list", help="Listar cache institucional")
+    _add_db_arg(p_clst)
+    p_clst.add_argument("--provider", default=None)
+    p_clst.add_argument("--limit", type=int, default=50)
+    p_clst.set_defaults(func=_cmd_catalog_cache_list)
 
     p_kb = sub.add_parser("knowledge", help="Base de conhecimento E19 (ingest offline)")
     kb_sub = p_kb.add_subparsers(dest="knowledge_cmd", required=True)

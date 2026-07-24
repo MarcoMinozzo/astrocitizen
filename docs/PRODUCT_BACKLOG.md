@@ -50,6 +50,7 @@
 | E18 | Educação / labs | P3 |
 | E19 | Base de conhecimento interna + RAG | P2–P3 |
 | E20 | Interoperabilidade (hub integrations / IVOA) | P1–P2 |
+| E21 | Espelho SaaS + formulários + info services | P1–P2 |
 
 ---
 
@@ -341,6 +342,22 @@ Skeleton: `integrations.registry` + `ObservatoryProvider` + modelos `Observation
 | AC-217 | AAVSO Spectroscopy | P2 | M | AC-210 | Fase 2 |
 | AC-218 | ALeRCE / Lasair alert ingest | P2 | L | AC-210 | Fase 3 |
 | AC-219 | MAST / ESO archive query | P3 | L | AC-210 | Fase 4 |
+
+---
+
+## E21 — Espelho SaaS + formulários + info services
+
+Doc: [D-013](decisoes/D-013-espelho-formularios-info.md) · [GUIA_INTEROPERABILIDADE.md](GUIA_INTEROPERABILIDADE.md)  
+Pilares: (1) cópia no BD mestre, (2) form schemas atlas, (3) cache/serviços internos.
+
+| ID | Item | Pri | Est | Dep | Notas |
+|----|------|-----|-----|-----|-------|
+| AC-220 | Schemas formulario por rede (AAVSO primeiro) + loader | P1 | M | D-013, AC-210 | ✅ `form_schema.json` + `contribute form-schema` |
+| AC-221 | Contribute/registry liga features → schema → FieldReview | P2 | M | AC-220 | |
+| AC-222 | Fila sync Desktop → payload canonico | P1 | L | D-008, AC-210 | |
+| AC-223 | Scaffold SaaS FastAPI+Postgres (auth + sync/batch + GET observations) | P1 | L | AC-222, API_ALVO | |
+| AC-224 | Info service cache VSX/SIMBAD (Desktop proto → SaaS) | P1 | M | AC-220 | ✅ `institutional_cache` + `catalog cache-*` |
+| AC-225 | Ingest job AID/LCG para cache | P2 | L | AC-223, AC-224 | |
 
 ---
 

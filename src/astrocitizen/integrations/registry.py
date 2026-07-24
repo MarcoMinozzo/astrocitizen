@@ -18,7 +18,7 @@ def default_providers(*, archive: Any | None = None) -> list[ObservatoryProvider
     """Providers skeleton — wrappers sobre adapters/contribution existentes."""
     return [
         SimbadProvider(),
-        VsxProvider(),
+        VsxProvider(archive=archive),
         AavsoProvider(archive=archive),
         MpcProvider(),
         TnsProvider(),

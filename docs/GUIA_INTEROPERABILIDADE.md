@@ -2,13 +2,23 @@
 
 Resumo normativo da correção de rota (fonte completa externa:
 `moodle_espectroscopia/guia_astrocitizen.md`). Nome de produto: **AstroCitizen**.
-Arquitectura: [D-012](decisoes/D-012-hub-integrations.md).
+Arquitectura: [D-012](decisoes/D-012-hub-integrations.md) ·
+[D-013](decisoes/D-013-espelho-formularios-info.md).
 
 ## Ideia central
 
 Observatório de pequeno/médio porte → hub que **consulta catálogos** e
 **publica** fotometria / espectro / astrometria / transientes via providers
 pluggáveis — sem inventar APIs privadas.
+
+Além do hub externo, a plataforma:
+
+1. **Espelha** todas as observações/submissões no **SaaS próprio** (BD mestre).
+2. Usa **formulários** versionados compatíveis com cada API (atlas).
+3. Expõe **serviços de informação internos** sobre cache nosso dos dados
+   institucionais (VSX, SIMBAD, …).
+
+Ver [D-013](decisoes/D-013-espelho-formularios-info.md).
 
 ## Fases
 

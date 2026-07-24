@@ -1,6 +1,6 @@
 """Schema SQLite — alinhado a MODELO_DADOS_V1 (subset S1+S2)."""
 
-SCHEMA_VERSION = 8
+SCHEMA_VERSION = 9
 
 # Tabelas S1 (v1)
 SCHEMA_V1_SQL = """
@@ -457,6 +457,20 @@ CREATE INDEX IF NOT EXISTS idx_knowledge_emb_model
     ON knowledge_chunk_embeddings(model_id);
 """
 
+# D-013 / AC-224 proto: cache de consultas institucionais (VSX, SIMBAD, …)
+SCHEMA_V9_SQL = """
+CREATE TABLE IF NOT EXISTS institutional_cache (
+    provider TEXT NOT NULL,
+    object_id TEXT NOT NULL,
+    payload TEXT NOT NULL,
+    fetched_at TEXT NOT NULL,
+    PRIMARY KEY (provider, object_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_inst_cache_fetched
+    ON institutional_cache(fetched_at);
+"""
+
 SCHEMA_SQL = (
     SCHEMA_V1_SQL
     + SCHEMA_V2_SQL
@@ -466,6 +480,7 @@ SCHEMA_SQL = (
     + SCHEMA_V6_SQL
     + SCHEMA_V7_SQL
     + SCHEMA_V8_SQL
+    + SCHEMA_V9_SQL
 )
 
 # Colunas extra em observations (ALTER idempotente via migrate helper)

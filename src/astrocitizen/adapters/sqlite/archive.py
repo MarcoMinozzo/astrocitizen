@@ -2275,3 +2275,83 @@ class SqliteArchive:
             }
             for r in rows
         ]
+
+    # --- institutional cache (v9 / D-013) ---
+    def upsert_institutional_cache(
+        self,
+        *,
+        provider: str,
+        object_id: str,
+        payload: dict[str, Any],
+        fetched_at: str | None = None,
+    ) -> None:
+        pid = (provider or "").strip().lower()
+        oid = (object_id or "").strip()
+        if not pid or not oid:
+            raise ValueError("provider e object_id obrigatorios")
+        self._conn.execute(
+            """
+            INSERT INTO institutional_cache(provider, object_id, payload, fetched_at)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(provider, object_id) DO UPDATE SET
+                payload = excluded.payload,
+                fetched_at = excluded.fetched_at
+            """,
+            (pid, oid, _j(payload), fetched_at or utc_now_iso()),
+        )
+        self._conn.commit()
+
+    def get_institutional_cache(
+        self, *, provider: str, object_id: str
+    ) -> dict[str, Any] | None:
+        row = self._conn.execute(
+            """
+            SELECT provider, object_id, payload, fetched_at
+            FROM institutional_cache
+            WHERE provider = ? AND object_id = ?
+            """,
+            ((provider or "").strip().lower(), (object_id or "").strip()),
+        ).fetchone()
+        if row is None:
+            return None
+        return {
+            "provider": row["provider"],
+            "object_id": row["object_id"],
+            "payload": _loads(row["payload"], {}),
+            "fetched_at": row["fetched_at"],
+        }
+
+    def list_institutional_cache(
+        self, *, provider: str | None = None, limit: int = 100
+    ) -> list[dict[str, Any]]:
+        lim = max(1, min(int(limit), 1000))
+        if provider:
+            rows = self._conn.execute(
+                """
+                SELECT provider, object_id, payload, fetched_at
+                FROM institutional_cache
+                WHERE provider = ?
+                ORDER BY fetched_at DESC
+                LIMIT ?
+                """,
+                ((provider or "").strip().lower(), lim),
+            ).fetchall()
+        else:
+            rows = self._conn.execute(
+                """
+                SELECT provider, object_id, payload, fetched_at
+                FROM institutional_cache
+                ORDER BY fetched_at DESC
+                LIMIT ?
+                """,
+                (lim,),
+            ).fetchall()
+        return [
+            {
+                "provider": r["provider"],
+                "object_id": r["object_id"],
+                "payload": _loads(r["payload"], {}),
+                "fetched_at": r["fetched_at"],
+            }
+            for r in rows
+        ]
