@@ -7,6 +7,7 @@ from typing import Any, Iterable
 from astrocitizen.integrations.aavso import AavsoProvider
 from astrocitizen.integrations.bess import BessProvider
 from astrocitizen.integrations.mpc import MpcProvider
+from astrocitizen.integrations.sesame import SesameProvider
 from astrocitizen.integrations.simbad import SimbadProvider
 from astrocitizen.integrations.tns import TnsProvider
 from astrocitizen.integrations.vsx import VsxProvider
@@ -17,7 +18,8 @@ from astrocitizen.shared.errors import NotFoundError
 def default_providers(*, archive: Any | None = None) -> list[ObservatoryProvider]:
     """Providers skeleton — wrappers sobre adapters/contribution existentes."""
     return [
-        SimbadProvider(),
+        SesameProvider(archive=archive),
+        SimbadProvider(archive=archive),
         VsxProvider(archive=archive),
         AavsoProvider(archive=archive),
         MpcProvider(),

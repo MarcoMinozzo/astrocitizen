@@ -1,0 +1,291 @@
+"""CatalogResolveService — resolve + cache + enrich targets (AC-226)."""
+
+from __future__ import annotations
+
+from typing import Any, Iterable, Sequence
+from uuid import UUID
+
+from astrocitizen.integrations.registry import ProviderRegistry, default_providers
+from astrocitizen.planning.models import Target
+from astrocitizen.shared.errors import DomainError, NotFoundError
+from astrocitizen.shared.timeutil import utc_now_iso
+
+DEFAULT_PROVIDERS: tuple[str, ...] = ("sesame", "vsx", "simbad")
+
+
+def _merge_payload(base: dict[str, Any], incoming: dict[str, Any], source: str) -> dict[str, Any]:
+    out = dict(base)
+    sources = list(out.get("sources") or [])
+    if source not in sources:
+        sources.append(source)
+    out["sources"] = sources
+
+    if out.get("ra_deg") is None and incoming.get("ra_deg") is not None:
+        out["ra_deg"] = float(incoming["ra_deg"])
+    if out.get("dec_deg") is None and incoming.get("dec_deg") is not None:
+        out["dec_deg"] = float(incoming["dec_deg"])
+
+    desig = incoming.get("designation")
+    if desig and (not out.get("designation") or out["designation"] == out.get("query")):
+        out["designation"] = str(desig)
+
+    ids = dict(out.get("external_ids") or {})
+    for k, v in dict(incoming.get("external_ids") or {}).items():
+        if v is not None and (k not in ids or ids[k] in (None, "")):
+            ids[k] = v
+        elif k not in ids:
+            ids[k] = v
+    # Prefer VSX photometric / variability fields when present
+    for k in ("auid", "variability_type", "period", "mag_max", "mag_min", "vsx", "otype"):
+        if k in (incoming.get("external_ids") or {}):
+            ids[k] = incoming["external_ids"][k]
+    out["external_ids"] = ids
+    return out
+
+
+def catalog_notes_from_ids(external_ids: dict[str, Any] | None) -> str:
+    """Notas curtas para ObservationBlock a partir de IDs de catálogo."""
+    ids = external_ids or {}
+    parts: list[str] = []
+    vsx_type = ids.get("variability_type") or ids.get("vsx_type")
+    if vsx_type:
+        parts.append(f"vsx_type={vsx_type}")
+    mag = ids.get("mag_max")
+    if mag is not None:
+        parts.append(f"mag_max={mag}")
+    period = ids.get("period")
+    if period is not None:
+        parts.append(f"period={period}")
+    otype = ids.get("otype")
+    if otype and not vsx_type:
+        parts.append(f"otype={otype}")
+    return "; ".join(parts)
+
+
+def mag_max_from_ids(external_ids: dict[str, Any] | None) -> float | None:
+    ids = external_ids or {}
+    raw = ids.get("mag_max")
+    if raw is None:
+        return None
+    try:
+        return float(raw)
+    except (TypeError, ValueError):
+        return None
+
+
+class CatalogResolveService:
+    """Facade: Sesame → VSX → SIMBAD, com institutional_cache e enrich Target."""
+
+    def __init__(
+        self,
+        archive: Any,
+        registry: ProviderRegistry | None = None,
+    ) -> None:
+        self.archive = archive
+        self.registry = registry or ProviderRegistry(
+            default_providers(archive=archive)
+        )
+
+    def _cache_get(self, provider: str, object_id: str) -> dict[str, Any] | None:
+        row = self.archive.get_institutional_cache(
+            provider=provider, object_id=object_id
+        )
+        if row is None:
+            return None
+        payload = row.get("payload")
+        return payload if isinstance(payload, dict) else None
+
+    def _cache_keys_for_target(self, target: Target) -> list[str]:
+        keys: list[str] = []
+        for cand in (
+            target.designation,
+            (target.external_ids or {}).get("auid"),
+            (target.external_ids or {}).get("vsx"),
+            (target.external_ids or {}).get("sesame"),
+            (target.external_ids or {}).get("simbad"),
+        ):
+            s = str(cand or "").strip()
+            if s and s not in keys:
+                keys.append(s)
+        return keys
+
+    def resolve(
+        self,
+        name: str,
+        *,
+        providers: Sequence[str] = DEFAULT_PROVIDERS,
+        use_cache: bool = True,
+        network: bool = True,
+    ) -> dict[str, Any]:
+        query = (name or "").strip()
+        if not query:
+            raise NotFoundError("nome de catalogo vazio")
+
+        merged: dict[str, Any] = {
+            "query": query,
+            "designation": query,
+            "ra_deg": None,
+            "dec_deg": None,
+            "external_ids": {},
+            "sources": [],
+        }
+
+        for provider_name in providers:
+            payload: dict[str, Any] | None = None
+            from_network = False
+            if use_cache:
+                payload = self._cache_get(provider_name, query)
+            if payload is None and network:
+                try:
+                    provider = self.registry.get(provider_name)
+                    if not provider.supports("search"):
+                        continue
+                    payload = provider.search_object(query)
+                    from_network = True
+                except (NotFoundError, DomainError):
+                    # Provider miss / rede — tentar seguinte
+                    payload = None
+            if payload is None:
+                continue
+            # Backup: garantir cache se o provider nao gravou
+            if from_network and self.archive is not None:
+                object_id = str(
+                    (payload.get("external_ids") or {}).get(provider_name)
+                    or payload.get("designation")
+                    or query
+                ).strip()
+                self.archive.upsert_institutional_cache(
+                    provider=provider_name,
+                    object_id=object_id,
+                    payload=payload,
+                    fetched_at=utc_now_iso(),
+                )
+                if query != object_id:
+                    self.archive.upsert_institutional_cache(
+                        provider=provider_name,
+                        object_id=query,
+                        payload=payload,
+                        fetched_at=utc_now_iso(),
+                    )
+            merged = _merge_payload(merged, payload, provider_name)
+
+        if merged.get("ra_deg") is None or merged.get("dec_deg") is None:
+            raise NotFoundError(f"catalogo nao resolveu coords: {query}")
+        return merged
+
+    def resolve_from_cache(
+        self,
+        name: str,
+        *,
+        providers: Sequence[str] = DEFAULT_PROVIDERS,
+        extra_keys: Iterable[str] | None = None,
+    ) -> dict[str, Any] | None:
+        """Junta hits de cache sem rede. None se nao houver coords."""
+        keys: list[str] = []
+        for cand in (name, *(extra_keys or ())):
+            s = str(cand or "").strip()
+            if s and s not in keys:
+                keys.append(s)
+        if not keys:
+            return None
+
+        merged: dict[str, Any] = {
+            "query": keys[0],
+            "designation": keys[0],
+            "ra_deg": None,
+            "dec_deg": None,
+            "external_ids": {},
+            "sources": [],
+        }
+        any_hit = False
+        for provider_name in providers:
+            for key in keys:
+                payload = self._cache_get(provider_name, key)
+                if payload is None:
+                    continue
+                any_hit = True
+                merged = _merge_payload(merged, payload, provider_name)
+                break
+        if not any_hit:
+            return None
+        if merged.get("ra_deg") is None or merged.get("dec_deg") is None:
+            # Cache parcial (ex. so mag) — devolver mesmo assim para notes
+            return merged
+        return merged
+
+    def enrich_target(
+        self,
+        target: Target,
+        *,
+        network: bool = False,
+        providers: Sequence[str] = DEFAULT_PROVIDERS,
+    ) -> Target:
+        """Actualiza ra/dec/external_ids a partir do cache (ou resolve com rede)."""
+        keys = self._cache_keys_for_target(target)
+        resolved: dict[str, Any] | None
+        if network:
+            try:
+                resolved = self.resolve(
+                    target.designation,
+                    providers=providers,
+                    use_cache=True,
+                    network=True,
+                )
+            except NotFoundError:
+                resolved = self.resolve_from_cache(
+                    target.designation,
+                    providers=providers,
+                    extra_keys=keys[1:],
+                )
+        else:
+            resolved = self.resolve_from_cache(
+                target.designation,
+                providers=providers,
+                extra_keys=keys[1:],
+            )
+
+        if resolved is None:
+            return target
+
+        if resolved.get("ra_deg") is not None:
+            target.ra_deg = float(resolved["ra_deg"])
+        if resolved.get("dec_deg") is not None:
+            target.dec_deg = float(resolved["dec_deg"])
+
+        ids = dict(target.external_ids or {})
+        for k, v in dict(resolved.get("external_ids") or {}).items():
+            if v is not None:
+                ids[k] = v
+        target.external_ids = ids
+
+        desig = resolved.get("designation")
+        if desig and isinstance(desig, str) and desig.strip():
+            # Nao renomear se o utilizador ja tem designation propria distinta
+            if not target.designation or target.designation.strip() == keys[0]:
+                target.designation = desig.strip()
+
+        return self.archive.upsert_target(target)
+
+    def refresh_program_targets(
+        self,
+        workspace_id: UUID,
+        *,
+        providers: Sequence[str] = DEFAULT_PROVIDERS,
+    ) -> list[Target]:
+        """Resolve (rede+cache) todos os alvos ligados a programas active."""
+        programs = self.archive.list_programs(workspace_id, state="active")
+        seen: set[UUID] = set()
+        updated: list[Target] = []
+        for program in programs:
+            for target, _role, _so in self.archive.list_program_targets(program.id):
+                if target.id in seen:
+                    continue
+                seen.add(target.id)
+                try:
+                    enriched = self.enrich_target(
+                        target, network=True, providers=providers
+                    )
+                    updated.append(enriched)
+                except NotFoundError:
+                    continue
+        return updated

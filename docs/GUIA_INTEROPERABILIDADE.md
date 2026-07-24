@@ -27,11 +27,24 @@ Ver [D-013](decisoes/D-013-espelho-formularios-info.md).
 
 | Fase | Foco | Integrações |
 |------|------|-------------|
-| **1** Base científica | SIMBAD, VizieR, Gaia TAP, Sesame; AAVSO fotometria (consulta + AEF/WebObs) |
+| **1** Base científica | **Consumo → cache → agenda**: Sesame, SIMBAD, VSX (VizieR/Gaia a seguir); AAVSO fotometria (consulta + AEF/WebObs) |
 | **2** Espectroscopia | ARAS, BeSS, AAVSO Spectroscopy |
 | **3** Transientes | TNS, ALeRCE, Lasair |
 | **4** Arquivos | MAST, ESO Archive |
 | **5** Automação | alertas→plano, comparação histórica, one-click publish |
+
+### Fase 1 — consumo → cache → agenda (slice actual)
+
+Prioridade desta fase **não** é publicar mais formatos; é:
+
+1. **Consumir** catálogos (Sesame coords → VSX AUID/tipo/período/mag → SIMBAD fallback).
+2. **Organizar** em `institutional_cache` + `Target.external_ids`.
+3. **Consultar** offline via CLI (`catalog resolve|refresh-targets|cache-*`).
+4. **Alimentar** `GenerateDailyPlan` / ProgramaDiario com notas de catálogo e
+   tie-break por `mag_max` quando a prioridade de programa empatar
+   (geração **sem rede**; `catalog refresh-targets` prévio é explícito).
+
+Serviço: `CatalogResolveService` (`integrations/catalog_service.py`) · AC-226 / AC-211.
 
 **Paralelo (obrigatório, não opcional):** **ASCOM Alpaca** (E4 — aquisição),
 Astrometry.net, JPL Horizons, meteo, client IVOA TAP. INDI fica como opção
@@ -58,11 +71,14 @@ Cada provider converte para o destino (AEF, BeSS FITS, ADES, TNS JSON, …).
 
 | Provider | features (manifesto) | Backend actual |
 |----------|----------------------|----------------|
-| SIMBAD | search | `adapters/sky/simbad_resolver.py` |
-| VSX | search | `adapters/sky/vsx_resolver.py` |
+| Sesame | search | `adapters/sky/sesame_resolver.py` + cache |
+| SIMBAD | search | `adapters/sky/simbad_resolver.py` + cache |
+| VSX | search | `adapters/sky/vsx_resolver.py` + cache |
 | AAVSO | search, prepare_photometry | AEF + WebObs (AC-096) |
 | MPC | prepare_astrometry | ADES PSV |
 | TNS | prepare_transient | AT report |
 | BeSS | prepare_spectrum | FITS 1D |
 
-Novos clientes (VizieR, Gaia, …) = itens E20 / AC-21x.
+Facade: `CatalogResolveService` (resolve + enrich + refresh programas active).
+
+Novos clientes (VizieR, Gaia, …) = itens E20 / AC-212…213 (sprint seguinte).

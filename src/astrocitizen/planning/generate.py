@@ -6,6 +6,11 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID
 
+from astrocitizen.integrations.catalog_service import (
+    CatalogResolveService,
+    catalog_notes_from_ids,
+    mag_max_from_ids,
+)
 from astrocitizen.planning.conflicts import resolve_priority_conflicts
 from astrocitizen.planning.equipment_rules import validate_instrument_config
 from astrocitizen.planning.meteo_rules import evaluate_meteo_window
@@ -42,6 +47,25 @@ def _shift_window(start: str, end: str, hours: float) -> tuple[str, str]:
     return fmt(a), fmt(b)
 
 
+def _apply_catalog_tiebreak(blocks: list[ObservationBlock], mag_by_block: dict[UUID, float | None]) -> None:
+    """Empate de prioridade: alvos mais brilhantes (mag_max menor) primeiro.
+
+    Reordena sort_order estavel: (priority, mag_max ou +inf, sort_order original).
+    """
+    indexed = list(enumerate(blocks))
+
+    def key(item: tuple[int, ObservationBlock]) -> tuple[int, float, int]:
+        idx, block = item
+        mag = mag_by_block.get(block.id)
+        mag_key = mag if mag is not None else float("inf")
+        return (block.priority, mag_key, idx)
+
+    ordered = [b for _, b in sorted(indexed, key=key)]
+    for i, block in enumerate(ordered):
+        block.sort_order = i
+    blocks[:] = ordered
+
+
 class GenerateDailyPlan:
     """Gera ProgramaDiario a partir de programas ativos + ceu + meteo + equipamento."""
 
@@ -50,10 +74,13 @@ class GenerateDailyPlan:
         archive: Any,
         ephemeris: Any,
         meteo: Any,
+        *,
+        catalog: CatalogResolveService | None = None,
     ) -> None:
         self.archive = archive
         self.ephemeris = ephemeris
         self.meteo = meteo
+        self.catalog = catalog
 
     def execute(
         self,
@@ -115,7 +142,10 @@ class GenerateDailyPlan:
         plan.state = "draft"
         plan = self.archive.upsert_daily_plan(plan)
 
+        catalog = self.catalog or CatalogResolveService(self.archive)
+
         blocks: list[ObservationBlock] = []
+        mag_by_block: dict[UUID, float | None] = {}
         sort_order = 0
         # Stagger windows slightly by program order to allow conflict demos when same night
         for prog_idx, program in enumerate(sorted(programs, key=lambda p: p.priority)):
@@ -134,24 +164,30 @@ class GenerateDailyPlan:
                 w_start, w_end = _shift_window(start_utc, end_utc, 0.0)  # same window -> conflict
 
             for target, _role, _so in linked:
+                # Enrich só a partir do cache (sem rede na geração; refresh prévio explícito)
+                target = catalog.enrich_target(target, network=False)
+                notes = catalog_notes_from_ids(target.external_ids)
+                mag = mag_max_from_ids(target.external_ids)
+
                 if target.ra_deg is None or target.dec_deg is None:
-                    blocks.append(
-                        ObservationBlock(
-                            id=new_id(),
-                            daily_plan_id=plan.id,
-                            program_id=program.id,
-                            target_id=target.id,
-                            instrument_config_id=cfg.id if cfg else None,
-                            sort_order=sort_order,
-                            window_start_utc=w_start,
-                            window_end_utc=w_end,
-                            status="inviavel_ceu",
-                            status_reason="alvo sem coordenadas RA/Dec",
-                            priority=program.priority,
-                            technique=None,
-                            meteo_snapshot_id=meteo_snap.id,
-                        )
+                    block = ObservationBlock(
+                        id=new_id(),
+                        daily_plan_id=plan.id,
+                        program_id=program.id,
+                        target_id=target.id,
+                        instrument_config_id=cfg.id if cfg else None,
+                        sort_order=sort_order,
+                        window_start_utc=w_start,
+                        window_end_utc=w_end,
+                        status="inviavel_ceu",
+                        status_reason="alvo sem coordenadas RA/Dec",
+                        priority=program.priority,
+                        technique=None,
+                        meteo_snapshot_id=meteo_snap.id,
+                        notes=notes,
                     )
+                    blocks.append(block)
+                    mag_by_block[block.id] = mag
                     sort_order += 1
                     continue
 
@@ -191,28 +227,30 @@ class GenerateDailyPlan:
                 tmpl = self.archive.get_program_template(program.template_id)
                 technique = tmpl.technique if tmpl else None
 
-                blocks.append(
-                    ObservationBlock(
-                        id=new_id(),
-                        daily_plan_id=plan.id,
-                        program_id=program.id,
-                        target_id=target.id,
-                        instrument_config_id=cfg.id if cfg else None,
-                        sort_order=sort_order,
-                        window_start_utc=w_start,
-                        window_end_utc=w_end,
-                        predicted_altitude_deg=alt,
-                        airmass=eph.get("airmass"),
-                        status=status,  # type: ignore[arg-type]
-                        status_reason=reason,
-                        priority=program.priority,
-                        technique=technique,
-                        ephemeris_snapshot_id=eph_snap.id,
-                        meteo_snapshot_id=meteo_snap.id,
-                    )
+                block = ObservationBlock(
+                    id=new_id(),
+                    daily_plan_id=plan.id,
+                    program_id=program.id,
+                    target_id=target.id,
+                    instrument_config_id=cfg.id if cfg else None,
+                    sort_order=sort_order,
+                    window_start_utc=w_start,
+                    window_end_utc=w_end,
+                    predicted_altitude_deg=alt,
+                    airmass=eph.get("airmass"),
+                    status=status,  # type: ignore[arg-type]
+                    status_reason=reason,
+                    priority=program.priority,
+                    technique=technique,
+                    ephemeris_snapshot_id=eph_snap.id,
+                    meteo_snapshot_id=meteo_snap.id,
+                    notes=notes,
                 )
+                blocks.append(block)
+                mag_by_block[block.id] = mag
                 sort_order += 1
 
+        _apply_catalog_tiebreak(blocks, mag_by_block)
         resolve_priority_conflicts(blocks)
         self.archive.replace_observation_blocks(plan.id, blocks)
         return plan

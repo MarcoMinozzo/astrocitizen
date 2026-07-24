@@ -23,16 +23,17 @@ def test_default_registry_manifests() -> None:
     reg = ProviderRegistry()
     names = reg.list_names()
     assert names == sorted(
-        ["aavso", "bess", "mpc", "simbad", "tns", "vsx"]
+        ["aavso", "bess", "mpc", "sesame", "simbad", "tns", "vsx"]
     )
     manifests = {m["name"]: m["features"] for m in reg.list_manifests()}
     assert "search" in manifests["simbad"]
+    assert "search" in manifests["sesame"]
     assert "prepare_photometry" in manifests["aavso"]
     assert "prepare_astrometry" in manifests["mpc"]
     assert "prepare_spectrum" in manifests["bess"]
     assert "prepare_transient" in manifests["tns"]
     searchers = reg.with_feature("search")
-    assert {p.name for p in searchers} >= {"simbad", "vsx", "aavso"}
+    assert {p.name for p in searchers} >= {"simbad", "vsx", "aavso", "sesame"}
 
 
 def test_registry_get_unknown() -> None:

@@ -336,9 +336,9 @@ Skeleton: `integrations.registry` + `ObservatoryProvider` + modelos `Observation
 | ID | Item | Pri | Est | Dep | Notas |
 |----|------|-----|-----|-----|-------|
 | AC-210 | Ports + domain + registry + wrappers AAVSO/MPC/TNS/BeSS/SIMBAD/VSX | P1 | M | D-012 | ✅ skeleton |
-| AC-211 | Sesame name resolver | P1 | S | AC-210 | Fase 1 |
-| AC-212 | VizieR catalog query | P1 | M | AC-210 | Fase 1 |
-| AC-213 | Gaia Archive TAP client | P1 | M | AC-210 | Fase 1 · IVOA |
+| AC-211 | Sesame name resolver | P1 | S | AC-210 | ✅ `SesameProvider` + cache |
+| AC-212 | VizieR catalog query | P1 | M | AC-210 | Fase 1 · sprint seguinte |
+| AC-213 | Gaia Archive TAP client | P1 | M | AC-210 | Fase 1 · IVOA · sprint seguinte |
 | AC-214 | Contribute UI lista providers por `features` | P2 | M | AC-210 | |
 | AC-215 | IVOA TAP/Cone facade genérica | P2 | L | AC-213 | multiplicador |
 | AC-216 | ARAS spectrum query/submit | P2 | L | AC-210, E10 | Fase 2 |
@@ -362,6 +362,7 @@ Pilares: (1) cópia no BD mestre, (2) form schemas atlas, (3) cache/serviços in
 | AC-223 | Scaffold SaaS FastAPI+Postgres (auth + sync/batch + GET observations) | P1 | L | AC-222, API_ALVO | |
 | AC-224 | Info service cache VSX/SIMBAD (Desktop proto → SaaS) | P1 | M | AC-220 | ✅ `institutional_cache` + `catalog cache-*` |
 | AC-225 | Ingest job AID/LCG para cache | P2 | L | AC-223, AC-224 | |
+| AC-226 | CatalogResolveService + ligação ProgramaDiario (cache→agenda) | P1 | M | AC-211, AC-224 | ✅ resolve/refresh + plan notes/mag |
 
 ---
 

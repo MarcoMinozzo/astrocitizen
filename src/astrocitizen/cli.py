@@ -1349,6 +1349,52 @@ def _cmd_catalog_cache_list(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_catalog_resolve(args: argparse.Namespace) -> int:
+    import json
+
+    from astrocitizen.integrations.catalog_service import CatalogResolveService
+
+    archive = _open_archive(Path(args.db))
+    archive.migrate()
+    svc = CatalogResolveService(archive)
+    providers = tuple(
+        p.strip() for p in (args.providers or "sesame,vsx,simbad").split(",") if p.strip()
+    )
+    try:
+        resolved = svc.resolve(
+            args.name,
+            providers=providers,
+            use_cache=not args.no_cache,
+            network=not args.cache_only,
+        )
+    except Exception as exc:
+        archive.close()
+        print(f"erro: {exc}")
+        return 1
+    archive.close()
+    print(json.dumps(resolved, ensure_ascii=False, indent=2))
+    return 0
+
+
+def _cmd_catalog_refresh_targets(args: argparse.Namespace) -> int:
+    from astrocitizen.integrations.catalog_service import CatalogResolveService
+
+    archive = _open_archive(Path(args.db))
+    ws = _ensure_default_workspace(archive)
+    svc = CatalogResolveService(archive)
+    providers = tuple(
+        p.strip() for p in (args.providers or "sesame,vsx,simbad").split(",") if p.strip()
+    )
+    updated = svc.refresh_program_targets(ws.id, providers=providers)
+    print(f"enriched={len(updated)}")
+    for t in updated:
+        ra = f"{t.ra_deg:.5f}" if t.ra_deg is not None else "-"
+        dec = f"{t.dec_deg:.5f}" if t.dec_deg is not None else "-"
+        print(f"  {t.designation}\tra={ra}\tdec={dec}\tid={t.id}")
+    archive.close()
+    return 0
+
+
 def _cmd_contribute_list(args: argparse.Namespace) -> int:
     archive = _open_archive(Path(args.db))
     ws = _ensure_default_workspace(archive)
@@ -2937,6 +2983,38 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_cat = sub.add_parser("catalog", help="Cache institucional / info services (D-013)")
     cat_sub = p_cat.add_subparsers(dest="catalog_cmd", required=True)
+    p_cres = cat_sub.add_parser(
+        "resolve", help="Resolver nome (Sesame/VSX/SIMBAD) → cache (AC-226)"
+    )
+    _add_db_arg(p_cres)
+    p_cres.add_argument("--name", required=True, help='ex.: "SS Cyg"')
+    p_cres.add_argument(
+        "--providers",
+        default="sesame,vsx,simbad",
+        help="Lista CSV de providers (default: sesame,vsx,simbad)",
+    )
+    p_cres.add_argument(
+        "--no-cache",
+        action="store_true",
+        help="Ignorar hits de institutional_cache",
+    )
+    p_cres.add_argument(
+        "--cache-only",
+        action="store_true",
+        help="So ler cache (sem rede)",
+    )
+    p_cres.set_defaults(func=_cmd_catalog_resolve)
+    p_cref = cat_sub.add_parser(
+        "refresh-targets",
+        help="Enriquecer alvos de programas active (rede+cache)",
+    )
+    _add_db_arg(p_cref)
+    p_cref.add_argument(
+        "--providers",
+        default="sesame,vsx,simbad",
+        help="Lista CSV de providers",
+    )
+    p_cref.set_defaults(func=_cmd_catalog_refresh_targets)
     p_cg = cat_sub.add_parser("cache-get", help="Ler entrada do institutional_cache")
     _add_db_arg(p_cg)
     p_cg.add_argument("--provider", required=True, help="ex.: vsx")
